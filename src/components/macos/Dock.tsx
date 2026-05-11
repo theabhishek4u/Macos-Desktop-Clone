@@ -17,6 +17,8 @@ import {
   CloudSun,
   Trash2,
   Rocket,
+  Map,
+  ListChecks,
   type LucideIcon,
 } from 'lucide-react'
 import useMacOSStore, { APP_CONFIGS } from '@/store/macos-store'
@@ -52,6 +54,8 @@ const ICON_MAP: Record<string, IconConfig> = {
   weather: { gradient: 'linear-gradient(135deg, #64B5F6, #42A5F5)', icon: CloudSun },
   trash: { gradient: 'linear-gradient(135deg, #90A4AE, #78909C)', icon: Trash2 },
   launchpad: { gradient: 'linear-gradient(135deg, #424242, #757575)', icon: Rocket },
+  maps: { gradient: 'linear-gradient(135deg, #4CAF50, #388E3C)', icon: Map },
+  reminders: { gradient: 'linear-gradient(135deg, #FFFFFF, #F5F5F5)', icon: ListChecks, iconColor: '#E53935' },
 }
 
 // Dock App Icon component
@@ -415,13 +419,14 @@ export default function Dock() {
         ref={dockRef}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
-        className="relative flex items-end gap-1.5 overflow-visible rounded-[18px] border border-white/20 bg-white/[0.15] px-4 pb-2.5 pt-2 shadow-2xl shadow-black/20 backdrop-blur-2xl"
+        className="relative flex items-end gap-1.5 overflow-visible rounded-[18px] border border-white/[0.18] px-4 pb-2.5 pt-2 shadow-2xl shadow-black/20 backdrop-blur-2xl"
         style={{
+          background: 'rgba(40, 40, 40, 0.45)',
           boxShadow:
-            'inset 0 1px 0 rgba(255,255,255,0.3), 0 8px 32px rgba(0,0,0,0.25), 0 2px 8px rgba(0,0,0,0.15)',
+            'inset 0 1px 0 rgba(255,255,255,0.25), 0 8px 32px rgba(0,0,0,0.35), 0 2px 8px rgba(0,0,0,0.2)',
           backgroundImage: `
-            linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)
+            linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px)
           `,
           backgroundSize: '12px 12px',
         }}

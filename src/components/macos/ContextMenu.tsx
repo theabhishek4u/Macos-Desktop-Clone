@@ -9,16 +9,24 @@ export default function ContextMenu() {
   const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    const handleClick = () => setContextMenu(null)
+    if (!contextMenu) return
+
+    const handleClick = (e: MouseEvent) => {
+      // Don't close if clicking inside the context menu
+      if (menuRef.current && menuRef.current.contains(e.target as Node)) return
+      setContextMenu(null)
+    }
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setContextMenu(null)
     }
-    if (contextMenu) {
-      window.addEventListener('click', handleClick)
-      window.addEventListener('keydown', handleKeyDown)
-    }
+
+    // Use mousedown for more responsive closing (don't wait for click)
+    document.addEventListener('mousedown', handleClick)
+    window.addEventListener('keydown', handleKeyDown)
+
     return () => {
-      window.removeEventListener('click', handleClick)
+      document.removeEventListener('mousedown', handleClick)
       window.removeEventListener('keydown', handleKeyDown)
     }
   }, [contextMenu, setContextMenu])
@@ -35,13 +43,14 @@ export default function ContextMenu() {
     <AnimatePresence>
       <motion.div
         ref={menuRef}
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.95 }}
-        transition={{ duration: 0.12 }}
-        className="fixed z-[99999] min-w-[200px] rounded-lg bg-gray-800/95 backdrop-blur-xl border border-white/10 py-1 shadow-2xl"
+        initial={{ opacity: 0, scale: 0.96, y: -2 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.96, y: -2 }}
+        transition={{ duration: 0.1, ease: [0.25, 0.46, 0.45, 0.94] }}
+        className="fixed z-[99999] min-w-[200px] rounded-lg bg-[#2a2a2e]/95 backdrop-blur-2xl border border-white/[0.12] py-1 shadow-2xl"
         style={{ left: x, top: y }}
         onClick={(e) => e.stopPropagation()}
+        onContextMenu={(e) => e.preventDefault()}
       >
         {contextMenu.items.map((item, i) => (
           <div key={i}>
@@ -49,7 +58,7 @@ export default function ContextMenu() {
               <div className="my-1 h-px bg-white/10 mx-3" />
             ) : (
               <button
-                className="w-full px-3 py-1 text-left text-[13px] text-white/90 hover:bg-blue-500 hover:text-white rounded-[4px] mx-1 flex items-center justify-between disabled:opacity-40 disabled:hover:bg-transparent"
+                className="w-full px-3 py-[3px] text-left text-[13px] text-white/90 hover:bg-[#0060df] hover:text-white rounded-[4px] mx-1 flex items-center justify-between disabled:opacity-40 disabled:hover:bg-transparent transition-colors duration-75"
                 style={{ width: 'calc(100% - 8px)' }}
                 disabled={item.disabled}
                 onClick={() => {

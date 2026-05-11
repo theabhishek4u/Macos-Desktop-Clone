@@ -218,7 +218,7 @@ export default function Terminal() {
   const [fileSystem, setFileSystem] = useState<Record<string, FileSystemNode>>(createDefaultFileSystem)
   const [currentPath, setCurrentPath] = useState<string[]>([])
   const [output, setOutput] = useState<OutputLine[]>([
-    { text: 'Last login: ' + new Date().toString(), color: 'text-gray-400' },
+    { text: 'Last login: ' + new Date().toString(), color: 'text-white/40' },
     { text: '' },
   ])
   const [input, setInput] = useState('')
@@ -268,11 +268,11 @@ export default function Terminal() {
     const trimmed = cmd.trim()
     const newOutput: OutputLine[] = []
 
-    // Build the prompt with colored parts
-    const promptHtml = `<span style="color:#28c840;font-weight:600">user@MacBook-Pro</span> <span style="color:#5ac8fa;font-weight:400">${getPromptPath()}</span> % `
+    // Build the prompt with colored parts - macOS style: user@MacBook ~ %
+    const promptHtml = `<span style="color:#28c840;font-weight:500">user@MacBook</span> <span style="color:#5ac8fa;font-weight:400">${getPromptPath()}</span> <span style="color:white;font-weight:400">%</span> `
 
-    // Echo the command with prompt
-    newOutput.push({ text: promptHtml + trimmed, isHtml: true })
+    // Echo the command with prompt (green for the command text)
+    newOutput.push({ text: promptHtml + `<span style="color:#28c840">${trimmed}</span>`, isHtml: true })
 
     if (trimmed === '') {
       setOutput(prev => [...prev, ...newOutput])
@@ -317,7 +317,7 @@ export default function Terminal() {
         ALL_COMMANDS.forEach(([name, desc]) => {
           newOutput.push({
             text: `  ${name.padEnd(16)}${desc}`,
-            color: 'text-gray-300',
+            color: 'text-white/70',
           })
         })
         break
@@ -346,7 +346,7 @@ export default function Terminal() {
               }
               return `   ${e.name}`
             }).join('  ')
-            newOutput.push({ text: line, color: 'text-gray-200' })
+            newOutput.push({ text: line, color: 'text-white/80' })
           }
         }
         break
@@ -354,7 +354,7 @@ export default function Terminal() {
 
       case 'pwd': {
         const path = currentPath.length === 0 ? '/Users/user' : `/Users/user/${currentPath.join('/')}`
-        newOutput.push({ text: path, color: 'text-gray-200' })
+        newOutput.push({ text: path, color: 'text-white/80' })
         break
       }
 
@@ -399,32 +399,32 @@ export default function Terminal() {
       }
 
       case 'whoami': {
-        newOutput.push({ text: 'user', color: 'text-gray-200' })
+        newOutput.push({ text: 'user', color: 'text-white/80' })
         break
       }
 
       case 'hostname': {
-        newOutput.push({ text: 'MacBook-Pro.local', color: 'text-gray-200' })
+        newOutput.push({ text: 'MacBook-Pro.local', color: 'text-white/80' })
         break
       }
 
       case 'uname': {
         if (args.includes('-a')) {
-          newOutput.push({ text: 'Darwin MacBook-Pro.local 23.0.0 Darwin Kernel Version 23.0.0: Mon Sep 25 20:57:52 PDT 2023; root:xnu-10002.1.13~1/RELEASE_ARM_T6030 arm64', color: 'text-gray-200' })
+          newOutput.push({ text: 'Darwin MacBook-Pro.local 23.0.0 Darwin Kernel Version 23.0.0: Mon Sep 25 20:57:52 PDT 2023; root:xnu-10002.1.13~1/RELEASE_ARM_T6030 arm64', color: 'text-white/80' })
         } else {
-          newOutput.push({ text: 'Darwin', color: 'text-gray-200' })
+          newOutput.push({ text: 'Darwin', color: 'text-white/80' })
         }
         break
       }
 
       case 'date': {
-        newOutput.push({ text: new Date().toString(), color: 'text-gray-200' })
+        newOutput.push({ text: new Date().toString(), color: 'text-white/80' })
         break
       }
 
       case 'echo': {
         const text = args.join(' ')
-        newOutput.push({ text, color: 'text-gray-200' })
+        newOutput.push({ text, color: 'text-white/80' })
         break
       }
 
@@ -450,7 +450,7 @@ export default function Terminal() {
         } else {
           const content = file.content ?? ''
           content.split('\n').forEach(line => {
-            newOutput.push({ text: line, color: 'text-gray-200' })
+            newOutput.push({ text: line, color: 'text-white/80' })
           })
         }
         break
@@ -549,7 +549,7 @@ export default function Terminal() {
         const load15 = (Math.random() * 1).toFixed(2)
         newOutput.push({
           text: ` ${new Date().toLocaleTimeString()}  up ${days} day${days > 1 ? 's' : ''}, ${hours}:${mins.toString().padStart(2, '0')}, 2 users, load averages: ${load1} ${load5} ${load15}`,
-          color: 'text-gray-200',
+          color: 'text-white/80',
         })
         break
       }
@@ -565,7 +565,7 @@ export default function Terminal() {
         const message = args.length > 0 ? args.join(' ') : 'Moo!'
         const cowLines = cowsay(message)
         cowLines.forEach(line => {
-          newOutput.push({ text: line, color: 'text-gray-200' })
+          newOutput.push({ text: line, color: 'text-white/80' })
         })
         break
       }
@@ -581,7 +581,7 @@ export default function Terminal() {
         matrixLines.forEach(line => {
           newOutput.push({ text: line, color: 'text-green-400' })
         })
-        newOutput.push({ text: '', color: 'text-gray-200' })
+        newOutput.push({ text: '', color: 'text-white/80' })
         newOutput.push({ text: 'Wake up, Neo...', color: 'text-green-500' })
         break
       }
@@ -702,76 +702,76 @@ export default function Terminal() {
 
   return (
     <div
-      className="flex flex-col w-full h-full bg-[#1e1e1e] text-[13px] leading-[1.4] cursor-text select-text"
+      className="flex flex-col w-full h-full bg-[#1e1e1e]/95 text-[13px] leading-[1.5] cursor-text select-text"
       onClick={handleTerminalClick}
-      style={{ fontFamily: "'SF Mono', 'Fira Code', 'Cascadia Code', 'Menlo', monospace" }}
+      style={{ fontFamily: "'SF Mono', 'Monaco', 'Menlo', 'Consolas', monospace" }}
     >
+      <style>{`
+        .terminal-scroll::-webkit-scrollbar {
+          width: 6px;
+        }
+        .terminal-scroll::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .terminal-scroll::-webkit-scrollbar-thumb {
+          background: rgba(255,255,255,0.15);
+          border-radius: 3px;
+        }
+        .terminal-scroll::-webkit-scrollbar-thumb:hover {
+          background: rgba(255,255,255,0.25);
+        }
+        @keyframes terminal-blink {
+          0%, 49% { opacity: 1; }
+          50%, 100% { opacity: 0; }
+        }
+        .terminal-cursor {
+          animation: terminal-blink 1s step-end infinite;
+        }
+      `}</style>
+
       {/* Title bar subtitle area */}
-      <div className="flex items-center justify-center h-[26px] shrink-0 bg-[#3a3a3a] border-b border-white/5 px-3">
-        <span className="text-[11px] text-white/50 tracking-wide" style={{ fontFamily: "'SF Mono', 'Fira Code', 'Cascadia Code', 'Menlo', monospace" }}>
-          user@MacBook-Pro — zsh — 80×24
+      <div className="flex items-center justify-center h-[26px] shrink-0 bg-[#3a3a3a]/90 border-b border-white/5 px-3">
+        <span className="text-[11px] text-white/40 tracking-wide" style={{ fontFamily: "'SF Mono', 'Monaco', 'Menlo', 'Consolas', monospace" }}>
+          user@MacBook — zsh — 80×24
         </span>
       </div>
 
       {/* Terminal output area */}
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto p-3 pb-0 min-h-0"
+        className="terminal-scroll flex-1 overflow-y-auto p-3 pb-0 min-h-0"
         style={{
           scrollbarWidth: 'thin',
           scrollbarColor: 'rgba(255,255,255,0.15) transparent',
         }}
       >
-        <style>{`
-          .terminal-scroll::-webkit-scrollbar {
-            width: 6px;
-          }
-          .terminal-scroll::-webkit-scrollbar-track {
-            background: transparent;
-          }
-          .terminal-scroll::-webkit-scrollbar-thumb {
-            background: rgba(255,255,255,0.15);
-            border-radius: 3px;
-          }
-          .terminal-scroll::-webkit-scrollbar-thumb:hover {
-            background: rgba(255,255,255,0.25);
-          }
-          @keyframes terminal-blink {
-            0%, 49% { opacity: 1; }
-            50%, 100% { opacity: 0; }
-          }
-          .terminal-cursor {
-            animation: terminal-blink 1s step-end infinite;
-          }
-        `}</style>
-
         {/* Output lines */}
         {output.map((line, i) => (
-          <div key={i} className="whitespace-pre-wrap break-all">
+          <div key={i} className="whitespace-pre-wrap break-all min-h-[20px]">
             {line.isHtml ? (
               <span
-                className="text-gray-200"
+                className="text-white/80"
                 dangerouslySetInnerHTML={{ __html: line.text }}
               />
             ) : (
-              <span className={line.color ?? 'text-gray-200'}>{line.text}</span>
+              <span className={line.color ?? 'text-white/80'}>{line.text}</span>
             )}
           </div>
         ))}
 
         {/* Tab suggestions */}
         {tabSuggestions.length > 0 && (
-          <div className="whitespace-pre-wrap break-all">
-            <span className="text-gray-500">{tabSuggestions.join('  ')}</span>
+          <div className="whitespace-pre-wrap break-all min-h-[20px]">
+            <span className="text-white/30">{tabSuggestions.join('  ')}</span>
           </div>
         )}
 
         {/* Input line */}
-        <form onSubmit={handleSubmit} className="flex items-center whitespace-pre">
-          <span className="text-[#28c840] font-semibold shrink-0">user@MacBook-Pro</span>
-          <span className="text-white/50 shrink-0"> </span>
+        <form onSubmit={handleSubmit} className="flex items-center whitespace-pre min-h-[20px]">
+          <span className="text-[#28c840] font-medium shrink-0">user@MacBook</span>
+          <span className="text-white/30 shrink-0"> </span>
           <span className="text-[#5ac8fa] shrink-0">{promptPath}</span>
-          <span className="text-white/70 shrink-0"> % </span>
+          <span className="text-white/50 shrink-0"> % </span>
           <div className="relative flex-1 min-w-0">
             <input
               ref={inputRef}
@@ -779,30 +779,33 @@ export default function Terminal() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              className="w-full bg-transparent text-gray-200 outline-none border-none p-0 m-0 text-[13px] caret-transparent"
+              className="w-full bg-transparent text-white/90 outline-none border-none p-0 m-0 text-[13px] caret-transparent"
               style={{
                 caretColor: 'transparent',
-                fontFamily: "'SF Mono', 'Fira Code', 'Cascadia Code', 'Menlo', monospace",
+                fontFamily: "'SF Mono', 'Monaco', 'Menlo', 'Consolas', monospace",
               }}
               spellCheck={false}
               autoComplete="off"
               autoCapitalize="off"
               autoCorrect="off"
             />
-            {/* Custom blinking cursor */}
+            {/* Custom blinking cursor - thin vertical line */}
             <span
-              className="terminal-cursor absolute top-0 pointer-events-none text-gray-200"
+              className="terminal-cursor absolute top-[1px] pointer-events-none"
               style={{
                 left: `${input.length * 7.8}px`,
+                width: '1.5px',
+                height: '15px',
+                background: 'rgba(255,255,255,0.8)',
+                borderRadius: '0.5px',
+                display: 'inline-block',
               }}
-            >
-              ▌
-            </span>
+            />
           </div>
         </form>
 
         {/* Bottom padding for scroll */}
-        <div className="h-3" />
+        <div className="h-4" />
       </div>
     </div>
   )

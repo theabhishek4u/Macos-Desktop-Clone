@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Wifi, Battery, Search, BatteryFull, BatteryMedium, BatteryLow, Bluetooth } from 'lucide-react'
 import useMacOSStore, { APP_CONFIGS } from '@/store/macos-store'
@@ -17,72 +17,466 @@ interface MenuItem {
   action?: string
 }
 
-const MENU_ITEMS: Record<string, MenuItem[]> = {
-  File: [
-    { label: 'New Window', shortcut: '⌘N' },
-    { label: 'New Tab', shortcut: '⌘T' },
-    { label: 'Open', shortcut: '⌘O' },
-    { separator: true, label: '' },
-    { label: 'Close Window', shortcut: '⌘W' },
-    { separator: true, label: '' },
-    { label: 'Print', shortcut: '⌘P' },
-  ],
-  Edit: [
-    { label: 'Undo', shortcut: '⌘Z' },
-    { label: 'Redo', shortcut: '⇧⌘Z' },
-    { separator: true, label: '' },
-    { label: 'Cut', shortcut: '⌘X' },
-    { label: 'Copy', shortcut: '⌘C' },
-    { label: 'Paste', shortcut: '⌘V' },
-    { label: 'Select All', shortcut: '⌘A' },
-  ],
-  View: [
-    { label: 'as Icons' },
-    { label: 'as List' },
-    { label: 'as Columns' },
-    { separator: true, label: '' },
-    { label: 'Show Sidebar', shortcut: '⌘S' },
-    { label: 'Show Path Bar' },
-    { label: 'Show Status Bar' },
-  ],
-  Window: [
-    { label: 'Minimize', shortcut: '⌘M' },
-    { label: 'Zoom' },
-    { separator: true, label: '' },
-    { label: 'Bring All to Front' },
-  ],
-  Help: [
-    { label: 'Search' },
-    { label: 'macOS Help' },
-  ],
+interface MenuSection {
+  name: string
+  items: MenuItem[]
+}
+
+// ─── App-specific menu definitions ────────────────────────────────────────────
+
+function getMenuItems(appId: string): MenuSection[] {
+  const File: MenuSection = {
+    name: 'File',
+    items: [
+      { label: 'New Window', shortcut: '⌘N' },
+      { label: 'New Tab', shortcut: '⌘T' },
+      { label: 'Open', shortcut: '⌘O' },
+      { separator: true, label: '' },
+      { label: 'Close Window', shortcut: '⌘W' },
+      { separator: true, label: '' },
+      { label: 'Print', shortcut: '⌘P' },
+    ],
+  }
+
+  const Edit: MenuSection = {
+    name: 'Edit',
+    items: [
+      { label: 'Undo', shortcut: '⌘Z' },
+      { label: 'Redo', shortcut: '⇧⌘Z' },
+      { separator: true, label: '' },
+      { label: 'Cut', shortcut: '⌘X' },
+      { label: 'Copy', shortcut: '⌘C' },
+      { label: 'Paste', shortcut: '⌘V' },
+      { label: 'Select All', shortcut: '⌘A' },
+    ],
+  }
+
+  const View: MenuSection = {
+    name: 'View',
+    items: [
+      { label: 'as Icons' },
+      { label: 'as List' },
+      { label: 'as Columns' },
+      { separator: true, label: '' },
+      { label: 'Show Sidebar', shortcut: '⌘S' },
+      { label: 'Show Path Bar' },
+      { label: 'Show Status Bar' },
+    ],
+  }
+
+  const Window: MenuSection = {
+    name: 'Window',
+    items: [
+      { label: 'Minimize', shortcut: '⌘M' },
+      { label: 'Zoom' },
+      { separator: true, label: '' },
+      { label: 'Bring All to Front' },
+    ],
+  }
+
+  const Help: MenuSection = {
+    name: 'Help',
+    items: [
+      { label: 'Search' },
+      { label: 'macOS Help' },
+    ],
+  }
+
+  switch (appId) {
+    case 'finder':
+      return [
+        File,
+        Edit,
+        View,
+        {
+          name: 'Go',
+          items: [
+            { label: 'Back', shortcut: '⌘[' },
+            { label: 'Forward', shortcut: '⌘]' },
+            { label: 'Enclosing Folder', shortcut: '⌘↑' },
+            { separator: true, label: '' },
+            { label: 'Computer', shortcut: '⇧⌘C' },
+            { label: 'Home', shortcut: '⇧⌘H' },
+            { label: 'Desktop', shortcut: '⇧⌘D' },
+            { label: 'Downloads', shortcut: '⌥⌘L' },
+            { label: 'Applications', shortcut: '⇧⌘A' },
+          ],
+        },
+        Window,
+        Help,
+      ]
+
+    case 'safari':
+      return [
+        File,
+        Edit,
+        {
+          name: 'View',
+          items: [
+            { label: 'Show Toolbar' },
+            { label: 'Show Bookmarks Bar' },
+            { separator: true, label: '' },
+            { label: 'Enter Full Screen', shortcut: '⌃⌘F' },
+          ],
+        },
+        {
+          name: 'History',
+          items: [
+            { label: 'Back', shortcut: '⌘[' },
+            { label: 'Forward', shortcut: '⌘]' },
+            { separator: true, label: '' },
+            { label: 'Show All History', shortcut: '⌥⌘0' },
+            { separator: true, label: '' },
+            { label: 'Recently Closed Tabs' },
+          ],
+        },
+        {
+          name: 'Bookmarks',
+          items: [
+            { label: 'Show Bookmarks', shortcut: '⌥⌘B' },
+            { separator: true, label: '' },
+            { label: 'Add Bookmark', shortcut: '⌘D' },
+            { label: 'Add Bookmark Folder' },
+          ],
+        },
+        Window,
+        Help,
+      ]
+
+    case 'calculator':
+      return [
+        File,
+        Edit,
+        {
+          name: 'View',
+          items: [
+            { label: 'Basic' },
+            { label: 'Scientific' },
+            { label: 'Programmer' },
+            { separator: true, label: '' },
+            { label: 'RPN Mode' },
+          ],
+        },
+        {
+          name: 'Convert',
+          items: [
+            { label: 'Currency' },
+            { label: 'Length' },
+            { label: 'Weight' },
+            { label: 'Temperature' },
+          ],
+        },
+        {
+          name: 'Speech',
+          items: [
+            { label: 'Speak Button Pressed' },
+            { label: 'Speak Result' },
+          ],
+        },
+        Window,
+        Help,
+      ]
+
+    case 'notes':
+      return [
+        File,
+        Edit,
+        {
+          name: 'Format',
+          items: [
+            { label: 'Bold', shortcut: '⌘B' },
+            { label: 'Italic', shortcut: '⌘I' },
+            { label: 'Underline', shortcut: '⌘U' },
+            { separator: true, label: '' },
+            { label: 'Heading' },
+            { label: 'Body' },
+            { separator: true, label: '' },
+            { label: 'List' },
+            { label: 'Checklist', shortcut: '⇧⌘L' },
+            { label: 'Table' },
+          ],
+        },
+        {
+          name: 'View',
+          items: [
+            { label: 'Show Folders' },
+            { label: 'Show Attachment Browser' },
+            { separator: true, label: '' },
+            { label: 'Sort By' },
+          ],
+        },
+        Window,
+        Help,
+      ]
+
+    case 'terminal':
+      return [
+        {
+          name: 'Terminal',
+          items: [
+            { label: 'Preferences...', shortcut: '⌘,' },
+            { separator: true, label: '' },
+            { label: 'Secure Keyboard Entry' },
+          ],
+        },
+        {
+          name: 'Shell',
+          items: [
+            { label: 'New Window', shortcut: '⌘N' },
+            { label: 'New Tab', shortcut: '⌘T' },
+            { separator: true, label: '' },
+            { label: 'Close Tab', shortcut: '⌘W' },
+            { label: 'Close Window', shortcut: '⇧⌘W' },
+          ],
+        },
+        Edit,
+        {
+          name: 'View',
+          items: [
+            { label: 'Bigger', shortcut: '⌘+' },
+            { label: 'Smaller', shortcut: '⌘-' },
+            { separator: true, label: '' },
+            { label: 'Default Size' },
+          ],
+        },
+        Window,
+        Help,
+      ]
+
+    case 'calendar':
+      return [
+        File,
+        Edit,
+        {
+          name: 'View',
+          items: [
+            { label: 'Day', shortcut: '⌘1' },
+            { label: 'Week', shortcut: '⌘2' },
+            { label: 'Month', shortcut: '⌘3' },
+            { label: 'Year', shortcut: '⌘4' },
+            { separator: true, label: '' },
+            { label: 'Show Holidays Calendar' },
+          ],
+        },
+        {
+          name: 'Go',
+          items: [
+            { label: 'Today', shortcut: '⌘T' },
+            { separator: true, label: '' },
+            { label: 'Back', shortcut: '⌘[' },
+            { label: 'Forward', shortcut: '⌘]' },
+          ],
+        },
+        Window,
+        Help,
+      ]
+
+    case 'music':
+      return [
+        File,
+        Edit,
+        {
+          name: 'View',
+          items: [
+            { label: 'Show Sidebar', shortcut: '⌘S' },
+            { label: 'Show Song List' },
+            { separator: true, label: '' },
+            { label: 'Column Browser' },
+          ],
+        },
+        {
+          name: 'Controls',
+          items: [
+            { label: 'Play/Pause', shortcut: 'Space' },
+            { label: 'Next Song', shortcut: '⌘→' },
+            { label: 'Previous Song', shortcut: '⌘←' },
+            { separator: true, label: '' },
+            { label: 'Shuffle' },
+            { label: 'Repeat' },
+            { separator: true, label: '' },
+            { label: 'Volume Up', shortcut: '⌘↑' },
+            { label: 'Volume Down', shortcut: '⌘↓' },
+          ],
+        },
+        {
+          name: 'Account',
+          items: [
+            { label: 'Sign In...' },
+            { separator: true, label: '' },
+            { label: 'Apple Music Settings...' },
+          ],
+        },
+        Window,
+        Help,
+      ]
+
+    case 'settings':
+      return [
+        File,
+        Edit,
+        {
+          name: 'View',
+          items: [
+            { label: 'Show All' },
+            { separator: true, label: '' },
+            { label: 'General' },
+            { label: 'Appearance' },
+            { label: 'Desktop & Screen Saver' },
+            { label: 'Dock & Menu Bar' },
+            { label: 'Display' },
+            { label: 'Battery' },
+            { label: 'Sound' },
+          ],
+        },
+        Window,
+        Help,
+      ]
+
+    case 'maps':
+      return [
+        File,
+        Edit,
+        {
+          name: 'View',
+          items: [
+            { label: 'Show Toolbar' },
+            { label: 'Show Sidebar' },
+            { separator: true, label: '' },
+            { label: 'Satellite' },
+            { label: 'Explore' },
+            { label: 'Driving' },
+            { label: 'Transit' },
+          ],
+        },
+        {
+          name: 'Go',
+          items: [
+            { label: 'My Location', shortcut: '⌘L' },
+            { separator: true, label: '' },
+            { label: 'Back', shortcut: '⌘[' },
+            { label: 'Forward', shortcut: '⌘]' },
+          ],
+        },
+        Window,
+        Help,
+      ]
+
+    case 'reminders':
+      return [
+        File,
+        Edit,
+        {
+          name: 'View',
+          items: [
+            { label: 'Show Sidebar', shortcut: '⌘S' },
+            { separator: true, label: '' },
+            { label: 'Sort By' },
+            { separator: true, label: '' },
+            { label: 'Show Completed' },
+          ],
+        },
+        Window,
+        Help,
+      ]
+
+    case 'photos':
+      return [
+        File,
+        Edit,
+        {
+          name: 'View',
+          items: [
+            { label: 'Photos' },
+            { label: 'Memories' },
+            { label: 'Favorites' },
+            { separator: true, label: '' },
+            { label: 'Show Sidebar' },
+          ],
+        },
+        Window,
+        Help,
+      ]
+
+    case 'weather':
+      return [
+        File,
+        Edit,
+        View,
+        Window,
+        Help,
+      ]
+
+    case 'clock':
+      return [
+        File,
+        Edit,
+        View,
+        Window,
+        Help,
+      ]
+
+    case 'textedit':
+      return [
+        File,
+        Edit,
+        {
+          name: 'Format',
+          items: [
+            { label: 'Bold', shortcut: '⌘B' },
+            { label: 'Italic', shortcut: '⌘I' },
+            { label: 'Underline', shortcut: '⌘U' },
+            { separator: true, label: '' },
+            { label: 'Bigger', shortcut: '⌘+' },
+            { label: 'Smaller', shortcut: '⌘-' },
+            { separator: true, label: '' },
+            { label: 'List' },
+            { label: 'Table' },
+          ],
+        },
+        View,
+        Window,
+        Help,
+      ]
+
+    default:
+      return [File, Edit, View, Window, Help]
+  }
 }
 
 const APPLE_MENU_ITEMS: MenuItem[] = [
   { label: 'About This Mac', shortcut: '' },
   { separator: true, label: '' },
   { label: 'System Preferences...', shortcut: '', action: 'settings' },
+  { label: 'App Store...', shortcut: '' },
+  { separator: true, label: '' },
+  { label: 'Recent Items', shortcut: '', disabled: true },
+  { separator: true, label: '' },
+  { label: 'Force Quit...', shortcut: '⌥⌘⎋' },
   { separator: true, label: '' },
   { label: 'Sleep', shortcut: '' },
   { label: 'Restart...', shortcut: '' },
   { label: 'Shut Down...', shortcut: '' },
+  { separator: true, label: '' },
+  { label: 'Log Out User...', shortcut: '⇧⌘Q' },
+  { label: 'Lock Screen', shortcut: '⌃⌘Q' },
 ]
 
-function formatDateTime(date: Date): string {
-  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-
-  const day = days[date.getDay()]
-  const month = months[date.getMonth()]
-  const dayNum = date.getDate()
-
+function formatTimeOnly(date: Date): string {
   let hours = date.getHours()
   const ampm = hours >= 12 ? 'PM' : 'AM'
   hours = hours % 12
   if (hours === 0) hours = 12
-
   const minutes = date.getMinutes().toString().padStart(2, '0')
+  return `${hours}:${minutes} ${ampm}`
+}
 
-  return `${day} ${month} ${dayNum}  ${hours}:${minutes} ${ampm}`
+function formatDateShort(date: Date): string {
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+  const day = days[date.getDay()]
+  const month = months[date.getMonth()]
+  const dayNum = date.getDate()
+  return `${day} ${month} ${dayNum}`
 }
 
 function BatteryIconWithLevel() {
@@ -123,7 +517,7 @@ function MenuDropdown({ items, onAction }: { items: MenuItem[]; onAction: (item:
         return (
           <button
             key={item.label}
-            className={`w-full text-left px-3 py-[3px] text-[13px] text-white/90 hover:bg-[#0060df] hover:text-white rounded-[4px] mx-1 flex items-center justify-between transition-colors ${
+            className={`w-full text-left px-3 py-[3px] text-[13px] text-white/90 hover:bg-[#0060df] hover:text-white rounded-[4px] mx-1 flex items-center justify-between transition-colors duration-75 ${
               item.disabled ? 'opacity-40 pointer-events-none' : ''
             }`}
             style={{ width: 'calc(100% - 8px)' }}
@@ -153,11 +547,15 @@ export default function MenuBar() {
   const [openMenu, setOpenMenu] = useState<string | null>(null)
   const menuBarRef = useRef<HTMLDivElement>(null)
 
-  // Determine active app name
+  // Determine active app name and ID
   const activeWindow = windows.find(w => w.id === activeWindowId)
   const activeAppName = activeWindow
     ? APP_CONFIGS[activeWindow.appId]?.name ?? 'Finder'
     : 'Finder'
+  const activeAppId = activeWindow?.appId ?? 'finder'
+
+  // Get app-specific menus
+  const currentMenus = useMemo(() => getMenuItems(activeAppId), [activeAppId])
 
   // Clock tick
   useEffect(() => {
@@ -251,32 +649,32 @@ export default function MenuBar() {
         </div>
 
         {/* Active app name */}
-        <span className="font-semibold text-[13px] px-2 h-[28px] flex items-center">
+        <span className="font-bold text-[13px] px-2 h-[28px] flex items-center">
           {activeAppName}
         </span>
 
-        {/* Menu items */}
-        {Object.keys(MENU_ITEMS).map(item => (
-          <div key={item} className="relative">
+        {/* App-specific menu items */}
+        {currentMenus.map(section => (
+          <div key={section.name} className="relative">
             <button
               className={`px-2 h-[28px] flex items-center rounded transition-colors text-[13px] font-medium ${
-                openMenu === item ? 'bg-white/15' : 'hover:bg-white/10'
+                openMenu === section.name ? 'bg-white/15' : 'hover:bg-white/10'
               }`}
-              onClick={() => handleMenuToggle(item)}
+              onClick={() => handleMenuToggle(section.name)}
               onMouseEnter={() => {
                 // If any menu is open, switch to hovered menu
                 if (openMenu !== null || appleMenuOpen) {
                   setAppleMenuOpen(false)
-                  setOpenMenu(item)
+                  setOpenMenu(section.name)
                 }
               }}
             >
-              {item}
+              {section.name}
             </button>
 
             <AnimatePresence>
-              {openMenu === item && (
-                <MenuDropdown items={MENU_ITEMS[item]} onAction={handleMenuItemClick} />
+              {openMenu === section.name && (
+                <MenuDropdown items={section.items} onAction={handleMenuItemClick} />
               )}
             </AnimatePresence>
           </div>
@@ -291,24 +689,31 @@ export default function MenuBar() {
         <Bluetooth className="h-3.5 w-3.5 opacity-80 ml-1.5" />
         <div className="w-px h-3 bg-white/20 mx-1.5" />
         <Search className="h-3.5 w-3.5 opacity-80 cursor-pointer hover:opacity-100 transition-opacity ml-0.5" onClick={toggleSpotlight} />
+        {/* Control Center - pill-shaped icon matching macOS */}
         <button
-          className="w-5 h-5 rounded-sm bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors cursor-pointer ml-1"
+          className="flex items-center gap-[3px] rounded-full px-1.5 py-[3px] hover:bg-white/15 transition-colors cursor-pointer ml-1"
           onClick={controlCenter.toggle}
           aria-label="Control Center"
         >
-          <div className="flex gap-[1.5px] items-end">
-            <div className="w-[3px] h-[4px] bg-white/80 rounded-[0.5px]" />
-            <div className="w-[3px] h-[6px] bg-white/80 rounded-[0.5px]" />
-            <div className="w-[3px] h-[8px] bg-white/80 rounded-[0.5px]" />
-            <div className="w-[3px] h-[10px] bg-white/80 rounded-[0.5px]" />
+          <div className="flex gap-[2px] items-end">
+            <div className="w-[2.5px] h-[3px] bg-white/70 rounded-[0.5px]" />
+            <div className="w-[2.5px] h-[5px] bg-white/70 rounded-[0.5px]" />
+            <div className="w-[2.5px] h-[7px] bg-white/70 rounded-[0.5px]" />
+            <div className="w-[2.5px] h-[9px] bg-white/70 rounded-[0.5px]" />
+          </div>
+          <div className="flex gap-[2px] items-start">
+            <div className="w-[2.5px] h-[3px] bg-white/70 rounded-[0.5px]" />
+            <div className="w-[2.5px] h-[5px] bg-white/70 rounded-[0.5px]" />
           </div>
         </button>
+        {/* Date and Time */}
         <button
-          className="text-[13px] tracking-tight whitespace-nowrap hover:bg-white/10 px-1.5 py-0.5 rounded transition-colors cursor-pointer ml-0.5"
+          className="text-[13px] tracking-tight whitespace-nowrap hover:bg-white/10 px-1.5 py-0.5 rounded transition-colors cursor-pointer ml-0.5 flex items-center gap-1.5"
           onClick={notificationCenter.toggle}
           aria-label="Notification Center"
         >
-          {formatDateTime(currentTime)}
+          <span className="text-white/60">{formatDateShort(currentTime)}</span>
+          <span>{formatTimeOnly(currentTime)}</span>
         </button>
       </div>
     </div>

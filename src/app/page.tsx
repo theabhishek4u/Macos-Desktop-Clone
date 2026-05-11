@@ -31,6 +31,8 @@ const Photos = dynamic(() => import('@/components/macos/apps/Photos'), { ssr: fa
 const Music = dynamic(() => import('@/components/macos/apps/Music'), { ssr: false })
 const TextEdit = dynamic(() => import('@/components/macos/apps/TextEdit'), { ssr: false })
 const Weather = dynamic(() => import('@/components/macos/apps/Weather'), { ssr: false })
+const Maps = dynamic(() => import('@/components/macos/apps/Maps'), { ssr: false })
+const Reminders = dynamic(() => import('@/components/macos/apps/Reminders'), { ssr: false })
 
 const APP_COMPONENTS: Record<string, React.ComponentType> = {
   finder: Finder,
@@ -45,6 +47,8 @@ const APP_COMPONENTS: Record<string, React.ComponentType> = {
   music: Music,
   textedit: TextEdit,
   weather: Weather,
+  maps: Maps,
+  reminders: Reminders,
 }
 
 export default function MacOSDesktop() {

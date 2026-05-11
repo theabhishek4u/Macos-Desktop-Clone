@@ -240,6 +240,23 @@ export default function Window({ windowId, children }: WindowProps) {
   const minimizeTranslateX = dockCenterX - (x + width / 2)
   const minimizeTranslateY = dockCenterY - (y + height / 2)
 
+  // Multi-layered shadow system
+  const getBoxShadow = () => {
+    if (isActive) {
+      if (isDragging) {
+        return isLightWindow
+          ? '0 0 0 0.5px rgba(0,0,0,0.08), 0 20px 40px rgba(0,0,0,0.15), 0 40px 80px rgba(0,0,0,0.12), 0 0 0 1px rgba(255,255,255,0.2)'
+          : '0 0 0 0.5px rgba(255,255,255,0.12), 0 20px 40px rgba(0,0,0,0.3), 0 40px 80px rgba(0,0,0,0.2), 0 0 0 1px rgba(255,255,255,0.1)'
+      }
+      return isLightWindow
+        ? '0 0 0 0.5px rgba(0,0,0,0.06), 0 2px 4px rgba(0,0,0,0.04), 0 8px 16px rgba(0,0,0,0.08), 0 24px 48px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.15)'
+        : '0 0 0 0.5px rgba(255,255,255,0.1), 0 2px 4px rgba(0,0,0,0.1), 0 8px 16px rgba(0,0,0,0.2), 0 24px 48px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.08)'
+    }
+    return isLightWindow
+      ? '0 0 0 0.5px rgba(0,0,0,0.06), 0 2px 4px rgba(0,0,0,0.03), 0 4px 8px rgba(0,0,0,0.04)'
+      : '0 0 0 0.5px rgba(255,255,255,0.06), 0 2px 4px rgba(0,0,0,0.08), 0 4px 8px rgba(0,0,0,0.06)'
+  }
+
   return (
     <AnimatePresence>
       {shouldRender && (
@@ -290,18 +307,12 @@ export default function Window({ windowId, children }: WindowProps) {
         >
           {/* Window frame */}
           <div
-            className={`flex flex-col w-full h-full rounded-xl overflow-hidden transition-all duration-300 relative ${
+            className={`flex flex-col w-full h-full rounded-xl overflow-hidden transition-shadow duration-300 relative ${
               isMaximized ? 'rounded-none' : ''
             }`}
             style={{
               background: isLightWindow ? '#f0f0f0' : '#1e1e1e',
-              boxShadow: isActive
-                ? isDragging
-                  ? '0 30px 60px -15px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05)'
-                  : isLightWindow
-                    ? '0 25px 50px -12px rgba(0,0,0,0.25), 0 10px 15px -3px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.1)'
-                    : '0 25px 50px -12px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.1)'
-                : '0 10px 25px -5px rgba(0,0,0,0.15)',
+              boxShadow: getBoxShadow(),
             }}
           >
             {/* Top highlight line - inner border highlight for light windows */}
@@ -335,58 +346,76 @@ export default function Window({ windowId, children }: WindowProps) {
               {/* Traffic Light Buttons */}
               <div
                 className="flex items-center gap-[8px] mr-3"
+                data-traffic-light
                 onMouseEnter={() => setTrafficHover(true)}
                 onMouseLeave={() => setTrafficHover(false)}
+                onMouseDown={(e) => e.stopPropagation()}
               >
                 {/* Close */}
                 <button
                   data-traffic-light
-                  className={`w-[13px] h-[13px] rounded-full flex items-center justify-center transition-colors duration-150 ${
+                  className={`w-[13px] h-[13px] rounded-full flex items-center justify-center transition-all duration-150 ${
                     isActive ? 'bg-[#ff5f57]' : isLightWindow ? 'bg-[#d4d4d4]' : 'bg-[#4a4a4a]'
-                  } ${trafficHover ? 'hover:brightness-90' : ''}`}
-                  style={isLightWindow && !isActive ? { boxShadow: 'inset 0 0 0 0.5px rgba(0,0,0,0.15)' } : undefined}
+                  } ${trafficHover && isActive ? 'hover:brightness-90' : ''}`}
+                  style={!isActive ? { boxShadow: isLightWindow ? 'inset 0 0 0 0.5px rgba(0,0,0,0.15), inset 0 1px 2px rgba(0,0,0,0.08)' : 'inset 0 0 0 0.5px rgba(255,255,255,0.08), inset 0 1px 2px rgba(0,0,0,0.2)' } : undefined}
                   onClick={(e) => {
                     e.stopPropagation()
                     handleClose()
                   }}
                 >
-                  {trafficHover && isActive && (
-                    <span className="text-[10px] leading-none text-black/80 font-bold">✕</span>
-                  )}
+                  <svg
+                    className="w-[8px] h-[8px] text-black/80 transition-opacity duration-150"
+                    style={{ opacity: trafficHover && isActive ? 1 : 0 }}
+                    viewBox="0 0 8 8"
+                    fill="none"
+                  >
+                    <path d="M1.5 1.5L6.5 6.5M6.5 1.5L1.5 6.5" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" />
+                  </svg>
                 </button>
 
                 {/* Minimize */}
                 <button
                   data-traffic-light
-                  className={`w-[13px] h-[13px] rounded-full flex items-center justify-center transition-colors duration-150 ${
+                  className={`w-[13px] h-[13px] rounded-full flex items-center justify-center transition-all duration-150 ${
                     isActive ? 'bg-[#febc2e]' : isLightWindow ? 'bg-[#d4d4d4]' : 'bg-[#4a4a4a]'
-                  } ${trafficHover ? 'hover:brightness-90' : ''}`}
-                  style={isLightWindow && !isActive ? { boxShadow: 'inset 0 0 0 0.5px rgba(0,0,0,0.15)' } : undefined}
+                  } ${trafficHover && isActive ? 'hover:brightness-90' : ''}`}
+                  style={!isActive ? { boxShadow: isLightWindow ? 'inset 0 0 0 0.5px rgba(0,0,0,0.15), inset 0 1px 2px rgba(0,0,0,0.08)' : 'inset 0 0 0 0.5px rgba(255,255,255,0.08), inset 0 1px 2px rgba(0,0,0,0.2)' } : undefined}
                   onClick={(e) => {
                     e.stopPropagation()
                     minimizeWindow(windowId)
                   }}
                 >
-                  {trafficHover && isActive && (
-                    <span className="text-[12px] leading-none text-black/80 font-bold -mt-[1px]">−</span>
-                  )}
+                  <svg
+                    className="w-[8px] h-[8px] text-black/80 transition-opacity duration-150"
+                    style={{ opacity: trafficHover && isActive ? 1 : 0 }}
+                    viewBox="0 0 8 8"
+                    fill="none"
+                  >
+                    <path d="M1 4H7" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" />
+                  </svg>
                 </button>
 
-                {/* Maximize */}
+                {/* Maximize (fullscreen icon) */}
                 <button
                   data-traffic-light
-                  className={`w-[13px] h-[13px] rounded-full flex items-center justify-center transition-colors duration-150 ${
+                  className={`w-[13px] h-[13px] rounded-full flex items-center justify-center transition-all duration-150 ${
                     isActive ? 'bg-[#28c840]' : isLightWindow ? 'bg-[#d4d4d4]' : 'bg-[#4a4a4a]'
-                  } ${trafficHover ? 'hover:brightness-90' : ''}`}
-                  style={isLightWindow && !isActive ? { boxShadow: 'inset 0 0 0 0.5px rgba(0,0,0,0.15)' } : undefined}
+                  } ${trafficHover && isActive ? 'hover:brightness-90' : ''}`}
+                  style={!isActive ? { boxShadow: isLightWindow ? 'inset 0 0 0 0.5px rgba(0,0,0,0.15), inset 0 1px 2px rgba(0,0,0,0.08)' : 'inset 0 0 0 0.5px rgba(255,255,255,0.08), inset 0 1px 2px rgba(0,0,0,0.2)' } : undefined}
                   onClick={(e) => {
                     e.stopPropagation()
                     maximizeWindow(windowId)
                   }}
                 >
-                  {trafficHover && isActive && (
-                    <span className="text-[11px] leading-none text-black/80 font-bold">+</span>
-                  )}
+                  <svg
+                    className="w-[8px] h-[8px] text-black/80 transition-opacity duration-150"
+                    style={{ opacity: trafficHover && isActive ? 1 : 0 }}
+                    viewBox="0 0 8 8"
+                    fill="none"
+                  >
+                    <path d="M1 5.5L1 7L2.5 7M7 2.5L7 1L5.5 1" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M7 7L4.5 4.5M1 1L3.5 3.5" stroke="currentColor" strokeWidth="0.7" strokeLinecap="round" />
+                  </svg>
                 </button>
               </div>
 

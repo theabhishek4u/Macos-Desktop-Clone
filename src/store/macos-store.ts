@@ -144,6 +144,24 @@ export const APP_CONFIGS: Record<string, AppConfig> = {
     minWidth: 0,
     minHeight: 0,
   },
+  maps: {
+    id: 'maps',
+    name: 'Maps',
+    icon: 'maps',
+    defaultWidth: 800,
+    defaultHeight: 550,
+    minWidth: 600,
+    minHeight: 400,
+  },
+  reminders: {
+    id: 'reminders',
+    name: 'Reminders',
+    icon: 'reminders',
+    defaultWidth: 650,
+    defaultHeight: 500,
+    minWidth: 450,
+    minHeight: 350,
+  },
 }
 
 interface MacOSState {
@@ -183,7 +201,7 @@ const useMacOSStore = create<MacOSState>((set, get) => ({
   dockApps: [
     'launchpad', 'finder', 'safari', 'notes', 'terminal', 'calculator',
     'calendar', 'photos', 'music', 'settings', 'clock',
-    'textedit', 'weather',
+    'textedit', 'weather', 'maps', 'reminders',
   ],
   openApps: [],
   contextMenu: null,

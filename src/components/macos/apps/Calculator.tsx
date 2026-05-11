@@ -557,9 +557,9 @@ export default function Calculator() {
     const roundSize = isScientific ? 'h-[44px] w-[44px]' : 'h-[56px] w-[56px]';
 
     const base =
-      'relative flex items-center justify-center rounded-full font-normal select-none cursor-pointer transition-all duration-75 active:scale-[0.92] focus:outline-none focus:ring-0 focus:ring-offset-0';
+      'relative flex items-center justify-center rounded-full font-normal select-none cursor-pointer transition-all duration-100 active:scale-[0.94] active:brightness-75 focus:outline-none focus:ring-0 focus:ring-offset-0';
     const size = btn.wide ? wideSize : roundSize;
-    const pressed = isActive ? 'scale-[0.92]' : '';
+    const pressed = isActive ? 'scale-[0.94] brightness-75' : '';
 
     if (btn.type === 'memory') {
       const memSize = isScientific ? 'h-[28px] text-[9px]' : 'h-[28px] text-[10px]';
@@ -573,20 +573,20 @@ export default function Calculator() {
 
     if (btn.type === 'function') {
       const funcFontSize = isScientific ? 'text-[16px]' : 'text-[20px]';
-      return `${base} ${size} bg-[#a5a5a5] hover:bg-[#c5c5c5] text-black ${funcFontSize} ${pressed}`;
+      return `${base} ${size} bg-[#a5a5a5] hover:bg-[#d4d4d4] active:bg-[#8e8e8e] text-black ${funcFontSize} ${pressed}`;
     }
     if (btn.type === 'operator') {
       const opFontSize = isScientific ? 'text-[18px]' : 'text-[24px]';
       const opKey = btn.key;
       const isActiveOp = activeOperator && opKey === activeOperator;
       if (isActiveOp) {
-        return `${base} ${size} bg-white text-orange-500 ${opFontSize} font-medium ${pressed}`;
+        return `${base} ${size} bg-white text-[#FF9500] hover:bg-white/90 ${opFontSize} font-medium ${pressed}`;
       }
-      return `${base} ${size} bg-orange-500 hover:bg-orange-400 text-white ${opFontSize} font-medium ${pressed}`;
+      return `${base} ${size} bg-[#FF9500] hover:bg-[#FFa733] active:bg-[#e68600] text-white ${opFontSize} font-medium ${pressed}`;
     }
     // Number buttons
     const numFontSize = isScientific ? 'text-[18px]' : 'text-[22px]';
-    return `${base} ${size} bg-[#505050] hover:bg-[#606060] text-white ${numFontSize} ${pressed}`;
+    return `${base} ${size} bg-[#505050] hover:bg-[#6a6a6a] active:bg-[#3a3a3a] text-white ${numFontSize} ${pressed}`;
   };
 
   const gap = isScientific ? 'gap-[6px]' : 'gap-[10px]';
@@ -608,16 +608,16 @@ export default function Calculator() {
       </div>
 
       {/* Display Area */}
-      <div className="flex flex-col items-end justify-end px-4 pt-1 pb-1 min-h-[80px]">
+      <div className="flex flex-col items-end justify-end px-4 pt-1 pb-2 min-h-[80px]">
         {/* Expression line */}
-        <div className="text-[#8e8e8e] text-xs h-5 text-right w-full truncate mb-1">
+        <div className="text-[#8e8e8e] text-[12px] h-5 text-right w-full truncate mb-0.5">
           {state.expression}
           {state.openParens > 0 && <span className="text-orange-400/60"> {'('.repeat(state.openParens)}</span>}
         </div>
         {/* Main display */}
         <div className="text-right w-full overflow-hidden">
           <span
-            className={`text-white font-light tracking-tight ${getDisplayFontSize(state.display, isScientific)} leading-tight`}
+            className={`text-white font-extralight tracking-tight ${getDisplayFontSize(state.display, isScientific)} leading-tight`}
           >
             {state.display === 'Error' ? 'Error' : formatDisplay(state.display)}
           </span>
