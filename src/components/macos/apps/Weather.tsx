@@ -2,7 +2,6 @@
 
 import { useState, useMemo } from 'react';
 import {
-  Sun,
   Cloud,
   CloudRain,
   Wind,
@@ -10,13 +9,13 @@ import {
   Eye,
   Thermometer,
   Gauge,
-  CloudSun,
   CloudSnow,
   CloudLightning,
   ChevronDown,
   MapPin,
   Sunrise as SunriseIcon,
   Sunset as SunsetIcon,
+  Volume2,
 } from 'lucide-react';
 
 interface HourlyForecast {
@@ -76,12 +75,245 @@ interface CityWeather {
   sun: SunData;
 }
 
+// ─── CSS Animation Keyframes (injected via style tag) ──────────────────────
+
+function WeatherAnimations() {
+  return (
+    <style>{`
+      @keyframes weather-sun-rotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+      @keyframes weather-sun-pulse {
+        0%, 100% { opacity: 0.6; transform: scale(1); }
+        50% { opacity: 1; transform: scale(1.08); }
+      }
+      @keyframes weather-raindrop-fall {
+        0% { transform: translateY(-8px); opacity: 0; }
+        20% { opacity: 1; }
+        100% { transform: translateY(18px); opacity: 0; }
+      }
+      @keyframes weather-cloud-drift {
+        0%, 100% { transform: translateX(0); }
+        50% { transform: translateX(6px); }
+      }
+      @keyframes weather-snowflake-fall {
+        0% { transform: translateY(-6px) rotate(0deg); opacity: 0; }
+        20% { opacity: 1; }
+        100% { transform: translateY(16px) rotate(180deg); opacity: 0; }
+      }
+      @keyframes weather-lightning-flash {
+        0%, 90%, 100% { opacity: 0.2; }
+        92%, 96% { opacity: 1; }
+        94% { opacity: 0.3; }
+      }
+      @keyframes weather-gradient-shift {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+      }
+      @keyframes weather-glow-pulse {
+        0%, 100% { filter: drop-shadow(0 0 8px rgba(255,255,255,0.3)); }
+        50% { filter: drop-shadow(0 0 16px rgba(255,255,255,0.5)); }
+      }
+      .weather-gradient-bg {
+        background-size: 200% 200%;
+        animation: weather-gradient-shift 20s ease infinite;
+      }
+      .weather-temp-glow {
+        text-shadow: 0 0 20px rgba(255,255,255,0.3), 0 0 40px rgba(255,255,255,0.15), 0 0 60px rgba(255,255,255,0.08);
+        animation: weather-glow-pulse 4s ease-in-out infinite;
+      }
+    `}</style>
+  );
+}
+
+// ─── Animated Weather Icons ─────────────────────────────────────────────────
+
+function AnimatedSunIcon({ size = 48 }: { size?: number }) {
+  return (
+    <div className="relative" style={{ width: size, height: size }}>
+      <svg viewBox="0 0 80 80" width={size} height={size}>
+        {/* Glow */}
+        <circle cx="40" cy="40" r="28" fill="rgba(251,191,36,0.15)" style={{ animation: 'weather-sun-pulse 3s ease-in-out infinite' }} />
+        {/* Rays */}
+        <g style={{ animation: 'weather-sun-rotate 20s linear infinite', transformOrigin: '40px 40px' }}>
+          {Array.from({ length: 8 }, (_, i) => {
+            const angle = (i * 45) * (Math.PI / 180);
+            const x1 = 40 + 22 * Math.cos(angle);
+            const y1 = 40 + 22 * Math.sin(angle);
+            const x2 = 40 + 32 * Math.cos(angle);
+            const y2 = 40 + 32 * Math.sin(angle);
+            return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#fbbf24" strokeWidth="2.5" strokeLinecap="round" opacity="0.7" />;
+          })}
+        </g>
+        {/* Sun body */}
+        <circle cx="40" cy="40" r="16" fill="#fbbf24" />
+        <circle cx="40" cy="40" r="12" fill="#f59e0b" />
+      </svg>
+    </div>
+  );
+}
+
+function AnimatedRainIcon({ size = 48 }: { size?: number }) {
+  return (
+    <div className="relative" style={{ width: size, height: size }}>
+      <svg viewBox="0 0 80 80" width={size} height={size}>
+        {/* Cloud */}
+        <ellipse cx="35" cy="30" rx="20" ry="12" fill="#94a3b8" opacity="0.9" />
+        <ellipse cx="48" cy="28" rx="16" ry="11" fill="#94a3b8" opacity="0.9" />
+        <ellipse cx="42" cy="34" rx="22" ry="10" fill="#94a3b8" opacity="0.85" />
+        {/* Raindrops */}
+        {[0, 1, 2, 3].map((i) => (
+          <line
+            key={i}
+            x1={22 + i * 12}
+            y1={42}
+            x2={20 + i * 12}
+            y2={54}
+            stroke="#60a5fa"
+            strokeWidth="2"
+            strokeLinecap="round"
+            opacity="0.8"
+            style={{ animation: `weather-raindrop-fall 1s ${i * 0.25}s ease-in infinite` }}
+          />
+        ))}
+      </svg>
+    </div>
+  );
+}
+
+function AnimatedCloudIcon({ size = 48 }: { size?: number }) {
+  return (
+    <div className="relative" style={{ width: size, height: size }}>
+      <svg viewBox="0 0 80 80" width={size} height={size}>
+        {/* Back cloud */}
+        <g style={{ animation: 'weather-cloud-drift 6s ease-in-out infinite' }}>
+          <ellipse cx="30" cy="38" rx="22" ry="14" fill="#cbd5e1" opacity="0.6" />
+          <ellipse cx="44" cy="36" rx="18" ry="12" fill="#cbd5e1" opacity="0.6" />
+        </g>
+        {/* Front cloud */}
+        <g style={{ animation: 'weather-cloud-drift 8s ease-in-out infinite reverse' }}>
+          <ellipse cx="38" cy="44" rx="26" ry="14" fill="#e2e8f0" opacity="0.9" />
+          <ellipse cx="52" cy="42" rx="20" ry="12" fill="#e2e8f0" opacity="0.85" />
+          <ellipse cx="32" cy="40" rx="16" ry="10" fill="#e2e8f0" opacity="0.9" />
+        </g>
+      </svg>
+    </div>
+  );
+}
+
+function AnimatedSnowIcon({ size = 48 }: { size?: number }) {
+  return (
+    <div className="relative" style={{ width: size, height: size }}>
+      <svg viewBox="0 0 80 80" width={size} height={size}>
+        {/* Cloud */}
+        <ellipse cx="35" cy="28" rx="20" ry="12" fill="#cbd5e1" opacity="0.85" />
+        <ellipse cx="48" cy="26" rx="16" ry="11" fill="#cbd5e1" opacity="0.85" />
+        <ellipse cx="42" cy="32" rx="22" ry="10" fill="#cbd5e1" opacity="0.8" />
+        {/* Snowflakes */}
+        {[0, 1, 2, 3, 4].map((i) => (
+          <circle
+            key={i}
+            cx={20 + i * 10}
+            cy={44}
+            r={2}
+            fill="white"
+            opacity="0.9"
+            style={{ animation: `weather-snowflake-fall 2s ${i * 0.35}s ease-in infinite` }}
+          />
+        ))}
+      </svg>
+    </div>
+  );
+}
+
+function AnimatedStormIcon({ size = 48 }: { size?: number }) {
+  return (
+    <div className="relative" style={{ width: size, height: size }}>
+      <svg viewBox="0 0 80 80" width={size} height={size}>
+        {/* Dark cloud */}
+        <ellipse cx="35" cy="28" rx="22" ry="13" fill="#64748b" opacity="0.95" />
+        <ellipse cx="50" cy="26" rx="17" ry="12" fill="#64748b" opacity="0.9" />
+        <ellipse cx="42" cy="33" rx="24" ry="11" fill="#475569" opacity="0.95" />
+        {/* Lightning bolt */}
+        <polygon
+          points="40,36 36,48 42,46 38,60 48,44 42,46 46,36"
+          fill="#fbbf24"
+          style={{ animation: 'weather-lightning-flash 4s ease-in-out infinite' }}
+        />
+        {/* Rain */}
+        {[0, 1, 2].map((i) => (
+          <line
+            key={i}
+            x1={20 + i * 14}
+            y1={44}
+            x2={18 + i * 14}
+            y2={56}
+            stroke="#60a5fa"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            opacity="0.5"
+            style={{ animation: `weather-raindrop-fall 1.2s ${i * 0.3}s ease-in infinite` }}
+          />
+        ))}
+      </svg>
+    </div>
+  );
+}
+
+function AnimatedPartlyCloudyIcon({ size = 48 }: { size?: number }) {
+  return (
+    <div className="relative" style={{ width: size, height: size }}>
+      <svg viewBox="0 0 80 80" width={size} height={size}>
+        {/* Sun behind */}
+        <g style={{ animation: 'weather-sun-rotate 25s linear infinite', transformOrigin: '28px 28px' }}>
+          {Array.from({ length: 6 }, (_, i) => {
+            const angle = (i * 60) * (Math.PI / 180);
+            const x1 = 28 + 18 * Math.cos(angle);
+            const y1 = 28 + 18 * Math.sin(angle);
+            const x2 = 28 + 26 * Math.cos(angle);
+            const y2 = 28 + 26 * Math.sin(angle);
+            return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" opacity="0.5" />;
+          })}
+        </g>
+        <circle cx="28" cy="28" r="12" fill="#fbbf24" opacity="0.8" />
+        {/* Cloud in front */}
+        <g style={{ animation: 'weather-cloud-drift 7s ease-in-out infinite' }}>
+          <ellipse cx="44" cy="44" rx="24" ry="14" fill="#e2e8f0" opacity="0.9" />
+          <ellipse cx="56" cy="42" rx="16" ry="11" fill="#e2e8f0" opacity="0.85" />
+          <ellipse cx="36" cy="40" rx="14" ry="10" fill="#e2e8f0" opacity="0.9" />
+        </g>
+      </svg>
+    </div>
+  );
+}
+
+function getAnimatedWeatherIcon(icon: string, size: number = 48) {
+  switch (icon) {
+    case 'sunny':
+      return <AnimatedSunIcon size={size} />;
+    case 'partly-cloudy':
+      return <AnimatedPartlyCloudyIcon size={size} />;
+    case 'cloudy':
+      return <AnimatedCloudIcon size={size} />;
+    case 'rainy':
+      return <AnimatedRainIcon size={size} />;
+    case 'stormy':
+      return <AnimatedStormIcon size={size} />;
+    case 'snowy':
+      return <AnimatedSnowIcon size={size} />;
+    default:
+      return <AnimatedSunIcon size={size} />;
+  }
+}
+
 function getWeatherIcon(icon: string, size: number = 16) {
   switch (icon) {
     case 'sunny':
-      return <Sun className="text-yellow-300" style={{ width: size, height: size }} />;
+      return <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>;
     case 'partly-cloudy':
-      return <CloudSun className="text-yellow-200" style={{ width: size, height: size }} />;
+      return <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="#fde68a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.9 6.6a4 4 0 1 1 2.5 4.4"/><path d="M17.6 18.2A4.5 4.5 0 1 0 16 9.5a5 5 0 1 0-7.6 4.2"/></svg>;
     case 'cloudy':
       return <Cloud className="text-gray-300" style={{ width: size, height: size }} />;
     case 'rainy':
@@ -91,19 +323,7 @@ function getWeatherIcon(icon: string, size: number = 16) {
     case 'snowy':
       return <CloudSnow className="text-blue-100" style={{ width: size, height: size }} />;
     default:
-      return <Sun className="text-yellow-300" style={{ width: size, height: size }} />;
-  }
-}
-
-function getEmoji(icon: string): string {
-  switch (icon) {
-    case 'sunny': return '☀️';
-    case 'partly-cloudy': return '⛅';
-    case 'cloudy': return '☁️';
-    case 'rainy': return '🌧️';
-    case 'stormy': return '⛈️';
-    case 'snowy': return '🌨️';
-    default: return '☀️';
+      return <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>;
   }
 }
 
@@ -123,6 +343,25 @@ function getGradient(condition: string): string {
       return 'linear-gradient(180deg, #e6dada 0%, #a8c0d6 100%)';
     default:
       return 'linear-gradient(180deg, #4facfe 0%, #00f2fe 100%)';
+  }
+}
+
+function getSoundLabel(condition: string): string {
+  switch (condition) {
+    case 'Rainy':
+      return 'Rain Sounds';
+    case 'Thunderstorm':
+      return 'Storm Sounds';
+    case 'Snowy':
+      return 'Wind Sounds';
+    case 'Cloudy':
+      return 'Ambient Sounds';
+    case 'Sunny':
+      return 'Bird Sounds';
+    case 'Partly Cloudy':
+      return 'Breeze Sounds';
+    default:
+      return 'Ambient Sounds';
   }
 }
 
@@ -357,10 +596,71 @@ const CITY_DATA: CityWeather[] = [
   },
 ];
 
+// ─── Hourly Temperature Graph SVG ──────────────────────────────────────────
+
+function HourlyTempGraph({ hourly }: { hourly: HourlyForecast[] }) {
+  const temps = hourly.map((h) => h.temp);
+  const minTemp = Math.min(...temps) - 2;
+  const maxTemp = Math.max(...temps) + 2;
+  const tempRange = maxTemp - minTemp || 1;
+
+  const width = hourly.length * 52;
+  const height = 40;
+  const padding = 6;
+
+  const points = hourly.map((h, i) => ({
+    x: padding + i * 52 + 26,
+    y: padding + (1 - (h.temp - minTemp) / tempRange) * (height - padding * 2),
+  }));
+
+  // Create smooth curve using catmull-rom to bezier
+  const smoothPath = points.length > 2
+    ? points.reduce((path, point, i) => {
+        if (i === 0) return `M ${point.x} ${point.y}`;
+        const prev = points[i - 1];
+        const cpx1 = prev.x + (point.x - prev.x) / 3;
+        const cpx2 = point.x - (point.x - prev.x) / 3;
+        return `${path} C ${cpx1} ${prev.y}, ${cpx2} ${point.y}, ${point.x} ${point.y}`;
+      }, '')
+    : points.length === 2
+    ? `M ${points[0].x} ${points[0].y} L ${points[1].x} ${points[1].y}`
+    : '';
+
+  // Gradient fill path (close the curve at the bottom)
+  const fillPath = smoothPath
+    ? `${smoothPath} L ${points[points.length - 1].x} ${height} L ${points[0].x} ${height} Z`
+    : '';
+
+  return (
+    <svg
+      viewBox={`0 0 ${width} ${height}`}
+      className="w-full mt-1"
+      style={{ height: '40px' }}
+      preserveAspectRatio="none"
+    >
+      <defs>
+        <linearGradient id="tempGraphGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="rgba(255,255,255,0.3)" />
+          <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+        </linearGradient>
+      </defs>
+      {/* Fill area */}
+      {fillPath && <path d={fillPath} fill="url(#tempGraphGradient)" />}
+      {/* Line */}
+      {smoothPath && (
+        <path d={smoothPath} fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="1.5" strokeLinecap="round" />
+      )}
+      {/* Dots */}
+      {points.map((point, i) => (
+        <circle key={i} cx={point.x} cy={point.y} r="2" fill="white" opacity="0.8" />
+      ))}
+    </svg>
+  );
+}
+
 // ─── Weather Map Placeholder ─────────────────────────────────────────────────
 
 function WeatherMapPlaceholder({ condition }: { condition: string }) {
-  // City markers for the map
   const cityMarkers = [
     { name: 'SF', x: 12, y: 38 },
     { name: 'NY', x: 78, y: 32 },
@@ -474,7 +774,9 @@ function UVIndexSection({ uv }: { uv: UVData }) {
   return (
     <div className="rounded-xl bg-white/20 backdrop-blur-md border border-white/15 p-3">
       <div className="flex items-center gap-1.5 mb-2">
-        <Sun className="h-3.5 w-3.5 text-yellow-300" />
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+        </svg>
         <span className="text-[11px] font-medium text-white/70 uppercase tracking-wide">UV Index</span>
       </div>
       <div className="flex items-baseline gap-2 mb-1">
@@ -593,7 +895,46 @@ function SunriseSunsetSection({ sun, conditionIcon }: { sun: SunData; conditionI
           </div>
         </div>
       </div>
+      {/* Unused variable suppression */}
+      {void conditionIcon}
     </div>
+  );
+}
+
+// ─── Ambient Sound Indicator ────────────────────────────────────────────────
+
+function AmbientSoundIndicator({ condition }: { condition: string }) {
+  const [playing, setPlaying] = useState(false);
+  const soundLabel = getSoundLabel(condition);
+
+  return (
+    <button
+      onClick={() => setPlaying(!playing)}
+      className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full transition-all duration-300 ${
+        playing
+          ? 'bg-white/25 border border-white/30'
+          : 'bg-white/10 border border-white/15 hover:bg-white/15'
+      }`}
+    >
+      <Volume2 className={`h-3 w-3 transition-colors ${playing ? 'text-white' : 'text-white/50'}`} />
+      <span className={`text-[10px] font-medium transition-colors ${playing ? 'text-white/90' : 'text-white/50'}`}>
+        {soundLabel}
+      </span>
+      {playing && (
+        <div className="flex items-center gap-[2px]">
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="w-[2px] rounded-full bg-white/70"
+              style={{
+                height: `${4 + Math.random() * 6}px`,
+                animation: `weather-sun-pulse ${0.5 + i * 0.15}s ease-in-out infinite`,
+              }}
+            />
+          ))}
+        </div>
+      )}
+    </button>
   );
 }
 
@@ -611,162 +952,187 @@ export default function Weather() {
   const gradientBg = getGradient(weather.condition);
 
   return (
-    <div
-      className="flex h-full w-full flex-col overflow-hidden text-white"
-      style={{ background: gradientBg }}
-    >
-      {/* City selector bar */}
-      <div className="relative flex items-center justify-center px-4 pt-3 pb-2 shrink-0">
-        <button
-          onClick={() => setShowCityMenu(!showCityMenu)}
-          className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-white/90 hover:bg-white/15 active:bg-white/25 transition-colors"
-        >
-          {weather.city}
-          <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showCityMenu ? 'rotate-180' : ''}`} />
-        </button>
-        {showCityMenu && (
-          <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 z-50 rounded-xl border border-white/20 bg-black/40 backdrop-blur-xl shadow-2xl overflow-hidden">
-            {CITY_DATA.map((city) => (
-              <button
-                key={city.city}
-                onClick={() => {
-                  setSelectedCity(city.city);
-                  setShowCityMenu(false);
-                }}
-                className={`w-full px-6 py-2 text-left text-[13px] transition-colors ${
-                  selectedCity === city.city
-                    ? 'bg-white/25 font-semibold'
-                    : 'hover:bg-white/15 text-white/80'
-                }`}
-              >
-                {city.city}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
+    <div className="flex h-full w-full flex-col overflow-hidden text-white relative">
+      <WeatherAnimations />
+      {/* Animated gradient background */}
+      <div
+        className="absolute inset-0 weather-gradient-bg"
+        style={{ background: gradientBg }}
+      />
+      {/* Slow-moving gradient overlay */}
+      <div
+        className="absolute inset-0 opacity-20 weather-gradient-bg pointer-events-none"
+        style={{
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 40%, rgba(0,0,0,0.1) 70%, rgba(255,255,255,0.05) 100%)',
+          backgroundSize: '200% 200%',
+        }}
+      />
 
-      {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar px-4 pb-4 min-h-0">
-        {/* Current weather */}
-        <div className="flex flex-col items-center pt-2 pb-4">
-          <span className="text-[72px] font-thin leading-none tracking-tighter">
-            {weather.currentTemp}°
-          </span>
-          <div className="flex items-center gap-2 mt-1">
-            <span className="text-2xl">{getEmoji(weather.conditionIcon)}</span>
-            <span className="text-base font-medium text-white/90">{weather.condition}</span>
-          </div>
-          <div className="flex items-center gap-3 mt-1 text-sm text-white/70">
-            <span>H:{weather.high}°</span>
-            <span>L:{weather.low}°</span>
-          </div>
-          <div className="mt-0.5 text-xs text-white/50">
-            Feels like {weather.feelsLike}°
-          </div>
+      {/* Content (on top of backgrounds) */}
+      <div className="relative z-10 flex flex-col h-full">
+        {/* City selector bar */}
+        <div className="relative flex items-center justify-center px-4 pt-3 pb-2 shrink-0">
+          <button
+            onClick={() => setShowCityMenu(!showCityMenu)}
+            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-white/90 hover:bg-white/15 active:bg-white/25 transition-colors"
+          >
+            {weather.city}
+            <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showCityMenu ? 'rotate-180' : ''}`} />
+          </button>
+          {showCityMenu && (
+            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 z-50 rounded-xl border border-white/20 bg-black/40 backdrop-blur-xl shadow-2xl overflow-hidden">
+              {CITY_DATA.map((city) => (
+                <button
+                  key={city.city}
+                  onClick={() => {
+                    setSelectedCity(city.city);
+                    setShowCityMenu(false);
+                  }}
+                  className={`w-full px-6 py-2 text-left text-[13px] transition-colors ${
+                    selectedCity === city.city
+                      ? 'bg-white/25 font-semibold'
+                      : 'hover:bg-white/15 text-white/80'
+                  }`}
+                >
+                  {city.city}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* Hourly forecast */}
-        <div className="rounded-xl bg-white/20 backdrop-blur-md border border-white/15 p-3 mb-3">
-          <div className="flex items-center gap-1.5 mb-2">
-            <Sun className="h-3.5 w-3.5 text-yellow-300" />
-            <span className="text-[11px] font-medium text-white/70 uppercase tracking-wide">Hourly Forecast</span>
+        {/* Scrollable content */}
+        <div className="flex-1 overflow-y-auto custom-scrollbar px-4 pb-4 min-h-0">
+          {/* Current weather */}
+          <div className="flex flex-col items-center pt-2 pb-4">
+            <span className="text-[80px] font-thin leading-none tracking-tighter weather-temp-glow">
+              {weather.currentTemp}°
+            </span>
+            <div className="flex items-center gap-2 mt-2">
+              {getAnimatedWeatherIcon(weather.conditionIcon, 40)}
+              <span className="text-base font-medium text-white/90">{weather.condition}</span>
+            </div>
+            <div className="flex items-center gap-3 mt-1 text-sm text-white/70">
+              <span>H:{weather.high}°</span>
+              <span>L:{weather.low}°</span>
+            </div>
+            <div className="mt-0.5 text-xs text-white/50">
+              Feels like {weather.feelsLike}°
+            </div>
+            {/* Ambient sound indicator */}
+            <div className="mt-2">
+              <AmbientSoundIndicator condition={weather.condition} />
+            </div>
           </div>
-          <div className="flex gap-0 overflow-x-auto custom-scrollbar pb-1 -mx-1 px-1">
-            {weather.hourly.map((hour, i) => (
+
+          {/* Hourly forecast */}
+          <div className="rounded-xl bg-white/20 backdrop-blur-md border border-white/15 p-3 mb-3">
+            <div className="flex items-center gap-1.5 mb-2">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+              </svg>
+              <span className="text-[11px] font-medium text-white/70 uppercase tracking-wide">Hourly Forecast</span>
+            </div>
+            <div className="overflow-x-auto custom-scrollbar pb-1 -mx-1 px-1">
+              <div className="flex" style={{ minWidth: 'max-content' }}>
+                {weather.hourly.map((hour, i) => (
+                  <div
+                    key={i}
+                    className="flex flex-col items-center min-w-[52px] py-1.5 px-1"
+                  >
+                    <span className="text-[11px] text-white/60 mb-1.5">{hour.time}</span>
+                    {getWeatherIcon(hour.icon, 18)}
+                    <span className="text-[13px] font-medium mt-1.5">{hour.temp}°</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* Temperature graph line */}
+            <HourlyTempGraph hourly={weather.hourly} />
+          </div>
+
+          {/* 7-Day forecast */}
+          <div className="rounded-xl bg-white/20 backdrop-blur-md border border-white/15 p-3 mb-3">
+            <div className="flex items-center gap-1.5 mb-2">
+              <Cloud className="h-3.5 w-3.5 text-white/60" />
+              <span className="text-[11px] font-medium text-white/70 uppercase tracking-wide">7-Day Forecast</span>
+            </div>
+            <div className="space-y-0">
+              {weather.daily.map((day, i) => {
+                const range = weather.daily.reduce(
+                  (acc, d) => ({
+                    min: Math.min(acc.min, d.low),
+                    max: Math.max(acc.max, d.high),
+                  }),
+                  { min: 200, max: -200 }
+                );
+                const rangeSpan = range.max - range.min;
+                const lowPct = ((day.low - range.min) / rangeSpan) * 100;
+                const highPct = ((day.high - range.min) / rangeSpan) * 100;
+
+                return (
+                  <div
+                    key={i}
+                    className="flex items-center py-1.5 border-b border-white/10 last:border-0"
+                  >
+                    <span className="w-12 text-[12px] text-white/80 shrink-0">{day.day}</span>
+                    <span className="w-6 shrink-0 flex justify-center">
+                      {getWeatherIcon(day.icon, 16)}
+                    </span>
+                    <span className="w-12 text-[11px] text-white/40 text-right shrink-0">{day.low}°</span>
+                    <div className="flex-1 mx-2 h-1 rounded-full bg-white/15 relative">
+                      <div
+                        className="absolute top-0 h-full rounded-full"
+                        style={{
+                          left: `${lowPct}%`,
+                          right: `${100 - highPct}%`,
+                          background: 'linear-gradient(90deg, #5bc0f8, #f8e75b)',
+                        }}
+                      />
+                    </div>
+                    <span className="w-12 text-[12px] text-white/90 shrink-0">{day.high}°</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Weather Map */}
+          <div className="mb-3">
+            <WeatherMapPlaceholder condition={weather.condition} />
+          </div>
+
+          {/* Air Quality & UV Index row */}
+          <div className="grid grid-cols-2 gap-3 mb-3">
+            <AirQualitySection aq={weather.airQuality} />
+            <UVIndexSection uv={weather.uvIndex} />
+          </div>
+
+          {/* Sunrise/Sunset */}
+          <div className="mb-3">
+            <SunriseSunsetSection sun={weather.sun} conditionIcon={weather.conditionIcon} />
+          </div>
+
+          {/* Weather details grid */}
+          <div className="grid grid-cols-2 gap-3">
+            {weather.details.map((detail, i) => (
               <div
                 key={i}
-                className="flex flex-col items-center min-w-[52px] py-1.5 px-1"
+                className="rounded-xl bg-white/20 backdrop-blur-md border border-white/15 p-3 flex flex-col"
               >
-                <span className="text-[11px] text-white/60 mb-1.5">{hour.time}</span>
-                {getWeatherIcon(hour.icon, 18)}
-                <span className="text-[13px] font-medium mt-1.5">{hour.temp}°</span>
+                <div className="flex items-center gap-1.5 mb-1">
+                  {detail.icon}
+                  <span className="text-[10px] font-medium text-white/60 uppercase tracking-wider">
+                    {detail.label}
+                  </span>
+                </div>
+                <span className="text-xl font-semibold">{detail.value}</span>
+                {detail.sublabel && (
+                  <span className="text-[11px] text-white/50 mt-0.5">{detail.sublabel}</span>
+                )}
               </div>
             ))}
           </div>
-        </div>
-
-        {/* 7-Day forecast */}
-        <div className="rounded-xl bg-white/20 backdrop-blur-md border border-white/15 p-3 mb-3">
-          <div className="flex items-center gap-1.5 mb-2">
-            <Cloud className="h-3.5 w-3.5 text-white/60" />
-            <span className="text-[11px] font-medium text-white/70 uppercase tracking-wide">7-Day Forecast</span>
-          </div>
-          <div className="space-y-0">
-            {weather.daily.map((day, i) => {
-              const range = weather.daily.reduce(
-                (acc, d) => ({
-                  min: Math.min(acc.min, d.low),
-                  max: Math.max(acc.max, d.high),
-                }),
-                { min: 200, max: -200 }
-              );
-              const rangeSpan = range.max - range.min;
-              const lowPct = ((day.low - range.min) / rangeSpan) * 100;
-              const highPct = ((day.high - range.min) / rangeSpan) * 100;
-
-              return (
-                <div
-                  key={i}
-                  className="flex items-center py-1.5 border-b border-white/10 last:border-0"
-                >
-                  <span className="w-12 text-[12px] text-white/80 shrink-0">{day.day}</span>
-                  <span className="w-6 shrink-0 flex justify-center">
-                    {getWeatherIcon(day.icon, 16)}
-                  </span>
-                  <span className="w-12 text-[11px] text-white/40 text-right shrink-0">{day.low}°</span>
-                  <div className="flex-1 mx-2 h-1 rounded-full bg-white/15 relative">
-                    <div
-                      className="absolute top-0 h-full rounded-full"
-                      style={{
-                        left: `${lowPct}%`,
-                        right: `${100 - highPct}%`,
-                        background: 'linear-gradient(90deg, #5bc0f8, #f8e75b)',
-                      }}
-                    />
-                  </div>
-                  <span className="w-12 text-[12px] text-white/90 shrink-0">{day.high}°</span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Weather Map */}
-        <div className="mb-3">
-          <WeatherMapPlaceholder condition={weather.condition} />
-        </div>
-
-        {/* Air Quality & UV Index row */}
-        <div className="grid grid-cols-2 gap-3 mb-3">
-          <AirQualitySection aq={weather.airQuality} />
-          <UVIndexSection uv={weather.uvIndex} />
-        </div>
-
-        {/* Sunrise/Sunset */}
-        <div className="mb-3">
-          <SunriseSunsetSection sun={weather.sun} conditionIcon={weather.conditionIcon} />
-        </div>
-
-        {/* Weather details grid */}
-        <div className="grid grid-cols-2 gap-3">
-          {weather.details.map((detail, i) => (
-            <div
-              key={i}
-              className="rounded-xl bg-white/20 backdrop-blur-md border border-white/15 p-3 flex flex-col"
-            >
-              <div className="flex items-center gap-1.5 mb-1">
-                {detail.icon}
-                <span className="text-[10px] font-medium text-white/60 uppercase tracking-wider">
-                  {detail.label}
-                </span>
-              </div>
-              <span className="text-xl font-semibold">{detail.value}</span>
-              {detail.sublabel && (
-                <span className="text-[11px] text-white/50 mt-0.5">{detail.sublabel}</span>
-              )}
-            </div>
-          ))}
         </div>
       </div>
     </div>

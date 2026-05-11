@@ -459,7 +459,7 @@ export default function MusicApp() {
       {/* Main content */}
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
-        <div className="w-48 bg-[#f5f0e8] border-r border-gray-200 flex-shrink-0 overflow-y-auto py-2 hidden sm:block">
+        <div className="w-44 bg-[#f5f0e8] border-r border-gray-200 flex-shrink-0 overflow-y-auto py-2 hidden sm:block">
           {sidebarSections.map((section) => (
             <div key={section.title} className="mb-3">
               <div className="flex items-center justify-between px-3 py-1">
@@ -631,8 +631,8 @@ export default function MusicApp() {
                   {/* Now Playing Album Art (for songs view) */}
                   {activeSection === 'songs' && !searchQuery && (
                     <div className="flex items-center gap-5 mb-5 bg-gradient-to-r from-gray-50 to-transparent p-4 rounded-xl">
-                      <div className={`w-32 h-32 rounded-xl bg-gradient-to-br ${currentSong.gradient} shadow-lg flex items-center justify-center flex-shrink-0 ${isPlaying ? 'animate-pulse' : ''}`}>
-                        <Disc3 size={48} className="text-white/50" />
+                      <div className={`w-24 h-24 rounded-xl bg-gradient-to-br ${currentSong.gradient} shadow-lg flex items-center justify-center flex-shrink-0 ${isPlaying ? 'animate-pulse' : ''}`}>
+                        <Disc3 size={36} className="text-white/50" />
                       </div>
                       <div>
                         <p className="text-[10px] text-gray-400 uppercase tracking-wider font-medium">Now Playing</p>
@@ -693,8 +693,8 @@ export default function MusicApp() {
                             )}
                           </span>
                           <div className="flex items-center gap-2 min-w-0">
-                            <div className={`w-8 h-8 rounded bg-gradient-to-br ${song.gradient} flex-shrink-0 flex items-center justify-center`}>
-                              <MusicIcon size={12} className="text-white/60" />
+                            <div className={`w-7 h-7 rounded bg-gradient-to-br ${song.gradient} flex-shrink-0 flex items-center justify-center`}>
+                              <MusicIcon size={11} className="text-white/60" />
                             </div>
                             <div className="min-w-0">
                               <p className={`text-xs font-medium truncate ${isCurrentSong ? 'text-red-500' : 'text-gray-800'}`}>
@@ -777,12 +777,12 @@ export default function MusicApp() {
       </div>
 
       {/* Now Playing Bar */}
-      <div className="bg-[#f5f0e8] border-t border-gray-200 px-4 py-2 flex-shrink-0">
+      <div className="bg-[#f5f0e8] border-t border-gray-200 px-3 py-1.5 flex-shrink-0">
         {/* Progress bar */}
         <div className="w-full mb-1.5">
           <div
             ref={progressBarRef}
-            className="w-full h-1.5 bg-gray-200/80 rounded-full cursor-pointer relative group"
+            className="w-full h-1 bg-gray-200/80 rounded-full cursor-pointer relative group"
             onClick={handleProgressSeek}
           >
             <div
@@ -811,14 +811,14 @@ export default function MusicApp() {
             </div>
             <button onClick={() => toggleFavorite(currentSong.id)} className="flex-shrink-0 ml-1">
               <Heart
-                size={13}
+                size={11}
                 className={currentSong.favorited ? 'text-red-500 fill-red-500' : 'text-gray-300 hover:text-red-400'}
               />
             </button>
           </div>
 
           {/* Playback controls */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <button
               onClick={() => setShuffleOn(!shuffleOn)}
               className={`p-1 rounded-md transition-colors ${shuffleOn ? 'text-red-500 bg-red-50' : 'text-gray-400 hover:text-gray-600'}`}
@@ -827,16 +827,16 @@ export default function MusicApp() {
               <Shuffle size={13} />
             </button>
             <button onClick={playPrev} className="text-gray-500 hover:text-gray-800 transition-colors">
-              <SkipBack size={16} />
+              <SkipBack size={14} />
             </button>
             <button
               onClick={togglePlay}
-              className="w-9 h-9 rounded-full bg-gray-800 text-white flex items-center justify-center hover:bg-gray-700 transition-colors shadow-sm"
+              className="w-8 h-8 rounded-full bg-gray-800 text-white flex items-center justify-center hover:bg-gray-700 transition-colors shadow-sm"
             >
-              {isPlaying ? <Pause size={15} /> : <Play size={15} className="ml-0.5" />}
+              {isPlaying ? <Pause size={14} /> : <Play size={14} className="ml-0.5" />}
             </button>
             <button onClick={playNext} className="text-gray-500 hover:text-gray-800 transition-colors">
-              <SkipForward size={16} />
+              <SkipForward size={14} />
             </button>
             <button
               onClick={cycleRepeat}
@@ -871,7 +871,7 @@ export default function MusicApp() {
               {isMuted || volume === 0 ? <VolumeX size={14} /> : volume < 50 ? <Volume1 size={14} /> : <Volume2 size={14} />}
             </button>
             <div
-              className="w-20 h-1.5 bg-gray-200/80 rounded-full cursor-pointer relative group"
+              className="w-20 h-1 bg-gray-200/80 rounded-full cursor-pointer relative group"
               onClick={handleVolumeChange}
             >
               <div

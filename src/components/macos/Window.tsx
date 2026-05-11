@@ -3,6 +3,7 @@
 import React, { useRef, useCallback, useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import useMacOSStore from '@/store/macos-store'
+import useDarkModeStore from '@/store/dark-mode-store'
 
 interface WindowProps {
   windowId: string
@@ -45,6 +46,7 @@ export default function Window({ windowId, children }: WindowProps) {
   const focusWindow = useMacOSStore((s) => s.focusWindow)
   const updateWindowPosition = useMacOSStore((s) => s.updateWindowPosition)
   const updateWindowSize = useMacOSStore((s) => s.updateWindowSize)
+  const { isDarkMode } = useDarkModeStore()
 
   const [trafficHover, setTrafficHover] = useState(false)
   const [isClosing, setIsClosing] = useState(false)
@@ -220,7 +222,7 @@ export default function Window({ windowId, children }: WindowProps) {
   if (!windowState) return null
 
   const { id, title, x, y, width, height, isMinimized, isMaximized } = windowState
-  const isLightWindow = LIGHT_WINDOW_APPS.has(windowState.appId)
+  const isLightWindow = !isDarkMode && LIGHT_WINDOW_APPS.has(windowState.appId)
 
   // Track minimize state transitions (render-phase derived state pattern)
   if (isMinimized && !prevIsMinimized) {
@@ -331,7 +333,7 @@ export default function Window({ windowId, children }: WindowProps) {
 
             {/* Title Bar */}
             <div
-              className={`flex items-center h-[38px] shrink-0 select-none px-3 transition-colors duration-150 ${
+              className={`flex items-center h-[36px] shrink-0 select-none px-3 transition-colors duration-150 ${
                 isLightWindow
                   ? isActive
                     ? 'bg-[#e8e8e8]/95 backdrop-blur-md border-b border-black/10'

@@ -214,7 +214,7 @@ export default function DesktopIcons() {
 
   return (
     <div
-      className="absolute top-[40px] right-[16px] flex flex-col items-end gap-0 z-10"
+      className="absolute top-[32px] right-[16px] flex flex-col items-end gap-[8px] z-10"
       onClick={handleDesktopClick}
     >
       {DESKTOP_ICONS.map(icon => {
@@ -223,7 +223,7 @@ export default function DesktopIcons() {
         return (
           <div
             key={icon.id}
-            className={`flex flex-col items-center justify-center w-[90px] py-1.5 cursor-default select-none transition-all duration-100 rounded-[6px] ${
+            className={`flex flex-col items-center justify-center w-[90px] py-2 cursor-default select-none transition-all duration-100 rounded-[6px] ${
               isSelected ? 'bg-blue-500/35' : 'hover:bg-white/[0.06]'
             }`}
             onClick={(e) => {

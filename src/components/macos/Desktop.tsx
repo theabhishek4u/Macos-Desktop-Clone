@@ -2,6 +2,7 @@
 
 import { useCallback, type CSSProperties } from 'react'
 import useMacOSStore, { ContextMenuItem } from '@/store/macos-store'
+import useDarkModeStore from '@/store/dark-mode-store'
 
 export interface Wallpaper {
   name: string
@@ -167,6 +168,10 @@ const WALLPAPERS: Wallpaper[] = [
 
 export default function Desktop({ children }: { children: React.ReactNode }) {
   const { setContextMenu, wallpaperIndex, setWallpaperIndex } = useMacOSStore()
+  const { isDarkMode } = useDarkModeStore()
+
+  // When dark mode is on, use the Dark Mode wallpaper (index 5) regardless of user selection
+  const effectiveWallpaperIndex = isDarkMode ? 5 : wallpaperIndex
 
   const handleContextMenu = useCallback((e: React.MouseEvent) => {
     e.preventDefault()
@@ -190,8 +195,8 @@ export default function Desktop({ children }: { children: React.ReactNode }) {
 
   return (
     <div
-      className="fixed inset-0 overflow-hidden select-none"
-      style={WALLPAPERS[wallpaperIndex].style}
+      className={`fixed inset-0 overflow-hidden select-none ${isDarkMode ? 'dark-mode-active' : ''}`}
+      style={{ ...WALLPAPERS[effectiveWallpaperIndex].style, transition: 'background 0.8s ease-in-out' }}
       onContextMenu={handleContextMenu}
     >
       {/* Animated gradient overlay for subtle shimmer effect */}

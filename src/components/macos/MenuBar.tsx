@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Wifi, Battery, Search, BatteryFull, BatteryMedium, BatteryLow, Bluetooth } from 'lucide-react'
 import useMacOSStore, { APP_CONFIGS } from '@/store/macos-store'
+import useDarkModeStore from '@/store/dark-mode-store'
 import { useSpotlight } from '@/components/macos/Spotlight'
 import { useAboutThisMac } from '@/components/macos/AboutThisMac'
 import { useControlCenter } from '@/components/macos/ControlCenter'
@@ -503,7 +504,7 @@ function MenuDropdown({ items, onAction }: { items: MenuItem[]; onAction: (item:
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: -4, scale: 0.98 }}
       transition={{ duration: 0.15, ease: 'easeOut' }}
-      className="absolute top-[28px] left-0 w-[240px] bg-[#2a2a2e]/95 backdrop-blur-2xl rounded-md shadow-2xl border border-white/[0.12] py-1 overflow-hidden"
+      className="absolute top-[25px] left-0 w-[240px] bg-[#2a2a2e]/95 backdrop-blur-2xl rounded-md shadow-2xl border border-white/[0.12] py-1 overflow-hidden"
     >
       {items.map((item, idx) => {
         if (item.separator) {
@@ -538,6 +539,7 @@ function MenuDropdown({ items, onAction }: { items: MenuItem[]; onAction: (item:
 
 export default function MenuBar() {
   const { activeWindowId, windows, openApp } = useMacOSStore()
+  const { isDarkMode } = useDarkModeStore()
   const { toggle: toggleSpotlight } = useSpotlight()
   const aboutThisMac = useAboutThisMac()
   const controlCenter = useControlCenter()
@@ -614,7 +616,9 @@ export default function MenuBar() {
 
   return (
     <div
-      className="fixed top-0 left-0 right-0 h-[28px] bg-black/70 backdrop-blur-xl text-white/90 text-[13px] font-medium z-[9999] flex items-center justify-between px-2 select-none"
+      className={`fixed top-0 left-0 right-0 h-[25px] backdrop-blur-xl text-white/90 text-[12.5px] font-medium z-[9999] flex items-center justify-between px-2 select-none ${
+        isDarkMode ? 'bg-black/80' : 'bg-black/50'
+      }`}
       style={{ borderBottom: '0.5px solid rgba(255,255,255,0.08)' }}
       ref={menuBarRef}
     >
@@ -623,7 +627,7 @@ export default function MenuBar() {
         {/* Apple logo + dropdown */}
         <div className="relative">
           <button
-            className={`px-2 h-[28px] flex items-center rounded transition-colors text-[16px] leading-none ${
+            className={`px-2 h-[25px] flex items-center rounded transition-colors text-[16px] leading-none ${
               appleMenuOpen ? 'bg-white/15' : 'hover:bg-white/10'
             }`}
             onClick={() => {
@@ -649,7 +653,7 @@ export default function MenuBar() {
         </div>
 
         {/* Active app name */}
-        <span className="font-bold text-[13px] px-2 h-[28px] flex items-center">
+        <span className="font-bold text-[12.5px] px-2 h-[25px] flex items-center">
           {activeAppName}
         </span>
 
@@ -657,7 +661,7 @@ export default function MenuBar() {
         {currentMenus.map(section => (
           <div key={section.name} className="relative">
             <button
-              className={`px-2 h-[28px] flex items-center rounded transition-colors text-[13px] font-medium ${
+              className={`px-2 h-[25px] flex items-center rounded transition-colors text-[12.5px] font-medium ${
                 openMenu === section.name ? 'bg-white/15' : 'hover:bg-white/10'
               }`}
               onClick={() => handleMenuToggle(section.name)}

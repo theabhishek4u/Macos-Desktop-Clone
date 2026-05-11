@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 
-type Tab = 'world' | 'stopwatch' | 'timer';
+type Tab = 'world' | 'alarm' | 'stopwatch' | 'timer';
 
 interface TimeZoneCity {
   name: string;
@@ -10,11 +10,45 @@ interface TimeZoneCity {
   emoji: string;
 }
 
+interface AlarmItem {
+  id: string;
+  hour: number;
+  minute: number;
+  label: string;
+  enabled: boolean;
+  repeatDays: string[];
+  firing: boolean;
+}
+
 const WORLD_CITIES: TimeZoneCity[] = [
   { name: 'New York', tz: 'America/New_York', emoji: '🗽' },
   { name: 'London', tz: 'Europe/London', emoji: '🇬🇧' },
   { name: 'Tokyo', tz: 'Asia/Tokyo', emoji: '🗼' },
   { name: 'Sydney', tz: 'Australia/Sydney', emoji: '🇦🇺' },
+];
+
+const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const DAY_FULL = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+function getRepeatLabel(days: string[]): string {
+  if (days.length === 7) return 'Every Day';
+  if (days.length === 5 && !days.includes('Sat') && !days.includes('Sun')) return 'Weekdays';
+  if (days.length === 2 && days.includes('Sat') && days.includes('Sun')) return 'Weekends';
+  if (days.length === 0) return 'One Time';
+  return days.join(', ');
+}
+
+function formatAlarmTime(hour: number, minute: number): string {
+  const period = hour >= 12 ? 'PM' : 'AM';
+  const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+  return `${displayHour}:${String(minute).padStart(2, '0')} ${period}`;
+}
+
+const INITIAL_ALARMS: AlarmItem[] = [
+  { id: '1', hour: 6, minute: 30, label: 'Wake Up', enabled: true, repeatDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'], firing: false },
+  { id: '2', hour: 7, minute: 0, label: 'Work', enabled: true, repeatDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'], firing: false },
+  { id: '3', hour: 8, minute: 30, label: 'Meeting', enabled: false, repeatDays: ['Mon', 'Wed', 'Fri'], firing: false },
+  { id: '4', hour: 9, minute: 0, label: 'Exercise', enabled: true, repeatDays: ['Sat', 'Sun'], firing: false },
 ];
 
 function getAnalogAngle(now: Date): { hour: number; minute: number; second: number } {
@@ -175,6 +209,288 @@ function WorldClockTab() {
             </div>
           );
         })}
+      </div>
+    </div>
+  );
+}
+
+function AlarmTab() {
+  const [alarms, setAlarms] = useState<AlarmItem[]>(INITIAL_ALARMS);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newHour, setNewHour] = useState(7);
+  const [newMinute, setNewMinute] = useState(0);
+  const [newLabel, setNewLabel] = useState('');
+  const [newRepeatDays, setNewRepeatDays] = useState<string[]>([]);
+  const [firingAlarmId, setFiringAlarmId] = useState<string | null>(null);
+  const [hoveredAlarmId, setHoveredAlarmId] = useState<string | null>(null);
+
+  const toggleAlarm = (id: string) => {
+    setAlarms((prev) =>
+      prev.map((a) => (a.id === id ? { ...a, enabled: !a.enabled } : a))
+    );
+  };
+
+  const deleteAlarm = (id: string) => {
+    setAlarms((prev) => prev.filter((a) => a.id !== id));
+  };
+
+  const simulateFire = (id: string) => {
+    setFiringAlarmId(id);
+    setTimeout(() => setFiringAlarmId(null), 2000);
+  };
+
+  const toggleRepeatDay = (day: string) => {
+    setNewRepeatDays((prev) =>
+      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
+    );
+  };
+
+  const saveAlarm = () => {
+    const newAlarm: AlarmItem = {
+      id: Date.now().toString(),
+      hour: newHour,
+      minute: newMinute,
+      label: newLabel || 'Alarm',
+      enabled: true,
+      repeatDays: newRepeatDays,
+      firing: false,
+    };
+    setAlarms((prev) => [...prev, newAlarm]);
+    setShowAddForm(false);
+    setNewHour(7);
+    setNewMinute(0);
+    setNewLabel('');
+    setNewRepeatDays([]);
+  };
+
+  return (
+    <div className="flex flex-col h-full overflow-hidden">
+      {/* Header with Add button */}
+      <div className="flex items-center justify-between px-4 pt-3 pb-2 shrink-0">
+        <span className="text-white text-sm font-semibold">Alarms</span>
+        <button
+          onClick={() => setShowAddForm(true)}
+          className="text-orange-500 text-sm font-medium hover:text-orange-400 transition-colors"
+        >
+          + Add Alarm
+        </button>
+      </div>
+
+      {/* Firing alarm indicator */}
+      {firingAlarmId && (
+        <div className="mx-4 mb-2 px-4 py-2 rounded-xl bg-orange-500/20 border border-orange-500/40 animate-pulse flex items-center gap-2">
+          <span className="text-xl">⏰</span>
+          <span className="text-orange-400 text-sm font-medium">Alarm Ringing!</span>
+          <button
+            onClick={() => setFiringAlarmId(null)}
+            className="ml-auto text-orange-300 text-xs hover:text-white transition-colors"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
+      {/* Add Alarm Form */}
+      {showAddForm && (
+        <div className="mx-4 mb-3 bg-[#2c2c2e] rounded-xl p-4 space-y-4 shrink-0">
+          <div className="text-white text-sm font-medium">New Alarm</div>
+
+          {/* Time picker */}
+          <div className="flex items-center justify-center gap-3">
+            <div className="flex flex-col items-center">
+              <button
+                onClick={() => setNewHour((h) => (h >= 23 ? 0 : h + 1))}
+                className="text-gray-400 hover:text-white text-lg px-3 py-1 transition-colors"
+              >
+                ▲
+              </button>
+              <div className="text-white text-4xl font-extralight tabular-nums w-16 text-center">
+                {String(newHour === 0 ? 12 : newHour > 12 ? newHour - 12 : newHour).padStart(2, '0')}
+              </div>
+              <button
+                onClick={() => setNewHour((h) => (h <= 0 ? 23 : h - 1))}
+                className="text-gray-400 hover:text-white text-lg px-3 py-1 transition-colors"
+              >
+                ▼
+              </button>
+            </div>
+            <span className="text-white text-3xl font-extralight mb-1">:</span>
+            <div className="flex flex-col items-center">
+              <button
+                onClick={() => setNewMinute((m) => (m >= 59 ? 0 : m + 1))}
+                className="text-gray-400 hover:text-white text-lg px-3 py-1 transition-colors"
+              >
+                ▲
+              </button>
+              <div className="text-white text-4xl font-extralight tabular-nums w-16 text-center">
+                {String(newMinute).padStart(2, '0')}
+              </div>
+              <button
+                onClick={() => setNewMinute((m) => (m <= 0 ? 59 : m - 1))}
+                className="text-gray-400 hover:text-white text-lg px-3 py-1 transition-colors"
+              >
+                ▼
+              </button>
+            </div>
+            <div className="flex flex-col gap-1 ml-2">
+              <button
+                onClick={() => { if (newHour >= 12) setNewHour(newHour - 12); }}
+                className={`px-2 py-1 rounded text-xs font-medium transition-colors ${newHour < 12 ? 'bg-orange-500 text-white' : 'bg-[#3a3a3c] text-gray-400'}`}
+              >
+                AM
+              </button>
+              <button
+                onClick={() => { if (newHour < 12) setNewHour(newHour + 12); }}
+                className={`px-2 py-1 rounded text-xs font-medium transition-colors ${newHour >= 12 ? 'bg-orange-500 text-white' : 'bg-[#3a3a3c] text-gray-400'}`}
+              >
+                PM
+              </button>
+            </div>
+          </div>
+
+          {/* Label input */}
+          <div>
+            <label className="text-gray-400 text-xs block mb-1">Label</label>
+            <input
+              type="text"
+              value={newLabel}
+              onChange={(e) => setNewLabel(e.target.value)}
+              placeholder="Alarm"
+              className="w-full bg-[#1c1c1e] text-white text-sm rounded-lg px-3 py-2 border border-[#3a3a3c] focus:border-orange-500 focus:outline-none placeholder:text-gray-500 transition-colors"
+            />
+          </div>
+
+          {/* Repeat day selector */}
+          <div>
+            <label className="text-gray-400 text-xs block mb-2">Repeat</label>
+            <div className="flex gap-1.5">
+              {DAY_LABELS.map((day, i) => (
+                <button
+                  key={day}
+                  onClick={() => toggleRepeatDay(day)}
+                  className={`w-8 h-8 rounded-full text-[10px] font-medium transition-colors ${
+                    newRepeatDays.includes(day)
+                      ? 'bg-orange-500 text-white'
+                      : 'bg-[#3a3a3c] text-gray-400 hover:bg-[#4a4a4c]'
+                  }`}
+                  title={DAY_FULL[i]}
+                >
+                  {day.charAt(0)}
+                </button>
+              ))}
+            </div>
+            <div className="text-gray-500 text-xs mt-1.5">
+              {getRepeatLabel(newRepeatDays)}
+            </div>
+          </div>
+
+          {/* Save / Cancel */}
+          <div className="flex gap-3 pt-1">
+            <button
+              onClick={() => {
+                setShowAddForm(false);
+                setNewHour(7);
+                setNewMinute(0);
+                setNewLabel('');
+                setNewRepeatDays([]);
+              }}
+              className="flex-1 py-2 rounded-lg bg-[#3a3a3c] text-gray-300 text-sm font-medium hover:bg-[#4a4a4c] transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={saveAlarm}
+              className="flex-1 py-2 rounded-lg bg-orange-500 text-white text-sm font-medium hover:bg-orange-600 transition-colors"
+            >
+              Save
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Alarm list */}
+      <div className="flex-1 overflow-y-auto px-4 pb-2 space-y-2">
+        {alarms.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 text-gray-500">
+            <span className="text-3xl mb-2">⏰</span>
+            <span className="text-sm">No alarms set</span>
+          </div>
+        ) : (
+          alarms.map((alarm) => (
+            <div
+              key={alarm.id}
+              className={`relative bg-[#2c2c2e] rounded-xl px-4 py-3 transition-all duration-200 ${
+                alarm.enabled ? '' : 'opacity-50'
+              } ${firingAlarmId === alarm.id ? 'ring-2 ring-orange-500 bg-orange-500/10' : ''}`}
+              onMouseEnter={() => setHoveredAlarmId(alarm.id)}
+              onMouseLeave={() => setHoveredAlarmId(null)}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-baseline gap-2">
+                    <span className={`text-2xl font-extralight tabular-nums ${alarm.enabled ? 'text-white' : 'text-gray-400'}`}>
+                      {formatAlarmTime(alarm.hour, alarm.minute)}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className={`text-xs ${alarm.enabled ? 'text-gray-300' : 'text-gray-500'}`}>
+                      {alarm.label}
+                    </span>
+                    <span className="text-gray-600 text-xs">·</span>
+                    <span className={`text-xs ${alarm.enabled ? 'text-gray-400' : 'text-gray-600'}`}>
+                      {getRepeatLabel(alarm.repeatDays)}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  {/* Delete button (visible on hover) */}
+                  {hoveredAlarmId === alarm.id && (
+                    <button
+                      onClick={() => deleteAlarm(alarm.id)}
+                      className="text-red-400 hover:text-red-300 transition-colors p-1"
+                      title="Delete alarm"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M18 6L6 18M6 6l12 12" />
+                      </svg>
+                    </button>
+                  )}
+
+                  {/* Fire test button */}
+                  {alarm.enabled && hoveredAlarmId === alarm.id && (
+                    <button
+                      onClick={() => simulateFire(alarm.id)}
+                      className="text-orange-400 hover:text-orange-300 transition-colors p-1"
+                      title="Test alarm"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polygon points="5 3 19 12 5 21 5 3" />
+                      </svg>
+                    </button>
+                  )}
+
+                  {/* Toggle switch */}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); toggleAlarm(alarm.id); }}
+                    className="relative w-12 h-7 rounded-full transition-colors duration-200 shrink-0 cursor-pointer"
+                    style={{
+                      backgroundColor: alarm.enabled ? '#ff9500' : '#555',
+                      padding: '2px',
+                    }}
+                  >
+                    <div
+                      className="w-5 h-5 rounded-full bg-white shadow-sm transition-transform duration-200"
+                      style={{
+                        transform: alarm.enabled ? 'translateX(20px)' : 'translateX(0px)',
+                      }}
+                    />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );
@@ -442,6 +758,7 @@ export default function Clock() {
 
   const tabs: { id: Tab; label: string; icon: string }[] = [
     { id: 'world', label: 'World Clock', icon: '🌍' },
+    { id: 'alarm', label: 'Alarm', icon: '⏰' },
     { id: 'stopwatch', label: 'Stopwatch', icon: '⏱' },
     { id: 'timer', label: 'Timer', icon: '⏲' },
   ];
@@ -451,6 +768,7 @@ export default function Clock() {
       {/* Content Area */}
       <div className="flex-1 overflow-hidden">
         {activeTab === 'world' && <WorldClockTab />}
+        {activeTab === 'alarm' && <AlarmTab />}
         {activeTab === 'stopwatch' && <StopwatchTab />}
         {activeTab === 'timer' && <TimerTab />}
       </div>
@@ -461,7 +779,7 @@ export default function Clock() {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex flex-col items-center gap-0.5 px-4 py-1 rounded-lg transition-colors ${
+            className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg transition-colors ${
               activeTab === tab.id ? 'text-orange-500' : 'text-gray-400 hover:text-gray-200'
             }`}
           >

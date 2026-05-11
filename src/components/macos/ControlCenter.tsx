@@ -12,6 +12,7 @@ import {
   Music,
   Monitor,
 } from 'lucide-react'
+import useDarkModeStore from '@/store/dark-mode-store'
 
 // --- Shared control center state (module-level) ---
 interface ControlCenterState {
@@ -136,6 +137,7 @@ function SliderTile({ icon, label, value, onChange }: SliderTileProps) {
 
 export default function ControlCenter() {
   const { isOpen, close } = useControlCenter()
+  const { isDarkMode, toggle: toggleDarkMode } = useDarkModeStore()
   const panelRef = useRef<HTMLDivElement>(null)
 
   // Toggle states
@@ -227,6 +229,14 @@ export default function ControlCenter() {
                 sublabel={focus ? 'On' : 'Off'}
                 active={focus}
                 onClick={() => setFocus(!focus)}
+                color="bg-[#5e5ce6]"
+              />
+              <ToggleTile
+                icon={isDarkMode ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+                label="Dark Mode"
+                sublabel={isDarkMode ? 'On' : 'Off'}
+                active={isDarkMode}
+                onClick={toggleDarkMode}
                 color="bg-[#5e5ce6]"
               />
             </div>

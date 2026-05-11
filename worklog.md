@@ -382,3 +382,220 @@ Unresolved Issues / Next Steps:
 - Could add more detailed dock icon gradients/gloss
 - Could add Dark Mode toggle in System Preferences
 - Could improve wallpaper with higher quality rendering
+
+---
+Task ID: 11
+Agent: Main Agent (Cron Review Session 11)
+Task: QA testing, Clock app fix, Weather animations, Safari favicons, Music UI polish, Dark Mode, global styling refinements
+
+Work Log:
+- Read worklog.md and assessed project status (10+ prior sessions completed, 14 apps, visual fidelity ~7/10)
+- Verified dev server and lint status — both passing, 200 OK responses
+- Ran agent-browser QA test with VLM analysis — rated 7.2/10 visual fidelity
+- QA identified key issues: Clock app broken tabs (no Alarm), Weather needs animations, Safari missing favicons, Music controls too large, System Preferences uses emoji icons, no Dark Mode
+- Dispatched 3 parallel agents for improvements:
+  - Agent 11-a: Fixed Clock app — added Alarm tab with 4 pre-populated alarms, toggle switches, delete/test buttons, Add Alarm form with time picker/label/repeat days. Enhanced Weather app — 6 animated SVG/CSS weather icons (rotating sun, falling rain, drifting clouds, falling snow, lightning flash, partly cloudy), temperature glow effect with pulsing text-shadow, animated gradient background (20s shift), ambient sound indicator, hourly temperature SVG graph curve
+  - Agent 11-b: Enhanced Safari — added colored favicon icons for all 6 bookmarks (Google blue G, YouTube red ▶, Wikipedia white W, Reddit orange R, Apple SVG logo, GitHub SVG logo). Better tab bar (lighter inactive tabs, active tab translucent white, separators between tabs). Music UI polish — reduced all control sizes (play button 9→8, skip 16→14, album art 32→24, sidebar 48→44, progress bar thinner, heart button smaller)
+  - Agent 11-c: Created Dark Mode system — dark-mode-store.ts with toggle/setDarkMode, Desktop switches to Dark Mode wallpaper, MenuBar becomes more translucent in dark mode, Control Center has Dark Mode toggle, System Preferences Appearance pane controls global dark mode, Window component switches light apps to dark chrome when dark mode on. Global styling — MenuBar height 28→25px, bg-black/70→50%, font 13→12.5px. Window title bar 38→36px. System Preferences emoji icons replaced with colored rounded-xl divs with white Lucide icons (21 panes). Desktop icons spacing improved
+- Fixed Clock alarm toggle — added stopPropagation, larger click target (w-12 h-7), cursor-pointer
+- Fixed Safari Apple/GitHub favicons — added SVG Apple logo and GitHub octocat icon instead of empty colored circles
+- Lint passes cleanly
+- Dev server compiles 200 OK
+
+Stage Summary:
+- **Clock app fully functional**: 4 tabs (World Clock, Alarm, Stopwatch, Timer), Alarm with toggle switches, add/delete/test
+- **Weather app dramatically enhanced**: 6 animated weather icons, temperature glow, animated gradient background, ambient sound indicator, hourly temperature SVG graph
+- **Safari favicons complete**: All 6 bookmarks have proper colored icons (Apple SVG, GitHub SVG, Google G, YouTube ▶, Wikipedia W, Reddit R)
+- **Music app more compact**: All controls reduced to match real Apple Music density
+- **Dark Mode system**: Full toggle via Control Center/System Preferences, affects wallpaper, window chrome, menu bar
+- **Global styling refined**: Thinner menu bar (25px), thinner window title bar (36px), System Preferences uses colored SVG icons instead of emoji
+- QA visual fidelity: 7.2/10 (up from 6-7/10)
+- All lint checks pass, dev server compiles 200 OK
+
+Unresolved Issues / Next Steps:
+- Could add drag-and-drop for desktop icons
+- Could add Notification Center real-time notifications with timer
+- Could add real Terminal command execution
+- Could add window snapping/tile feature
+- Could add Touch ID / Face ID animation on login
+- Could add more detailed dock icon gradients/gloss
+- Could add About This Mac dialog with system info
+
+---
+Task ID: 11-b
+Agent: Safari Favicon & Music Polish Agent
+Task: Enhance Safari favicons and Music app UI polish
+
+Work Log:
+- Read worklog.md and all referenced files (Safari.tsx, Music.tsx)
+- **Safari — Added FaviconIcon component with colored circle + letter favicons**:
+  - Created `FaviconConfig` interface with `letter`, `bgColor`, `textColor?`, `borderColor?`
+  - Created `FAVICON_CONFIG` map with 6 domain-specific favicon configs:
+    - apple.com: Gray (#A2AAAD) circle with "" (Apple logo emoji)
+    - google.com: Blue (#4285F4) circle with "G"
+    - youtube.com: Red (#FF0000) circle with "▶"
+    - github.com: Dark (#24292e) circle with "" (GitHub logo emoji)
+    - wikipedia.org: White (#ffffff) circle with "W", gray text (#333333), gray border (#cccccc)
+    - reddit.com: Orange (#FF4500) circle with "R"
+  - Created `FaviconIcon` component that accepts `url` and `size` ('default' | 'small'):
+    - Default size: 28x28px, 14px font
+    - Small size: 16x16px, 9px font
+    - Falls back to Globe icon for unknown domains
+    - Uses `rounded-lg` border radius for macOS-style appearance
+  - Updated `FAVICON_MAP` to store domain keys instead of empty strings
+  - Updated `resolveFavicon` to return domain keys instead of empty strings
+- **Safari — Updated start page Favorites grid**:
+  - Replaced `{bm.favicon}` (empty string) with `<FaviconIcon url={bm.url} />`
+  - Removed `text-2xl` class from the favicon container (no longer needed)
+- **Safari — Better Tab Bar**:
+  - Tab bar background changed from `bg-[#e8e8e8]` to `bg-[#ececec]` (lighter gray)
+  - Active tab: `bg-white/95` (very light, slightly translucent) instead of solid `bg-white`
+  - Inactive tabs: `bg-transparent` with `hover:bg-white/40` instead of `bg-[#e0e0e0]` with `hover:bg-[#eaeaea]`
+  - Added subtle separator between tabs via `borderRight: 1px solid rgba(0,0,0,0.08)` on non-last tabs
+  - Tab connector corners updated to match new bg color `#ececec`
+  - Close button already had `opacity-0 group-hover:opacity-100` (confirmed working)
+  - Replaced `{tab.favicon || ''}` with `<FaviconIcon url={tab.url} size="small" />` in tab bar
+- **Safari — Updated bookmarks bar**:
+  - Replaced `{bm.favicon}` with `<FaviconIcon url={bm.url} size="small" />`
+- **Safari — Updated Tab Overview**:
+  - Replaced `{tab.favicon}` with `<FaviconIcon url={tab.url} size="small" />`
+- **Music — UI Polish (more compact/dense like real Apple Music)**:
+  - Sidebar: `w-48` → `w-44` (narrower)
+  - Now Playing album art: `w-32 h-32` → `w-24 h-24`, Disc3 icon `size={48}` → `size={36}`
+  - Song list mini album art: `w-8 h-8` → `w-7 h-7`, MusicIcon `size={12}` → `size={11}`
+  - Bottom player bar padding: `px-4 py-2` → `px-3 py-1.5` (more compact)
+  - Progress bar: `h-1.5` → `h-1` (thinner)
+  - Volume bar: `h-1.5` → `h-1` (thinner)
+  - Playback controls gap: `gap-2` → `gap-1.5`
+  - Skip buttons: `size={16}` → `size={14}`
+  - Play/pause button: `w-9 h-9` → `w-8 h-8`, Pause/Play icon `size={15}` → `size={14}`
+  - Heart/favorite button: `size={13}` → `size={11}`
+- All lint checks pass cleanly
+- Dev server compiles without errors
+
+Stage Summary:
+- **Safari favicons**: All 6 bookmark domains now display colored letter-based favicon icons (28x28px on start page, 16x16px in tab bar/bookmarks bar/tab overview)
+- **Safari tab bar**: Lighter background, active tab with white/95% opacity, inactive tabs transparent with subtle separators, favicon icons in tabs
+- **Music app compact**: All dimensions reduced per QA feedback — smaller album art, narrower sidebar, thinner progress/volume bars, smaller playback controls, compact player bar padding
+- No changes to: Zustand store, Window component, page.tsx, Dock, MenuBar, or other app components
+
+---
+Task ID: 11-a
+Agent: Clock & Weather Enhancement Agent
+Task: Fix Clock app (add Alarm tab, fix all tabs) and enhance Weather app (animations, visuals)
+
+Work Log:
+- Read worklog.md and all referenced files (Clock.tsx, Weather.tsx, Window.tsx for dark window check)
+- **Clock App — Added Alarm Tab**:
+  - Updated `type Tab` from `'world' | 'stopwatch' | 'timer'` to `'world' | 'alarm' | 'stopwatch' | 'timer'`
+  - Added 4th tab with ⏰ icon and "Alarm" label
+  - Created `AlarmItem` interface with id, hour, minute, label, enabled, repeatDays, firing
+  - Pre-populated 4 sample alarms: "Wake Up" (6:30 AM, Weekdays), "Work" (7:00 AM, Weekdays), "Meeting" (8:30 AM, Mon/Wed/Fri, disabled), "Exercise" (9:00 AM, Weekends)
+  - Created `AlarmTab` component with:
+    - Alarm list with time display, label, repeat days description, toggle switch
+    - Toggle switch: orange (#ff9500) when enabled, gray (#555) when disabled; disabled alarms shown with opacity-50
+    - Delete button: appears on hover (X icon with red color)
+    - Test button: appears on hover for enabled alarms (play icon, triggers visual alarm indicator)
+    - "Add Alarm" button at top right
+    - Add alarm form with: hour/minute scroll wheels (up/down buttons), AM/PM toggle, label input, repeat day selector (Mon-Sun circular buttons, orange when selected), Save/Cancel buttons
+    - `getRepeatLabel()` function: shows "Every Day", "Weekdays", "Weekends", "One Time", or day list
+    - Simulated alarm firing: orange ring around alarm card, pulsing "Alarm Ringing!" indicator with dismiss button
+  - Verified Stopwatch tab: Start/Stop/Lap/Reset buttons all connected with onClick handlers, interval-based timing works
+  - Verified Timer tab: Start/Pause/Resume/Reset buttons connected, time picker up/down buttons work, circular progress animation works
+  - Dark theme with bg-[#1c1c1e], orange (#ff9500) accents matching macOS Clock app
+- **Weather App — Added Weather Animations and Better Visuals**:
+  - Added CSS keyframe animations via injected `<style>` tag (WeatherAnimations component):
+    - `weather-sun-rotate`: 360° rotation for sun rays (20s linear infinite)
+    - `weather-sun-pulse`: Scale/opacity pulse for sun glow (3s ease-in-out infinite)
+    - `weather-raindrop-fall`: Falling raindrops animation with staggered delays
+    - `weather-cloud-drift`: Slow horizontal translateX cloud drift (6-8s ease-in-out)
+    - `weather-snowflake-fall`: Falling + rotating snowflakes with staggered delays
+    - `weather-lightning-flash`: Occasional opacity pulse simulating lightning (4s cycle)
+    - `weather-gradient-shift`: Background gradient position shift (20s ease infinite)
+    - `weather-glow-pulse`: Temperature text glow pulse (4s ease-in-out infinite)
+  - Created 6 animated SVG weather icon components (replacing emoji-based getEmoji):
+    - `AnimatedSunIcon`: Rotating rays + pulsing glow + gradient sun body
+    - `AnimatedRainIcon`: Cloud + 4 falling raindrop lines with staggered animation
+    - `AnimatedCloudIcon`: Two-layer clouds with opposite drift directions
+    - `AnimatedSnowIcon`: Cloud + 5 falling snowflake circles with staggered animation
+    - `AnimatedStormIcon`: Dark cloud + lightning bolt with flash animation + rain lines
+    - `AnimatedPartlyCloudyIcon`: Sun behind with rotating rays + cloud in front with drift
+  - Enhanced temperature display: 72px → 80px font, added `weather-temp-glow` class with text-shadow (20px/40px/60px white glow) and pulsing drop-shadow animation
+  - Added animated gradient background: `weather-gradient-bg` class with 200% background-size and 20s shifting animation
+  - Added gradient overlay: second animated gradient layer (135deg, white/black/white, 20s) at 20% opacity for depth
+  - Added `AmbientSoundIndicator` component:
+    - Shows weather condition-specific sound label ("Rain Sounds", "Wind Sounds", "Bird Sounds", etc.)
+    - Toggleable play/stop with Volume2 icon
+    - When playing: brighter bg, animated sound bars (3 bars with random heights and pulse animation)
+  - Added `HourlyTempGraph` component:
+    - SVG smooth curve (cubic bezier) connecting hourly temperature points
+    - Gradient fill area below the curve (white 30% → transparent)
+    - White dots at each data point
+    - 40px height, responsive width matching hourly forecast width
+  - Removed `getEmoji()` function (replaced by animated icons)
+  - Removed `Sun` import from lucide-react (replaced with inline SVG for consistency), added `Volume2` import
+  - Weather app confirmed using dark window chrome (not in LIGHT_WINDOW_APPS set)
+- All lint checks pass cleanly
+- Dev server compiles 200 OK
+
+Stage Summary:
+- **Clock Alarm Tab**: Full Alarm tab with 4 sample alarms, add/delete/toggle/test functionality, alarm firing indicator, time picker with AM/PM, repeat day selector, dark theme with orange accents
+- **Clock Stopwatch/Timer**: Verified all buttons connected and functional
+- **Weather animated icons**: 6 custom SVG+CSS animated weather icons replacing static emojis (sun rotation, rain falling, cloud drifting, snow falling, lightning flash, partly cloudy)
+- **Weather temperature glow**: Larger 80px font with pulsing text-shadow glow effect
+- **Weather gradient animation**: Two animated gradient layers (20s cycle) for dynamic background
+- **Weather ambient sound**: Toggleable indicator showing condition-specific sounds with animated bars
+- **Weather hourly graph**: SVG smooth curve with gradient fill connecting hourly temperatures
+- **No breaking changes** to existing functionality or other components
+
+---
+Task ID: 11-c
+Agent: Dark Mode & Styling Agent
+Task: Add Dark Mode toggle system and improve global styling
+
+Work Log:
+- Created /src/store/dark-mode-store.ts — Zustand store with isDarkMode, toggle(), setDarkMode()
+- Updated /src/components/macos/Desktop.tsx:
+  - Imported useDarkModeStore
+  - When dark mode is on, applies `dark-mode-active` CSS class to root desktop div
+  - When dark mode is on, uses Dark Mode wallpaper (index 5) regardless of user's wallpaper selection
+  - Added smooth 0.8s transition for background changes between light/dark wallpapers
+- Updated /src/components/macos/MenuBar.tsx:
+  - Imported useDarkModeStore
+  - Changed height from h-[28px] to h-[25px] (matching macOS ~24-25px)
+  - Changed background from bg-black/70 to bg-black/50 (light mode) / bg-black/80 (dark mode)
+  - Changed font size from text-[13px] to text-[12.5px]
+  - Updated all menu button heights to h-[25px]
+  - Updated dropdown position from top-[28px] to top-[25px]
+- Updated /src/components/macos/ControlCenter.tsx:
+  - Imported useDarkModeStore
+  - Added Dark Mode toggle tile to the 2-column toggle grid (alongside Wi-Fi, Bluetooth, AirDrop, Focus)
+  - Shows Moon/Sun icon based on current state, purple color when active
+- Updated /src/components/macos/apps/SystemPreferences.tsx:
+  - Imported useDarkModeStore
+  - AppearancePane now uses useDarkModeStore instead of local state
+  - Added 'auto' option to Appearance selector (light/dark/auto matching macOS)
+  - Appearance buttons call setDarkMode() directly from the store
+  - Replaced all emoji icons (⚙️, 🎨, 🖥️, etc.) with colored SVG circle icons containing white Lucide icons
+  - Each pane icon rendered as: rounded-xl div with pane's color as background, Lucide icon in white at 28px
+  - Updated PlaceholderPane to accept color and icon props, renders Lucide icon instead of emoji
+  - Updated toolbar breadcrumb icon to render Lucide icon instead of emoji
+- Updated /src/components/macos/Window.tsx:
+  - Imported useDarkModeStore
+  - isLightWindow now returns false when dark mode is on: `!isDarkMode && LIGHT_WINDOW_APPS.has(windowState.appId)`
+  - This makes all light-window apps (Notes, Calculator, Calendar, etc.) use dark chrome in dark mode
+  - Changed title bar height from h-[38px] to h-[36px] matching macOS more closely
+- Updated /src/components/macos/DesktopIcons.tsx:
+  - Changed top position from top-[40px] to top-[32px] (aligned with new 25px menu bar)
+  - Changed gap from gap-0 to gap-[8px] for proper vertical spacing between icons
+  - Changed py-1.5 to py-2 for better click target padding
+- All lint checks pass cleanly
+- Dev server compiles 200 OK
+
+Stage Summary:
+- **Dark Mode system**: Complete Zustand store + integrated across Desktop (wallpaper transition), MenuBar (darker bg), Window (dark chrome for light apps), ControlCenter (toggle), System Preferences (Appearance pane)
+- **MenuBar refinements**: h-[25px] (from 28), bg-black/50 (from 70), text-[12.5px] (from 13), dark mode bg-black/80
+- **Window refinements**: h-[36px] title bar (from 38), dark mode disables light window chrome
+- **System Preferences**: Emoji icons replaced with colored circle + Lucide icons, Appearance pane controls global dark mode
+- **Desktop Icons**: Better grid spacing with 8px gaps and adjusted top position
+- No changes to: Dock component, page.tsx, or any app components not mentioned

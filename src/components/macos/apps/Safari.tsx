@@ -48,13 +48,30 @@ const BOOKMARKS: BookmarkItem[] = [
   { name: 'Reddit', url: 'reddit.com', favicon: '' },
 ]
 
+interface FaviconConfig {
+  letter?: string
+  bgColor: string
+  textColor?: string
+  borderColor?: string
+  icon?: 'apple' | 'github'
+}
+
+const FAVICON_CONFIG: Record<string, FaviconConfig> = {
+  'apple.com': { bgColor: '#A2AAAD', icon: 'apple' },
+  'google.com': { letter: 'G', bgColor: '#4285F4' },
+  'youtube.com': { letter: '▶', bgColor: '#FF0000' },
+  'github.com': { bgColor: '#24292e', icon: 'github' },
+  'wikipedia.org': { letter: 'W', bgColor: '#ffffff', textColor: '#333333', borderColor: '#cccccc' },
+  'reddit.com': { letter: 'R', bgColor: '#FF4500' },
+}
+
 const FAVICON_MAP: Record<string, string> = {
-  'apple.com': '',
-  'google.com': '',
-  'youtube.com': '',
-  'github.com': '',
-  'wikipedia.org': '',
-  'reddit.com': '',
+  'apple.com': 'apple',
+  'google.com': 'google',
+  'youtube.com': 'youtube',
+  'github.com': 'github',
+  'wikipedia.org': 'wikipedia',
+  'reddit.com': 'reddit',
 }
 
 const PAGE_TITLES: Record<string, string> = {
@@ -72,6 +89,56 @@ let tabCounter = 0
 function generateTabId(): string {
   tabCounter++
   return `tab-${tabCounter}-${Date.now()}`
+}
+
+function FaviconIcon({ url, size = 'default' }: { url: string; size?: 'default' | 'small' }) {
+  const normalized = url.toLowerCase().replace(/^https?:\/\//, '').replace(/\/$/, '')
+  let config: FaviconConfig | undefined
+
+  if (normalized.includes('apple')) config = FAVICON_CONFIG['apple.com']
+  else if (normalized.includes('google')) config = FAVICON_CONFIG['google.com']
+  else if (normalized.includes('youtube')) config = FAVICON_CONFIG['youtube.com']
+  else if (normalized.includes('github')) config = FAVICON_CONFIG['github.com']
+  else if (normalized.includes('wikipedia')) config = FAVICON_CONFIG['wikipedia.org']
+  else if (normalized.includes('reddit')) config = FAVICON_CONFIG['reddit.com']
+
+  if (!config) {
+    return <Globe size={size === 'small' ? 12 : 16} className="text-gray-400" />
+  }
+
+  const dim = size === 'small' ? 16 : 28
+  const fontSize = size === 'small' ? 9 : 14
+
+  // SVG icons for Apple and GitHub
+  const appleIcon = (
+    <svg viewBox="0 0 170 170" fill="currentColor" style={{ width: dim * 0.6, height: dim * 0.6 }}>
+      <path d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.2-2.12-9.97-3.17-14.34-3.17-4.58 0-9.49 1.05-14.75 3.17-5.28 2.13-9.54 3.24-12.8 3.35-4.93.21-9.84-1.96-14.75-6.52-3.13-2.73-7.05-7.41-11.75-14.04-5.03-7.08-9.17-15.29-12.41-24.65-3.47-10.11-5.21-19.9-5.21-29.38 0-10.86 2.35-20.22 7.04-28.04 3.69-6.27 8.6-11.23 14.76-14.88 6.15-3.65 12.8-5.51 19.97-5.63 3.92 0 9.06 1.21 15.43 3.6 6.36 2.4 10.44 3.62 12.24 3.62 1.34 0 5.87-1.43 13.56-4.28 7.27-2.64 13.41-3.74 18.44-3.32 13.63 1.1 23.87 6.47 30.68 16.15-12.2 7.39-18.22 17.73-18.1 31 0.12 10.33 3.86 18.93 11.19 25.77 3.33 3.17 7.05 5.62 11.18 7.37-.9 2.6-1.84 5.09-2.85 7.47zM119.1 7.01c0 8.1-2.96 15.67-8.86 22.67-7.12 8.32-15.73 13.13-25.07 12.37a25.2 25.2 0 0 1-.19-3.07c0-7.78 3.39-16.1 9.4-22.9 3-3.44 6.82-6.31 11.45-8.6 4.62-2.26 8.99-3.51 13.1-3.75.13 1.11.17 2.22.17 3.28z" />
+    </svg>
+  )
+
+  const githubIcon = (
+    <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: dim * 0.6, height: dim * 0.6 }}>
+      <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+    </svg>
+  )
+
+  return (
+    <div
+      className="flex items-center justify-center shrink-0 rounded-lg"
+      style={{
+        width: dim,
+        height: dim,
+        backgroundColor: config.bgColor,
+        color: config.textColor ?? 'white',
+        fontSize,
+        fontWeight: 600,
+        lineHeight: 1,
+        border: config.borderColor ? `1px solid ${config.borderColor}` : undefined,
+      }}
+    >
+      {config.icon === 'apple' ? appleIcon : config.icon === 'github' ? githubIcon : config.letter}
+    </div>
+  )
 }
 
 function createTab(url: string = 'localhost:3000', title?: string): Tab {
@@ -113,8 +180,8 @@ function AppleStartPage() {
               key={bm.url}
               className="flex flex-col items-center gap-2 group cursor-pointer"
             >
-              <div className="w-14 h-14 rounded-2xl bg-white shadow-md border border-gray-100 flex items-center justify-center text-2xl group-hover:shadow-lg group-hover:scale-105 transition-all duration-200">
-                {bm.favicon}
+              <div className="w-14 h-14 rounded-2xl bg-white shadow-md border border-gray-100 flex items-center justify-center group-hover:shadow-lg group-hover:scale-105 transition-all duration-200">
+                <FaviconIcon url={bm.url} />
               </div>
               <span className="text-[11px] text-gray-500 group-hover:text-gray-700 truncate w-full text-center transition-colors">
                 {bm.name}
@@ -720,12 +787,12 @@ function resolvePageTitle(url: string): string {
 
 function resolveFavicon(url: string): string {
   const normalized = url.toLowerCase().replace(/^https?:\/\//, '').replace(/\/$/, '')
-  if (normalized.includes('google')) return ''
-  if (normalized.includes('youtube')) return ''
-  if (normalized.includes('github')) return ''
-  if (normalized.includes('wikipedia')) return ''
-  if (normalized.includes('apple')) return ''
-  if (normalized.includes('reddit')) return ''
+  if (normalized.includes('google')) return 'google'
+  if (normalized.includes('youtube')) return 'youtube'
+  if (normalized.includes('github')) return 'github'
+  if (normalized.includes('wikipedia')) return 'wikipedia'
+  if (normalized.includes('apple')) return 'apple'
+  if (normalized.includes('reddit')) return 'reddit'
   return ''
 }
 
@@ -1032,18 +1099,21 @@ export default function Safari() {
       </div>
 
       {/* ─── Tab Bar ──────────────────────────────────────────────────── */}
-      <div className="shrink-0 bg-[#e8e8e8] border-b border-gray-300/50">
-        <div className="flex items-end px-1 pt-0.5 gap-0 overflow-x-auto">
-          {tabs.map((tab) => {
+      <div className="shrink-0 bg-[#ececec] border-b border-gray-300/50">
+        <div className="flex items-end px-1 pt-0.5 overflow-x-auto">
+          {tabs.map((tab, tabIdx) => {
             const isActive = tab.id === activeTabId
             return (
               <div
                 key={tab.id}
                 className={`group flex items-center gap-1.5 px-3 py-[5px] min-w-[140px] max-w-[220px] text-[12px] rounded-t-lg cursor-pointer transition-colors relative ${
                   isActive
-                    ? 'bg-white text-gray-800'
-                    : 'bg-[#e0e0e0] text-gray-500 hover:bg-[#eaeaea]'
+                    ? 'bg-white/95 text-gray-800'
+                    : 'bg-transparent text-gray-500 hover:bg-white/40'
                 }`}
+                style={{
+                  borderRight: tabIdx < tabs.length - 1 ? '1px solid rgba(0,0,0,0.08)' : undefined,
+                }}
                 onClick={() => {
                   setActiveTabId(tab.id)
                   setShowTabOverview(false)
@@ -1053,17 +1123,17 @@ export default function Safari() {
                 {isActive && (
                   <>
                     <div className="absolute -bottom-px left-0 right-0 h-[2px] bg-white" />
-                    <div className="absolute -bottom-px -left-1 w-2 h-2 bg-[#e8e8e8]" style={{ borderRadius: '0 0 8px 0' }} />
-                    <div className="absolute -bottom-px -right-1 w-2 h-2 bg-[#e8e8e8]" style={{ borderRadius: '0 0 0 8px' }} />
+                    <div className="absolute -bottom-px -left-1 w-2 h-2 bg-[#ececec]" style={{ borderRadius: '0 0 8px 0' }} />
+                    <div className="absolute -bottom-px -right-1 w-2 h-2 bg-[#ececec]" style={{ borderRadius: '0 0 0 8px' }} />
                   </>
                 )}
 
                 {/* Favicon / Loading spinner */}
-                <span className="text-[13px] shrink-0">
+                <span className="shrink-0">
                   {tab.isLoading ? (
                     <span className="inline-block w-3 h-3 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
                   ) : (
-                    tab.favicon || ''
+                    <FaviconIcon url={tab.url} size="small" />
                   )}
                 </span>
 
@@ -1107,7 +1177,7 @@ export default function Safari() {
             className="flex items-center gap-1.5 px-2.5 py-[3px] rounded-md hover:bg-gray-200/60 text-[12px] text-gray-600 hover:text-gray-800 transition-colors"
             onClick={() => handleBookmarkClick(bm)}
           >
-            <span className="text-[12px]">{bm.favicon}</span>
+            <FaviconIcon url={bm.url} size="small" />
             <span className="truncate">{bm.name}</span>
           </button>
         ))}
@@ -1185,7 +1255,7 @@ function TabOverview({
               {/* Simulated preview */}
               <div className="bg-white aspect-[4/3] relative">
                 <div className="h-6 bg-gray-100 border-b border-gray-200 flex items-center px-2">
-                  <span className="text-[10px]">{tab.favicon}</span>
+                  <FaviconIcon url={tab.url} size="small" />
                   <span className="text-[10px] text-gray-500 truncate ml-1">{tab.title}</span>
                 </div>
                 <div className="p-2 space-y-1.5">
