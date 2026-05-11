@@ -17,6 +17,7 @@ const NotificationCenter = dynamic(() => import('@/components/macos/Notification
 const Launchpad = dynamic(() => import('@/components/macos/Launchpad'), { ssr: false })
 const MissionControl = dynamic(() => import('@/components/macos/MissionControl'), { ssr: false })
 const LoginScreen = dynamic(() => import('@/components/macos/LoginScreen'), { ssr: false })
+const KeyboardShortcuts = dynamic(() => import('@/components/macos/KeyboardShortcuts'), { ssr: false })
 
 const Finder = dynamic(() => import('@/components/macos/apps/Finder'), { ssr: false })
 const Calculator = dynamic(() => import('@/components/macos/apps/Calculator'), { ssr: false })
@@ -71,6 +72,7 @@ export default function MacOSDesktop() {
       <Launchpad />
       <MissionControl />
       <LoginScreen />
+      <KeyboardShortcuts />
     </Desktop>
   )
 }

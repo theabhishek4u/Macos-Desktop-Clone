@@ -116,9 +116,9 @@ export default function DesktopIcons() {
               />
             </div>
             <span
-              className={`text-[11px] text-center leading-tight font-medium max-w-[80px] truncate px-1.5 py-0.5 rounded ${
+              className={`text-[11px] text-center leading-tight font-medium max-w-[100px] break-words px-1.5 py-0.5 rounded ${
                 isSelected
-                  ? 'text-white bg-black/30 backdrop-blur-sm'
+                  ? 'text-white bg-blue-500/40 backdrop-blur-sm'
                   : 'text-white/85 bg-black/30 backdrop-blur-sm'
               }`}
               style={{ textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}

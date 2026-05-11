@@ -162,22 +162,7 @@ export default function Spotlight() {
   // Flat list for keyboard navigation
   const flatResults = groupedResults.flatMap(g => g.items)
 
-  // Keyboard shortcut: Cmd+Space to toggle
-  useEffect(() => {
-    const handleGlobalKeyDown = (e: KeyboardEvent) => {
-      if (e.metaKey && e.code === 'Space') {
-        e.preventDefault()
-        if (spotlightState.isOpen) {
-          close()
-        } else {
-          spotlightState.isOpen = true
-          emitChange()
-        }
-      }
-    }
-    window.addEventListener('keydown', handleGlobalKeyDown)
-    return () => window.removeEventListener('keydown', handleGlobalKeyDown)
-  }, [close])
+  // Note: Cmd+Space is now handled globally in KeyboardShortcuts.tsx
 
   // Handle result selection
   const handleSelect = useCallback(

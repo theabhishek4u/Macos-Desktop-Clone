@@ -187,9 +187,9 @@ function DockIcon({
               }
             : {
                 type: 'spring',
-                stiffness: 400,
-                damping: 25,
-                mass: 0.8,
+                stiffness: 500,
+                damping: 18,
+                mass: 0.6,
               }
         }
         className="flex items-center justify-center rounded-[12px] transition-shadow duration-200 hover:shadow-[0_0_15px_rgba(255,255,255,0.15)]"
@@ -207,12 +207,23 @@ function DockIcon({
         <DockAppIcon appId={appId} size={currentSize * 0.85} />
       </motion.button>
 
-      {/* Running indicator dot */}
+      {/* Running indicator dot with gentle glow pulse */}
       {isRunning && !isTrash && (
         <motion.div
           initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          className="mt-0.5 h-[5px] w-[5px] rounded-full bg-white shadow-[0_0_3px_rgba(255,255,255,0.5)]"
+          animate={{ 
+            scale: 1,
+            boxShadow: [
+              '0 0 3px rgba(255,255,255,0.5)',
+              '0 0 8px rgba(255,255,255,0.8)',
+              '0 0 3px rgba(255,255,255,0.5)',
+            ]
+          }}
+          transition={{
+            scale: { type: 'spring', stiffness: 400, damping: 25 },
+            boxShadow: { duration: 2, repeat: Infinity, ease: 'easeInOut' },
+          }}
+          className="mt-0.5 h-[5px] w-[5px] rounded-full bg-white"
         />
       )}
     </div>
@@ -408,6 +419,11 @@ export default function Dock() {
         style={{
           boxShadow:
             'inset 0 1px 0 rgba(255,255,255,0.3), 0 8px 32px rgba(0,0,0,0.25), 0 2px 8px rgba(0,0,0,0.15)',
+          backgroundImage: `
+            linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)
+          `,
+          backgroundSize: '12px 12px',
         }}
         initial={{ y: 80, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -428,6 +444,13 @@ export default function Dock() {
             background: 'linear-gradient(180deg, rgba(255,255,255,0.08), transparent)',
           }}
         />
+        {/* Bottom reflection/shine gradient */}
+        <div
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-5 rounded-b-[18px]"
+          style={{
+            background: 'linear-gradient(180deg, transparent, rgba(255,255,255,0.06))',
+          }}
+        />
 
         {dockItems.map((item, index) => {
           if (!item) return null
@@ -443,8 +466,8 @@ export default function Dock() {
                 <div
                   className="mx-1.5 h-10 w-[1px] self-center"
                   style={{
-                    background: 'rgba(255,255,255,0.2)',
-                    boxShadow: '0 0 2px rgba(255,255,255,0.08), -1px 0 0 rgba(255,255,255,0.05)',
+                    background: 'linear-gradient(180deg, transparent, rgba(255,255,255,0.3) 20%, rgba(255,255,255,0.3) 80%, transparent)',
+                    boxShadow: '0 0 4px rgba(255,255,255,0.12), 0 0 1px rgba(255,255,255,0.2)',
                   }}
                 />
               )}

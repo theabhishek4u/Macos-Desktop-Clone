@@ -50,6 +50,8 @@ export default function Window({ windowId, children }: WindowProps) {
   const [isClosing, setIsClosing] = useState(false)
   const [isMinimizing, setIsMinimizing] = useState(false)
   const [prevIsMinimized, setPrevIsMinimized] = useState(false)
+  const [isDragging, setIsDragging] = useState(false)
+  const [isResizing, setIsResizing] = useState(false)
 
   // Use refs for drag/resize state to avoid re-renders during interaction
   const dragRef = useRef<{
@@ -83,6 +85,7 @@ export default function Window({ windowId, children }: WindowProps) {
       if ((e.target as HTMLElement).closest('[data-traffic-light]')) return
       e.preventDefault()
       focusWindow(windowId)
+      setIsDragging(true)
       dragRef.current = {
         startX: e.clientX,
         startY: e.clientY,
@@ -101,6 +104,7 @@ export default function Window({ windowId, children }: WindowProps) {
 
       const handleMouseUp = () => {
         dragRef.current = null
+        setIsDragging(false)
         document.removeEventListener('mousemove', handleMouseMove)
         document.removeEventListener('mouseup', handleMouseUp)
       }
@@ -118,6 +122,7 @@ export default function Window({ windowId, children }: WindowProps) {
       e.stopPropagation()
       focusWindow(windowId)
 
+      setIsResizing(true)
       resizeRef.current = {
         direction,
         startMouseX: e.clientX,
@@ -190,6 +195,7 @@ export default function Window({ windowId, children }: WindowProps) {
 
       const handleMouseUp = () => {
         resizeRef.current = null
+        setIsResizing(false)
         document.removeEventListener('mousemove', handleMouseMove)
         document.removeEventListener('mouseup', handleMouseUp)
         document.body.style.cursor = ''
@@ -246,6 +252,7 @@ export default function Window({ windowId, children }: WindowProps) {
             width,
             height,
             zIndex: windowState.zIndex,
+            transition: isDragging || isResizing ? 'none' : 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1), top 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1), height 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
           }}
           initial={{ scale: 0.95, opacity: 0 }}
           animate={
@@ -255,10 +262,11 @@ export default function Window({ windowId, children }: WindowProps) {
                   x: minimizeTranslateX,
                   y: minimizeTranslateY,
                   opacity: 0,
+                  rotate: 0,
                 }
               : isClosing
-                ? { scale: 0.92, opacity: 0, x: 0, y: 0 }
-                : { scale: 1, opacity: 1, x: 0, y: 0 }
+                ? { scale: 0.92, opacity: 0, x: 0, y: 0, rotate: 0 }
+                : { scale: isDragging ? 1.01 : 1, opacity: isActive ? 1 : 0.98, x: 0, y: 0, rotate: isDragging ? 0.5 : 0 }
           }
           exit={{
             scale: 0.92,
@@ -282,21 +290,28 @@ export default function Window({ windowId, children }: WindowProps) {
         >
           {/* Window frame */}
           <div
-            className={`flex flex-col w-full h-full rounded-xl overflow-hidden transition-shadow duration-200 transition-all duration-300 ${
-              isActive
-                ? 'shadow-2xl shadow-black/30'
-                : 'shadow-lg shadow-black/15'
-            } ${isMaximized ? 'rounded-none' : ''}`}
+            className={`flex flex-col w-full h-full rounded-xl overflow-hidden transition-all duration-300 relative ${
+              isMaximized ? 'rounded-none' : ''
+            }`}
             style={{
               background: isLightWindow ? '#f0f0f0' : '#1e1e1e',
+              boxShadow: isActive
+                ? isDragging
+                  ? '0 30px 60px -15px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05)'
+                  : isLightWindow
+                    ? '0 25px 50px -12px rgba(0,0,0,0.25), 0 10px 15px -3px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.1)'
+                    : '0 25px 50px -12px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.1)'
+                : '0 10px 25px -5px rgba(0,0,0,0.15)',
             }}
           >
-            {/* Top highlight line */}
+            {/* Top highlight line - inner border highlight for light windows */}
             <div
               className="w-full h-[1px] shrink-0"
               style={{
                 background: isLightWindow
-                  ? 'linear-gradient(90deg, transparent, rgba(0,0,0,0.03) 20%, rgba(0,0,0,0.05) 50%, rgba(0,0,0,0.03) 80%, transparent)'
+                  ? isActive
+                    ? 'linear-gradient(90deg, transparent, rgba(255,255,255,0.5) 20%, rgba(255,255,255,0.7) 50%, rgba(255,255,255,0.5) 80%, transparent)'
+                    : 'linear-gradient(90deg, transparent, rgba(0,0,0,0.03) 20%, rgba(0,0,0,0.05) 50%, rgba(0,0,0,0.03) 80%, transparent)'
                   : isActive
                     ? 'linear-gradient(90deg, transparent, rgba(255,255,255,0.1) 20%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.1) 80%, transparent)'
                     : 'linear-gradient(90deg, transparent, rgba(255,255,255,0.05) 20%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.05) 80%, transparent)',
@@ -390,7 +405,7 @@ export default function Window({ windowId, children }: WindowProps) {
             </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-hidden">
+            <div className={`flex-1 overflow-hidden transition-opacity duration-200 ${isActive ? 'opacity-100' : 'opacity-90'}`}>
               {children}
             </div>
           </div>

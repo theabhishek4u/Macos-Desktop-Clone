@@ -216,7 +216,7 @@ export default function MenuBar() {
 
   return (
     <div
-      className="fixed top-0 left-0 right-0 h-[28px] bg-black/70 backdrop-blur-xl text-white/90 text-[13px] font-normal z-[9999] flex items-center justify-between px-2 select-none"
+      className="fixed top-0 left-0 right-0 h-[28px] bg-black/70 backdrop-blur-xl text-white/90 text-[13px] font-medium z-[9999] flex items-center justify-between px-2 select-none"
       style={{ borderBottom: '0.5px solid rgba(255,255,255,0.08)' }}
       ref={menuBarRef}
     >
@@ -259,7 +259,7 @@ export default function MenuBar() {
         {Object.keys(MENU_ITEMS).map(item => (
           <div key={item} className="relative">
             <button
-              className={`px-2 h-[28px] flex items-center rounded transition-colors text-[13px] font-normal ${
+              className={`px-2 h-[28px] flex items-center rounded transition-colors text-[13px] font-medium ${
                 openMenu === item ? 'bg-white/15' : 'hover:bg-white/10'
               }`}
               onClick={() => handleMenuToggle(item)}
