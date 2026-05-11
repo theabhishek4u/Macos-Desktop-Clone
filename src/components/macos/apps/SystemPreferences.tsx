@@ -1,6 +1,8 @@
 'use client'
 
 import React, { useState } from 'react'
+import useMacOSStore from '@/store/macos-store'
+import { WALLPAPERS } from '@/components/macos/Desktop'
 import {
   ChevronLeft,
   Sun,
@@ -1027,15 +1029,7 @@ function DesktopPane() {
   const [changeInterval, setChangeInterval] = useState('never')
   const [randomOrder, setRandomOrder] = useState(false)
   const [showDesktopFolders, setShowDesktopFolders] = useState(true)
-
-  const wallpapers = [
-    'linear-gradient(135deg, #1a1a2e, #16213e)',
-    'linear-gradient(135deg, #2d1b69, #11998e)',
-    'linear-gradient(135deg, #1e3c72, #2a5298)',
-    'linear-gradient(135deg, #0c0c1d, #4a1942)',
-    'linear-gradient(135deg, #0f2027, #2c5364)',
-    'linear-gradient(135deg, #1f1c2c, #928dab)',
-  ]
+  const { wallpaperIndex, setWallpaperIndex } = useMacOSStore()
 
   return (
     <div>
@@ -1043,12 +1037,24 @@ function DesktopPane() {
         <div className="py-3">
           <div className="text-[13px] text-gray-800 font-medium mb-3">Desktop Pictures</div>
           <div className="grid grid-cols-3 gap-2">
-            {wallpapers.map((wp, i) => (
+            {WALLPAPERS.map((wp, i) => (
               <div
                 key={i}
-                className="aspect-video rounded-lg cursor-pointer border-2 border-transparent hover:border-blue-400 transition-colors"
-                style={{ background: wp }}
-              />
+                className="aspect-video rounded-lg cursor-pointer border-2 transition-colors relative overflow-hidden group"
+                style={wp.style}
+                onClick={() => setWallpaperIndex(i)}
+              >
+                <div className={`absolute inset-0 rounded-lg transition-colors ${
+                  wallpaperIndex === i
+                    ? 'border-2 border-blue-500 shadow-md shadow-blue-500/20'
+                    : 'border-transparent hover:border-blue-400/60'
+                }`} />
+                <div className={`absolute bottom-1 left-1 right-1 text-[9px] font-medium text-white/80 bg-black/30 rounded px-1 py-0.5 text-center truncate ${
+                  wallpaperIndex === i ? 'bg-blue-500/40' : ''
+                }`}>
+                  {wp.name}
+                </div>
+              </div>
             ))}
           </div>
         </div>

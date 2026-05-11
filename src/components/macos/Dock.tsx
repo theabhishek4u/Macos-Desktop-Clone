@@ -10,7 +10,7 @@ const MAX_SCALE = 1.8
 const MAGNIFICATION_RANGE = 150 // pixel range for magnification effect
 const SIGMA = 70 // gaussian spread
 const ICON_GAP = 6 // gap between icons (gap-1.5 = 6px)
-const DOCK_PADDING_X = 12 // px-3 = 12px
+const DOCK_PADDING_X = 16 // px-4 = 16px
 
 // Trash config (not in APP_CONFIGS since it's not an app)
 const TRASH_CONFIG = { id: 'trash', name: 'Trash', icon: '🗑️' }
@@ -62,10 +62,11 @@ function DockIcon({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 4 }}
             transition={{ duration: 0.15 }}
-            className="absolute -top-10 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-gray-800/90 px-3 py-1.5 text-xs font-medium text-white shadow-lg backdrop-blur-sm"
+            className="absolute -top-11 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-lg border border-white/10 bg-gray-800/90 px-4 py-1.5 text-xs font-medium text-white shadow-lg backdrop-blur-md"
           >
             {name}
-            <div className="absolute -bottom-1 left-1/2 h-2 w-2 -translate-x-1/2 rotate-45 bg-gray-800/90" />
+            {/* Caret/arrow pointing down to the icon */}
+            <div className="absolute -bottom-[5px] left-1/2 h-[10px] w-[10px] -translate-x-1/2 rotate-45 border-b border-r border-white/10 bg-gray-800/90" />
           </motion.div>
         )}
       </AnimatePresence>
@@ -93,15 +94,17 @@ function DockIcon({
                 mass: 0.8,
               }
         }
-        className="flex items-center justify-center rounded-xl transition-shadow duration-200 hover:shadow-lg hover:shadow-white/10"
+        className="flex items-center justify-center rounded-[12px] transition-shadow duration-200 hover:shadow-[0_0_15px_rgba(255,255,255,0.15)]"
         style={{
           fontSize: Math.round(currentSize * 0.55),
           lineHeight: 1,
           background: isTrash
-            ? 'linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.05))'
-            : 'linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.08))',
+            ? 'linear-gradient(135deg, rgba(255,255,255,0.18), rgba(255,255,255,0.06))'
+            : 'linear-gradient(145deg, rgba(255,255,255,0.25), rgba(255,255,255,0.1))',
           backdropFilter: 'blur(8px)',
-          border: '1px solid rgba(255,255,255,0.18)',
+          border: '1px solid rgba(255,255,255,0.22)',
+          boxShadow:
+            'inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.1)',
         }}
       >
         <span className="select-none">{icon}</span>
@@ -112,7 +115,7 @@ function DockIcon({
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
-          className="mt-0.5 h-1 w-1 rounded-full bg-white/90 shadow-sm shadow-white/50"
+          className="mt-0.5 h-[5px] w-[5px] rounded-full bg-white shadow-[0_0_3px_rgba(255,255,255,0.5)]"
         />
       )}
     </div>
@@ -223,11 +226,31 @@ export default function Dock() {
         ref={dockRef}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
-        className="flex items-end gap-1.5 rounded-2xl border border-white/30 bg-white/20 px-3 pb-2 pt-2 shadow-2xl shadow-black/20 backdrop-blur-2xl"
+        className="relative flex items-end gap-1.5 overflow-hidden rounded-[18px] border border-white/20 bg-white/[0.15] px-4 pb-2.5 pt-2 shadow-2xl shadow-black/20 backdrop-blur-2xl"
+        style={{
+          boxShadow:
+            'inset 0 1px 0 rgba(255,255,255,0.3), 0 8px 32px rgba(0,0,0,0.25), 0 2px 8px rgba(0,0,0,0.15)',
+        }}
         initial={{ y: 80, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ type: 'spring', stiffness: 200, damping: 22, delay: 0.3 }}
       >
+        {/* Subtle top highlight/reflection shine */}
+        <div
+          className="pointer-events-none absolute inset-x-0 top-0 h-[1px]"
+          style={{
+            background:
+              'linear-gradient(90deg, transparent, rgba(255,255,255,0.4) 20%, rgba(255,255,255,0.6) 50%, rgba(255,255,255,0.4) 80%, transparent)',
+          }}
+        />
+        {/* Subtle gradient reflection below the highlight line */}
+        <div
+          className="pointer-events-none absolute inset-x-0 top-[1px] h-6"
+          style={{
+            background: 'linear-gradient(180deg, rgba(255,255,255,0.08), transparent)',
+          }}
+        />
+
         {dockItems.map((item, index) => {
           if (!item) return null
 
@@ -239,7 +262,13 @@ export default function Dock() {
             <React.Fragment key={item.id}>
               {/* Separator before Trash */}
               {isTrash && (
-                <div className="mx-1.5 h-10 w-px self-center bg-white/25" />
+                <div
+                  className="mx-1.5 h-10 w-[1px] self-center"
+                  style={{
+                    background: 'rgba(255,255,255,0.2)',
+                    boxShadow: '0 0 2px rgba(255,255,255,0.08), -1px 0 0 rgba(255,255,255,0.05)',
+                  }}
+                />
               )}
               <DockIcon
                 appId={item.id}

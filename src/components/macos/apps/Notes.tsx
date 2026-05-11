@@ -11,6 +11,16 @@ import {
   List,
   AlignLeft,
   NotebookPen,
+  FolderClosed,
+  Clock,
+  Cloud,
+  Share2,
+  Table,
+  TextQuote,
+  ListChecks,
+  ChevronRight,
+  ChevronDown,
+  MoreHorizontal,
 } from 'lucide-react';
 
 interface Note {
@@ -18,15 +28,30 @@ interface Note {
   title: string;
   content: string;
   updatedAt: Date;
+  folderId: string;
 }
+
+interface Folder {
+  id: string;
+  name: string;
+  icon: 'all' | 'notes' | 'trash' | 'custom';
+  count?: number;
+}
+
+const DEFAULT_FOLDERS: Folder[] = [
+  { id: 'all', name: 'All iCloud', icon: 'all' },
+  { id: 'notes', name: 'Notes', icon: 'notes' },
+  { id: 'trash', name: 'Recently Deleted', icon: 'trash' },
+];
 
 const SAMPLE_NOTES: Note[] = [
   {
     id: '1',
     title: 'Welcome to Notes',
     content:
-      'This is your new Notes app. You can create, edit, and delete notes here.\n\nTry creating a new note with the + button in the sidebar!',
+      'This is your new Notes app. You can create, edit, and delete notes here.\n\nTry creating a new note with the + button in the toolbar!',
     updatedAt: new Date(Date.now() - 1000 * 60 * 5),
+    folderId: 'notes',
   },
   {
     id: '2',
@@ -34,6 +59,7 @@ const SAMPLE_NOTES: Note[] = [
     content:
       'Team standup - Monday\n\n- Discussed Q2 roadmap\n- Design review scheduled for Wednesday\n- New feature specs need approval\n- Follow up with engineering on timeline',
     updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 2),
+    folderId: 'notes',
   },
   {
     id: '3',
@@ -41,6 +67,7 @@ const SAMPLE_NOTES: Note[] = [
     content:
       'Ingredients:\n- 400g spaghetti\n- 200g guanciale\n- 4 egg yolks\n- 100g pecorino romano\n- Black pepper\n\nCook pasta al dente. Crisp guanciale. Mix yolks with cheese. Combine off heat.',
     updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 24),
+    folderId: 'notes',
   },
   {
     id: '4',
@@ -48,6 +75,15 @@ const SAMPLE_NOTES: Note[] = [
     content:
       '1. Designing Data-Intensive Applications - Martin Kleppmann\n2. The Pragmatic Programmer - Hunt & Thomas\n3. Clean Code - Robert C. Martin\n4. Refactoring - Martin Fowler',
     updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 48),
+    folderId: 'notes',
+  },
+  {
+    id: '5',
+    title: 'Project Ideas',
+    content:
+      'Build a weather dashboard with real-time data\nCreate a habit tracker with streaks\nDesign a personal portfolio site',
+    updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 10),
+    folderId: 'notes',
   },
 ];
 
@@ -82,54 +118,119 @@ function getDisplayTitle(note: Note): string {
 
 function getPreviewText(note: Note): string {
   const lines = note.content.trim().split('\n');
-  // Skip the first line if it's used as the auto-title
   const startIdx = note.title.trim() ? 0 : 1;
   const preview = lines.slice(startIdx).join(' ').trim();
   return preview || 'No additional text';
 }
 
+function getTimeGroup(date: Date): 'today' | 'week' | 'month' | 'older' {
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffDays < 1) return 'today';
+  if (diffDays < 7) return 'week';
+  if (diffDays < 30) return 'month';
+  return 'older';
+}
+
+const TIME_LABELS: Record<string, string> = {
+  today: 'Today',
+  week: 'Previous 7 Days',
+  month: 'Previous 30 Days',
+  older: 'Older',
+};
+
 export default function Notes() {
   const [notes, setNotes] = useState<Note[]>(SAMPLE_NOTES);
   const [selectedId, setSelectedId] = useState<string>('1');
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedFolderId, setSelectedFolderId] = useState<string>('all');
+  const [folders] = useState<Folder[]>(DEFAULT_FOLDERS);
+  const [iCloudExpanded, setICloudExpanded] = useState(true);
 
   const selectedNote = useMemo(
     () => notes.find((n) => n.id === selectedId) ?? null,
     [notes, selectedId]
   );
 
+  const folderFilteredNotes = useMemo(() => {
+    if (selectedFolderId === 'all') return notes.filter((n) => n.folderId !== 'trash');
+    if (selectedFolderId === 'trash') return notes.filter((n) => n.folderId === 'trash');
+    return notes.filter((n) => n.folderId === selectedFolderId);
+  }, [notes, selectedFolderId]);
+
   const filteredNotes = useMemo(() => {
-    if (!searchQuery.trim()) return notes;
+    if (!searchQuery.trim()) return folderFilteredNotes;
     const q = searchQuery.toLowerCase();
-    return notes.filter(
+    return folderFilteredNotes.filter(
       (n) =>
         getDisplayTitle(n).toLowerCase().includes(q) ||
         n.content.toLowerCase().includes(q)
     );
-  }, [notes, searchQuery]);
+  }, [folderFilteredNotes, searchQuery]);
+
+  const groupedNotes = useMemo(() => {
+    const groups: Record<string, Note[]> = {};
+    for (const note of filteredNotes) {
+      const group = getTimeGroup(note.updatedAt);
+      if (!groups[group]) groups[group] = [];
+      groups[group].push(note);
+    }
+    // Sort within each group by date
+    for (const key of Object.keys(groups)) {
+      groups[key].sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+    }
+    return groups;
+  }, [filteredNotes]);
+
+  const folderCounts = useMemo(() => {
+    const counts: Record<string, number> = {
+      all: notes.filter((n) => n.folderId !== 'trash').length,
+      notes: notes.filter((n) => n.folderId === 'notes').length,
+      trash: notes.filter((n) => n.folderId === 'trash').length,
+    };
+    return counts;
+  }, [notes]);
 
   const handleAddNote = useCallback(() => {
+    const targetFolder = selectedFolderId === 'all' || selectedFolderId === 'trash' ? 'notes' : selectedFolderId;
     const newNote: Note = {
       id: generateId(),
       title: '',
       content: '',
       updatedAt: new Date(),
+      folderId: targetFolder,
     };
     setNotes((prev) => [newNote, ...prev]);
     setSelectedId(newNote.id);
-  }, []);
+  }, [selectedFolderId]);
 
   const handleDeleteNote = useCallback(
     (id: string, e?: React.MouseEvent) => {
       e?.stopPropagation();
       setNotes((prev) => {
-        const updated = prev.filter((n) => n.id !== id);
-        if (selectedId === id && updated.length > 0) {
-          setSelectedId(updated[0].id);
-        } else if (updated.length === 0) {
-          setSelectedId('');
+        const note = prev.find((n) => n.id === id);
+        // If in trash, permanently delete; otherwise move to trash
+        if (note?.folderId === 'trash') {
+          const updated = prev.filter((n) => n.id !== id);
+          if (selectedId === id && updated.length > 0) {
+            const nonTrash = updated.filter((n) => n.folderId !== 'trash');
+            setSelectedId(nonTrash.length > 0 ? nonTrash[0].id : updated[0].id);
+          } else if (updated.length === 0) {
+            setSelectedId('');
+          }
+          return updated;
+        } else {
+          const updated = prev.map((n) =>
+            n.id === id ? { ...n, folderId: 'trash', updatedAt: new Date() } : n
+          );
+          if (selectedId === id) {
+            const remaining = updated.filter((n) => n.folderId !== 'trash');
+            setSelectedId(remaining.length > 0 ? remaining[0].id : '');
+          }
+          return updated;
         }
-        return updated;
       });
     },
     [selectedId]
@@ -157,28 +258,97 @@ export default function Notes() {
     [selectedId]
   );
 
+  const getFolderIcon = (folder: Folder) => {
+    switch (folder.icon) {
+      case 'all':
+        return <FolderClosed className="h-3.5 w-3.5 text-blue-500" />;
+      case 'notes':
+        return <FolderClosed className="h-3.5 w-3.5 text-yellow-500" />;
+      case 'trash':
+        return <Trash2 className="h-3.5 w-3.5 text-gray-400" />;
+      default:
+        return <FolderClosed className="h-3.5 w-3.5 text-gray-400" />;
+    }
+  };
+
   return (
     <div className="flex h-full w-full overflow-hidden rounded-inherit">
-      {/* Sidebar */}
+      {/* Column 1: Folders Sidebar */}
       <div
-        className="flex w-[180px] min-w-[180px] flex-col border-r border-[#d6cfc2]"
-        style={{ backgroundColor: '#f5f0e8' }}
+        className="flex w-[140px] min-w-[140px] flex-col border-r border-[#d4cec3]"
+        style={{ backgroundColor: '#efe9dd' }}
       >
-        {/* Sidebar Header */}
-        <div className="flex items-center justify-between px-3 py-2 border-b border-[#d6cfc2]/60">
-          <NotebookPen className="h-4 w-4 text-amber-700" />
+        {/* Folders Header */}
+        <div className="flex items-center justify-between px-3 py-2 border-b border-[#d4cec3]/60">
+          <NotebookPen className="h-4 w-4 text-blue-600" />
           <button
             onClick={handleAddNote}
-            className="flex h-6 w-6 items-center justify-center rounded-md bg-amber-700/10 text-amber-800 transition-colors hover:bg-amber-700/20 active:bg-amber-700/30"
+            className="flex h-6 w-6 items-center justify-center rounded-md bg-blue-500/10 text-blue-600 transition-colors hover:bg-blue-500/20 active:bg-blue-500/30"
             title="New Note"
           >
             <Plus className="h-3.5 w-3.5" />
           </button>
         </div>
 
+        {/* iCloud Section */}
+        <div className="flex-1 overflow-y-auto custom-scrollbar py-1">
+          {/* iCloud Header */}
+          <button
+            onClick={() => setICloudExpanded(!iCloudExpanded)}
+            className="flex w-full items-center gap-1 px-3 py-1.5 text-left hover:bg-black/[0.04] transition-colors"
+          >
+            {iCloudExpanded ? (
+              <ChevronDown className="h-3 w-3 text-gray-400 shrink-0" />
+            ) : (
+              <ChevronRight className="h-3 w-3 text-gray-400 shrink-0" />
+            )}
+            <Cloud className="h-3 w-3 text-blue-400 shrink-0" />
+            <span className="text-[11px] font-semibold text-gray-600 uppercase tracking-wide">
+              iCloud
+            </span>
+          </button>
+
+          {/* Folder List */}
+          {iCloudExpanded && (
+            <div className="mt-0.5">
+              {folders.map((folder) => (
+                <button
+                  key={folder.id}
+                  onClick={() => setSelectedFolderId(folder.id)}
+                  className={`group flex w-full items-center gap-2 px-3 pl-7 py-[5px] text-left transition-all duration-150 ${
+                    folder.id === selectedFolderId
+                      ? 'bg-blue-500/15 text-blue-700'
+                      : 'text-gray-700 hover:bg-black/[0.04]'
+                  }`}
+                >
+                  {getFolderIcon(folder)}
+                  <span className="text-[12px] font-medium truncate flex-1">
+                    {folder.name}
+                  </span>
+                  <span
+                    className={`text-[10px] shrink-0 ${
+                      folder.id === selectedFolderId
+                        ? 'text-blue-500'
+                        : 'text-gray-400'
+                    }`}
+                  >
+                    {folderCounts[folder.id] ?? 0}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Column 2: Notes List */}
+      <div
+        className="flex w-[200px] min-w-[200px] flex-col border-r border-[#d4cec3]"
+        style={{ backgroundColor: '#f5f0e8' }}
+      >
         {/* Search Bar */}
-        <div className="px-2 py-1.5">
-          <div className="flex items-center gap-1.5 rounded-md bg-black/5 px-2 py-1">
+        <div className="px-2.5 py-2">
+          <div className="flex items-center gap-1.5 rounded-full bg-black/[0.05] px-2.5 py-[5px]">
             <Search className="h-3 w-3 text-gray-400 shrink-0" />
             <input
               type="text"
@@ -190,117 +360,172 @@ export default function Notes() {
           </div>
         </div>
 
-        {/* Notes List */}
+        {/* Notes List with Groups */}
         <div className="flex-1 overflow-y-auto custom-scrollbar">
           {filteredNotes.length === 0 && (
-            <div className="px-3 py-6 text-center text-[11px] text-gray-400">
+            <div className="px-3 py-8 text-center text-[11px] text-gray-400">
               {searchQuery ? 'No matching notes' : 'No notes yet'}
             </div>
           )}
-          {filteredNotes.map((note) => (
-            <button
-              key={note.id}
-              onClick={() => setSelectedId(note.id)}
-              className={`group relative w-full px-3 py-2 text-left transition-colors border-l-2 ${
-                note.id === selectedId
-                  ? 'bg-yellow-100/50 border-amber-500'
-                  : 'bg-transparent border-transparent hover:bg-yellow-50/40'
-              }`}
-            >
-              <div className="flex items-start justify-between gap-1">
-                <div className="min-w-0 flex-1">
-                  <div className="truncate text-[12px] font-semibold text-gray-800 leading-tight">
-                    {getDisplayTitle(note)}
-                  </div>
-                  <div className="mt-0.5 flex items-center gap-1.5">
-                    <span className="text-[10px] text-gray-400 shrink-0">
-                      {formatDate(note.updatedAt)}
-                    </span>
-                    <span className="truncate text-[10px] text-gray-400">
-                      {getPreviewText(note).slice(0, 30)}
-                    </span>
-                  </div>
+
+          {(['today', 'week', 'month', 'older'] as const).map((group) => {
+            const groupNotes = groupedNotes[group];
+            if (!groupNotes || groupNotes.length === 0) return null;
+
+            return (
+              <div key={group}>
+                {/* Section Header */}
+                <div className="px-3 pt-3 pb-1">
+                  <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
+                    {TIME_LABELS[group]}
+                  </span>
                 </div>
-                <button
-                  onClick={(e) => handleDeleteNote(note.id, e)}
-                  className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-red-100 hover:text-red-500 text-gray-400"
-                  title="Delete Note"
-                >
-                  <Trash2 className="h-3 w-3" />
-                </button>
+
+                {/* Notes in this group */}
+                {groupNotes.map((note) => (
+                  <button
+                    key={note.id}
+                    onClick={() => setSelectedId(note.id)}
+                    className={`group relative w-full px-3 py-2 text-left transition-all duration-150 border-l-[3px] rounded-r-md mx-1 ${
+                      note.id === selectedId
+                        ? 'bg-blue-50/70 border-blue-500'
+                        : 'bg-transparent border-transparent hover:bg-black/[0.03]'
+                    }`}
+                    style={{ width: 'calc(100% - 8px)' }}
+                  >
+                    <div className="flex items-start justify-between gap-1">
+                      <div className="min-w-0 flex-1">
+                        <div
+                          className={`truncate text-[12px] font-semibold leading-tight ${
+                            note.id === selectedId ? 'text-gray-900' : 'text-gray-800'
+                          }`}
+                        >
+                          {getDisplayTitle(note)}
+                        </div>
+                        <div className="mt-0.5 flex items-center gap-1.5">
+                          <span className="text-[10px] text-gray-400 shrink-0">
+                            {formatDate(note.updatedAt)}
+                          </span>
+                          <span className="truncate text-[10px] text-gray-400/70">
+                            {getPreviewText(note).slice(0, 28)}
+                          </span>
+                        </div>
+                      </div>
+                      <button
+                        onClick={(e) => handleDeleteNote(note.id, e)}
+                        className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity duration-150 p-0.5 rounded hover:bg-red-100 hover:text-red-500 text-gray-400"
+                        title={note.folderId === 'trash' ? 'Delete Permanently' : 'Move to Trash'}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </button>
+                    </div>
+                  </button>
+                ))}
               </div>
-            </button>
-          ))}
+            );
+          })}
         </div>
 
-        {/* Sidebar Footer */}
-        <div className="border-t border-[#d6cfc2]/60 px-3 py-1.5">
+        {/* Notes Count Footer */}
+        <div className="border-t border-[#d4cec3]/60 px-3 py-1.5">
           <span className="text-[10px] text-gray-400">
-            {notes.length} note{notes.length !== 1 ? 's' : ''}
+            {filteredNotes.length} note{filteredNotes.length !== 1 ? 's' : ''}
           </span>
         </div>
       </div>
 
-      {/* Editor */}
+      {/* Column 3: Editor */}
       <div className="flex flex-1 flex-col bg-white min-w-0">
         {selectedNote ? (
           <>
             {/* Format Toolbar */}
-            <div className="flex items-center gap-0.5 border-b border-gray-100 px-3 py-1.5 bg-gray-50/50">
+            <div className="flex items-center gap-0.5 border-b border-gray-200/80 px-4 py-1.5 bg-white">
               <button
-                className="rounded p-1.5 text-gray-500 hover:bg-gray-200/60 hover:text-gray-700 transition-colors"
+                className="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors duration-150"
+                title="Title"
+              >
+                <TextQuote className="h-3.5 w-3.5" />
+              </button>
+              <button
+                className="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors duration-150"
                 title="Bold"
               >
                 <Bold className="h-3.5 w-3.5" />
               </button>
               <button
-                className="rounded p-1.5 text-gray-500 hover:bg-gray-200/60 hover:text-gray-700 transition-colors"
+                className="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors duration-150"
                 title="Italic"
               >
                 <Italic className="h-3.5 w-3.5" />
               </button>
               <button
-                className="rounded p-1.5 text-gray-500 hover:bg-gray-200/60 hover:text-gray-700 transition-colors"
+                className="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors duration-150"
                 title="Underline"
               >
                 <Underline className="h-3.5 w-3.5" />
               </button>
               <div className="mx-1 h-4 w-px bg-gray-200" />
               <button
-                className="rounded p-1.5 text-gray-500 hover:bg-gray-200/60 hover:text-gray-700 transition-colors"
+                className="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors duration-150"
                 title="Bulleted List"
               >
                 <List className="h-3.5 w-3.5" />
               </button>
               <button
-                className="rounded p-1.5 text-gray-500 hover:bg-gray-200/60 hover:text-gray-700 transition-colors"
+                className="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors duration-150"
+                title="Checklist"
+              >
+                <ListChecks className="h-3.5 w-3.5" />
+              </button>
+              <button
+                className="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors duration-150"
+                title="Table"
+              >
+                <Table className="h-3.5 w-3.5" />
+              </button>
+              <button
+                className="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors duration-150"
                 title="Align Left"
               >
                 <AlignLeft className="h-3.5 w-3.5" />
               </button>
+              <div className="mx-1 h-4 w-px bg-gray-200" />
+              <button
+                className="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors duration-150"
+                title="Share"
+              >
+                <Share2 className="h-3.5 w-3.5" />
+              </button>
+              <div className="flex-1" />
+              <button
+                className="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors duration-150"
+                title="More"
+              >
+                <MoreHorizontal className="h-3.5 w-3.5" />
+              </button>
             </div>
 
-            {/* Title */}
-            <div className="px-6 pt-5 pb-1">
+            {/* Title Area */}
+            <div className="border-b border-gray-100 px-8 pt-6 pb-3">
               <input
                 type="text"
                 value={selectedNote.title}
                 onChange={(e) => handleUpdateTitle(e.target.value)}
                 placeholder="Title"
-                className="w-full text-xl font-bold text-gray-900 placeholder:text-gray-300 focus:outline-none"
+                className="w-full text-2xl font-bold text-gray-900 placeholder:text-gray-200 focus:outline-none tracking-tight"
               />
-              <div className="mt-1 text-[11px] text-gray-400">
+              <div className="mt-1.5 text-[11px] text-gray-400">
                 {formatDate(selectedNote.updatedAt)}
               </div>
             </div>
 
-            {/* Content */}
-            <div className="flex-1 px-6 pb-4 pt-2 min-h-0">
+            {/* Content Area */}
+            <div className="flex-1 px-8 pb-6 pt-3 min-h-0">
               <textarea
                 value={selectedNote.content}
                 onChange={(e) => handleUpdateContent(e.target.value)}
-                placeholder="Start writing..."
-                className="h-full w-full resize-none text-sm leading-relaxed text-gray-700 placeholder:text-gray-300 focus:outline-none font-sans"
+                placeholder="Start writing…"
+                className="h-full w-full resize-none text-[14px] leading-[1.7] text-gray-700 placeholder:text-gray-300 focus:outline-none font-sans"
               />
             </div>
           </>
@@ -308,10 +533,11 @@ export default function Notes() {
           /* Empty State */
           <div className="flex flex-1 flex-col items-center justify-center text-gray-300 gap-3">
             <NotebookPen className="h-12 w-12" />
-            <div className="text-sm">No Note Selected</div>
+            <div className="text-sm font-medium">No Note Selected</div>
+            <div className="text-xs text-gray-300">Select a note or create a new one</div>
             <button
               onClick={handleAddNote}
-              className="mt-1 rounded-md bg-amber-700/10 px-3 py-1.5 text-xs font-medium text-amber-800 transition-colors hover:bg-amber-700/20"
+              className="mt-2 rounded-lg bg-blue-500/10 px-4 py-2 text-xs font-medium text-blue-600 transition-colors duration-150 hover:bg-blue-500/20 active:bg-blue-500/30"
             >
               Create a Note
             </button>

@@ -4,6 +4,9 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Wifi, Battery, Search, BatteryFull, BatteryMedium, BatteryLow } from 'lucide-react'
 import useMacOSStore, { APP_CONFIGS } from '@/store/macos-store'
+import { useSpotlight } from '@/components/macos/Spotlight'
+import { useAboutThisMac } from '@/components/macos/AboutThisMac'
+import { useControlCenter } from '@/components/macos/ControlCenter'
 
 const MENU_ITEMS = ['File', 'Edit', 'View', 'Window', 'Help']
 
@@ -53,6 +56,9 @@ function BatteryIconWithLevel() {
 
 export default function MenuBar() {
   const { activeWindowId, windows, openApp } = useMacOSStore()
+  const { toggle: toggleSpotlight } = useSpotlight()
+  const aboutThisMac = useAboutThisMac()
+  const controlCenter = useControlCenter()
   const [currentTime, setCurrentTime] = useState<Date>(new Date())
   const [appleMenuOpen, setAppleMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -89,6 +95,11 @@ export default function MenuBar() {
 
   const handleAppleMenuItemClick = (item: typeof APPLE_MENU_ITEMS[number]) => {
     if ('separator' in item && item.separator) return
+    if (item.label === 'About This Mac') {
+      aboutThisMac.open()
+      setAppleMenuOpen(false)
+      return
+    }
     if ('action' in item && item.action) {
       openApp(item.action)
     }
@@ -109,7 +120,13 @@ export default function MenuBar() {
             onClick={() => setAppleMenuOpen(prev => !prev)}
             aria-label="Apple Menu"
           >
-            🍎
+            <svg
+              className="w-[14px] h-[14px]"
+              viewBox="0 0 170 170"
+              fill="currentColor"
+            >
+              <path d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.2-2.12-9.97-3.17-14.34-3.17-4.58 0-9.49 1.05-14.75 3.17-5.28 2.13-9.54 3.24-12.8 3.35-4.93.21-9.84-1.96-14.75-6.52-3.13-2.73-7.05-7.41-11.75-14.04-5.03-7.08-9.17-15.29-12.41-24.65-3.47-10.11-5.21-19.9-5.21-29.38 0-10.86 2.35-20.22 7.04-28.04 3.69-6.27 8.6-11.23 14.76-14.88 6.15-3.65 12.8-5.51 19.97-5.63 3.92 0 9.06 1.21 15.43 3.6 6.36 2.4 10.44 3.62 12.24 3.62 1.34 0 5.87-1.43 13.56-4.28 7.27-2.64 13.41-3.74 18.44-3.32 13.63 1.1 23.87 6.47 30.68 16.15-12.2 7.39-18.22 17.73-18.1 31 0.12 10.33 3.86 18.93 11.19 25.77 3.33 3.17 7.05 5.62 11.18 7.37-.9 2.6-1.84 5.09-2.85 7.47zM119.1 7.01c0 8.1-2.96 15.67-8.86 22.67-7.12 8.32-15.73 13.13-25.07 12.37a25.2 25.2 0 0 1-.19-3.07c0-7.78 3.39-16.1 9.4-22.9 3-3.44 6.82-6.31 11.45-8.6 4.62-2.26 8.99-3.51 13.1-3.75.13 1.11.17 2.22.17 3.28z" />
+            </svg>
           </button>
 
           <AnimatePresence>
@@ -171,15 +188,19 @@ export default function MenuBar() {
       <div className="flex items-center gap-3">
         <BatteryIconWithLevel />
         <Wifi className="h-4 w-4" />
-        <Search className="h-3.5 w-3.5 opacity-80" />
-        <div className="w-4 h-4 rounded-sm bg-white/20 flex items-center justify-center">
+        <Search className="h-3.5 w-3.5 opacity-80 cursor-pointer hover:opacity-100 transition-opacity" onClick={toggleSpotlight} />
+        <button
+          className="w-4 h-4 rounded-sm bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors cursor-pointer"
+          onClick={controlCenter.toggle}
+          aria-label="Control Center"
+        >
           <div className="flex gap-[1.5px] items-end">
             <div className="w-[3px] h-[4px] bg-white/70 rounded-[0.5px]" />
             <div className="w-[3px] h-[6px] bg-white/70 rounded-[0.5px]" />
             <div className="w-[3px] h-[8px] bg-white/70 rounded-[0.5px]" />
             <div className="w-[3px] h-[10px] bg-white/70 rounded-[0.5px]" />
           </div>
-        </div>
+        </button>
         <span className="text-[12px] tracking-tight whitespace-nowrap">
           {formatDateTime(currentTime)}
         </span>

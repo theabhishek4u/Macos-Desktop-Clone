@@ -9,6 +9,10 @@ const MenuBar = dynamic(() => import('@/components/macos/MenuBar'), { ssr: false
 const Dock = dynamic(() => import('@/components/macos/Dock'), { ssr: false })
 const Window = dynamic(() => import('@/components/macos/Window'), { ssr: false })
 const ContextMenu = dynamic(() => import('@/components/macos/ContextMenu'), { ssr: false })
+const DesktopIcons = dynamic(() => import('@/components/macos/DesktopIcons'), { ssr: false })
+const Spotlight = dynamic(() => import('@/components/macos/Spotlight'), { ssr: false })
+const AboutThisMac = dynamic(() => import('@/components/macos/AboutThisMac'), { ssr: false })
+const ControlCenter = dynamic(() => import('@/components/macos/ControlCenter'), { ssr: false })
 
 const Finder = dynamic(() => import('@/components/macos/apps/Finder'), { ssr: false })
 const Calculator = dynamic(() => import('@/components/macos/apps/Calculator'), { ssr: false })
@@ -44,6 +48,7 @@ export default function MacOSDesktop() {
   return (
     <Desktop>
       <MenuBar />
+      <DesktopIcons />
       {windows.map(win => {
         const AppComponent = APP_COMPONENTS[win.appId]
         if (!AppComponent) return null
@@ -55,6 +60,9 @@ export default function MacOSDesktop() {
       })}
       <Dock />
       <ContextMenu />
+      <Spotlight />
+      <AboutThisMac />
+      <ControlCenter />
     </Desktop>
   )
 }
