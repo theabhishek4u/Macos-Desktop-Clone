@@ -33,6 +33,9 @@ const RESIZE_HANDLES: { direction: ResizeDirection; className: string }[] = [
   { direction: 'se', className: 'bottom-0 right-0 w-[12px] h-[12px] -mb-[3px] -mr-[3px]' },
 ]
 
+// Apps that use light window chrome (light title bar, light frame)
+const LIGHT_WINDOW_APPS = new Set(['notes', 'textedit', 'calculator', 'calendar', 'clock', 'settings', 'finder', 'photos'])
+
 export default function Window({ windowId, children }: WindowProps) {
   const windowState = useMacOSStore((s) => s.windows.find((w) => w.id === windowId))
   const activeWindowId = useMacOSStore((s) => s.activeWindowId)
@@ -45,6 +48,8 @@ export default function Window({ windowId, children }: WindowProps) {
 
   const [trafficHover, setTrafficHover] = useState(false)
   const [isClosing, setIsClosing] = useState(false)
+  const [isMinimizing, setIsMinimizing] = useState(false)
+  const [prevIsMinimized, setPrevIsMinimized] = useState(false)
 
   // Use refs for drag/resize state to avoid re-renders during interaction
   const dragRef = useRef<{
@@ -209,10 +214,29 @@ export default function Window({ windowId, children }: WindowProps) {
   if (!windowState) return null
 
   const { id, title, x, y, width, height, isMinimized, isMaximized } = windowState
+  const isLightWindow = LIGHT_WINDOW_APPS.has(windowState.appId)
+
+  // Track minimize state transitions (render-phase derived state pattern)
+  if (isMinimized && !prevIsMinimized) {
+    setPrevIsMinimized(true)
+    setIsMinimizing(true)
+  } else if (!isMinimized && prevIsMinimized) {
+    setPrevIsMinimized(false)
+    setIsMinimizing(false)
+  }
+
+  // The window should render if not minimized, or currently in minimize animation
+  const shouldRender = !isMinimized || isMinimizing
+
+  // Calculate minimize animation target (toward dock at bottom center)
+  const dockCenterX = typeof window !== 'undefined' ? window.innerWidth / 2 : 960
+  const dockCenterY = typeof window !== 'undefined' ? window.innerHeight - 40 : 1040
+  const minimizeTranslateX = dockCenterX - (x + width / 2)
+  const minimizeTranslateY = dockCenterY - (y + height / 2)
 
   return (
     <AnimatePresence>
-      {!isMinimized && (
+      {shouldRender && (
         <motion.div
           key={id}
           className="absolute flex flex-col"
@@ -224,18 +248,35 @@ export default function Window({ windowId, children }: WindowProps) {
             zIndex: windowState.zIndex,
           }}
           initial={{ scale: 0.95, opacity: 0 }}
-          animate={{
-            scale: isClosing ? 0.92 : 1,
-            opacity: isClosing ? 0 : 1,
-          }}
+          animate={
+            isMinimizing
+              ? {
+                  scale: 0.1,
+                  x: minimizeTranslateX,
+                  y: minimizeTranslateY,
+                  opacity: 0,
+                }
+              : isClosing
+                ? { scale: 0.92, opacity: 0, x: 0, y: 0 }
+                : { scale: 1, opacity: 1, x: 0, y: 0 }
+          }
           exit={{
             scale: 0.92,
             opacity: 0,
           }}
-          transition={{
-            type: 'spring',
-            stiffness: 400,
-            damping: 30,
+          transition={
+            isMinimizing
+              ? { duration: 0.4, ease: 'easeIn' }
+              : {
+                  type: 'spring',
+                  stiffness: 400,
+                  damping: 30,
+                }
+          }
+          onAnimationComplete={() => {
+            if (isMinimizing) {
+              setIsMinimizing(false)
+            }
           }}
           onMouseDown={() => focusWindow(windowId)}
         >
@@ -247,25 +288,31 @@ export default function Window({ windowId, children }: WindowProps) {
                 : 'shadow-lg shadow-black/15'
             } ${isMaximized ? 'rounded-none' : ''}`}
             style={{
-              background: '#1e1e1e',
+              background: isLightWindow ? '#f0f0f0' : '#1e1e1e',
             }}
           >
             {/* Top highlight line */}
             <div
               className="w-full h-[1px] shrink-0"
               style={{
-                background: isActive
-                  ? 'linear-gradient(90deg, transparent, rgba(255,255,255,0.1) 20%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.1) 80%, transparent)'
-                  : 'linear-gradient(90deg, transparent, rgba(255,255,255,0.05) 20%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.05) 80%, transparent)',
+                background: isLightWindow
+                  ? 'linear-gradient(90deg, transparent, rgba(0,0,0,0.03) 20%, rgba(0,0,0,0.05) 50%, rgba(0,0,0,0.03) 80%, transparent)'
+                  : isActive
+                    ? 'linear-gradient(90deg, transparent, rgba(255,255,255,0.1) 20%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.1) 80%, transparent)'
+                    : 'linear-gradient(90deg, transparent, rgba(255,255,255,0.05) 20%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.05) 80%, transparent)',
               }}
             />
 
             {/* Title Bar */}
             <div
               className={`flex items-center h-[38px] shrink-0 select-none px-3 transition-colors duration-150 ${
-                isActive
-                  ? 'bg-[#3a3a3a]/95 backdrop-blur-md border-b border-white/10'
-                  : 'bg-[#2d2d2d]/95 backdrop-blur-md border-b border-white/5'
+                isLightWindow
+                  ? isActive
+                    ? 'bg-[#e8e8e8]/95 backdrop-blur-md border-b border-black/10'
+                    : 'bg-[#e0e0e0]/95 backdrop-blur-md border-b border-black/5'
+                  : isActive
+                    ? 'bg-[#3a3a3a]/95 backdrop-blur-md border-b border-white/10'
+                    : 'bg-[#2d2d2d]/95 backdrop-blur-md border-b border-white/5'
               }`}
               onMouseDown={handleDragMouseDown}
               onDoubleClick={() => maximizeWindow(windowId)}
@@ -280,8 +327,9 @@ export default function Window({ windowId, children }: WindowProps) {
                 <button
                   data-traffic-light
                   className={`w-[13px] h-[13px] rounded-full flex items-center justify-center transition-colors duration-150 ${
-                    isActive ? 'bg-[#ff5f57]' : 'bg-[#4a4a4a]'
+                    isActive ? 'bg-[#ff5f57]' : isLightWindow ? 'bg-[#d4d4d4]' : 'bg-[#4a4a4a]'
                   } ${trafficHover ? 'hover:brightness-90' : ''}`}
+                  style={isLightWindow && !isActive ? { boxShadow: 'inset 0 0 0 0.5px rgba(0,0,0,0.15)' } : undefined}
                   onClick={(e) => {
                     e.stopPropagation()
                     handleClose()
@@ -296,8 +344,9 @@ export default function Window({ windowId, children }: WindowProps) {
                 <button
                   data-traffic-light
                   className={`w-[13px] h-[13px] rounded-full flex items-center justify-center transition-colors duration-150 ${
-                    isActive ? 'bg-[#febc2e]' : 'bg-[#4a4a4a]'
+                    isActive ? 'bg-[#febc2e]' : isLightWindow ? 'bg-[#d4d4d4]' : 'bg-[#4a4a4a]'
                   } ${trafficHover ? 'hover:brightness-90' : ''}`}
+                  style={isLightWindow && !isActive ? { boxShadow: 'inset 0 0 0 0.5px rgba(0,0,0,0.15)' } : undefined}
                   onClick={(e) => {
                     e.stopPropagation()
                     minimizeWindow(windowId)
@@ -312,8 +361,9 @@ export default function Window({ windowId, children }: WindowProps) {
                 <button
                   data-traffic-light
                   className={`w-[13px] h-[13px] rounded-full flex items-center justify-center transition-colors duration-150 ${
-                    isActive ? 'bg-[#28c840]' : 'bg-[#4a4a4a]'
+                    isActive ? 'bg-[#28c840]' : isLightWindow ? 'bg-[#d4d4d4]' : 'bg-[#4a4a4a]'
                   } ${trafficHover ? 'hover:brightness-90' : ''}`}
+                  style={isLightWindow && !isActive ? { boxShadow: 'inset 0 0 0 0.5px rgba(0,0,0,0.15)' } : undefined}
                   onClick={(e) => {
                     e.stopPropagation()
                     maximizeWindow(windowId)
@@ -329,7 +379,9 @@ export default function Window({ windowId, children }: WindowProps) {
               <div className="flex-1 text-center pr-14">
                 <span
                   className={`text-[13px] font-medium transition-colors duration-150 ${
-                    isActive ? 'text-white/85' : 'text-white/40'
+                    isLightWindow
+                      ? isActive ? 'text-black/85' : 'text-black/40'
+                      : isActive ? 'text-white/85' : 'text-white/40'
                   }`}
                 >
                   {title}

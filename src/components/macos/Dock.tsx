@@ -119,6 +119,7 @@ interface DockIconProps {
   onClick: () => void
   onHoverStart: () => void
   onHoverEnd: () => void
+  onContextMenu: (e: React.MouseEvent) => void
   isTrash?: boolean
 }
 
@@ -131,6 +132,7 @@ function DockIcon({
   onClick,
   onHoverStart,
   onHoverEnd,
+  onContextMenu,
   isTrash = false,
 }: DockIconProps) {
   const [showTooltip, setShowTooltip] = useState(false)
@@ -168,6 +170,7 @@ function DockIcon({
       {/* Icon */}
       <motion.button
         onClick={onClick}
+        onContextMenu={onContextMenu}
         aria-label={name}
         animate={{
           width: currentSize,
@@ -216,6 +219,80 @@ function DockIcon({
   )
 }
 
+// Dock Context Menu component
+function DockContextMenu({
+  x,
+  y,
+  appId,
+  isTrash,
+  onClose,
+}: {
+  x: number
+  y: number
+  appId: string
+  isTrash: boolean
+  onClose: () => void
+}) {
+  const openApp = useMacOSStore((s) => s.openApp)
+
+  const appMenuItems = [
+    { label: 'Options', disabled: true },
+    { label: 'Keep in Dock', action: () => {} },
+    { label: 'Open at Login', action: () => {} },
+    { label: 'Show All Windows', action: () => {} },
+    { separator: true, label: '' },
+    { label: 'Open', action: () => { openApp(appId); onClose() } },
+  ]
+
+  const trashMenuItems = [
+    { label: 'Open', action: () => { onClose() } },
+    { label: 'Empty Trash', action: () => { onClose() } },
+    { separator: true, label: '' },
+    { label: 'Get Info', action: () => { onClose() } },
+  ]
+
+  const items = isTrash ? trashMenuItems : appMenuItems
+
+  // Adjust position so menu doesn't go off-screen
+  const menuWidth = 180
+  const menuHeight = items.length * 28
+  const adjustedX = Math.min(x - menuWidth / 2, window.innerWidth - menuWidth - 8)
+  const adjustedY = Math.max(28, y - menuHeight - 8)
+
+  return (
+    <>
+      {/* Backdrop to catch clicks outside */}
+      <div className="fixed inset-0 z-[10001]" onClick={onClose} onContextMenu={(e) => { e.preventDefault(); onClose() }} />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        transition={{ duration: 0.12, ease: 'easeOut' }}
+        className="fixed z-[10002] w-[180px] bg-[#2a2a2e]/95 backdrop-blur-2xl rounded-md border border-white/[0.12] py-1 shadow-2xl"
+        style={{ left: adjustedX, top: adjustedY }}
+      >
+        {items.map((item, idx) => {
+          if (item.separator) {
+            return <div key={`sep-${idx}`} className="h-px bg-white/10 mx-2 my-1" />
+          }
+          return (
+            <button
+              key={item.label}
+              className={`w-full text-left px-3 py-[3px] text-[13px] text-white/90 hover:bg-[#0060df] hover:text-white rounded-[4px] mx-1 flex items-center transition-colors ${
+                item.disabled ? 'opacity-40 pointer-events-none' : ''
+              }`}
+              style={{ width: 'calc(100% - 8px)' }}
+              onClick={item.action}
+            >
+              {item.label}
+            </button>
+          )
+        })}
+      </motion.div>
+    </>
+  )
+}
+
 export default function Dock() {
   const dockApps = useMacOSStore((s) => s.dockApps)
   const openApps = useMacOSStore((s) => s.openApps)
@@ -226,6 +303,7 @@ export default function Dock() {
   const [mouseX, setMouseX] = useState<number | null>(null)
   const [dockRect, setDockRect] = useState<DOMRect | null>(null)
   const [bouncingApp, setBouncingApp] = useState<string | null>(null)
+  const [dockContextMenu, setDockContextMenu] = useState<{ x: number; y: number; appId: string; isTrash: boolean } | null>(null)
 
   // All dock items: apps + trash
   const dockItems = useMemo(
@@ -380,12 +458,29 @@ export default function Dock() {
                 onClick={() => handleClick(item.id, isTrash)}
                 onHoverStart={() => {}}
                 onHoverEnd={() => {}}
+                onContextMenu={(e) => {
+                  e.preventDefault()
+                  setDockContextMenu({ x: e.clientX, y: e.clientY, appId: item.id, isTrash })
+                }}
                 isTrash={isTrash}
               />
             </React.Fragment>
           )
         })}
       </motion.div>
+
+      {/* Right-click context menu */}
+      <AnimatePresence>
+        {dockContextMenu && (
+          <DockContextMenu
+            x={dockContextMenu.x}
+            y={dockContextMenu.y}
+            appId={dockContextMenu.appId}
+            isTrash={dockContextMenu.isTrash}
+            onClose={() => setDockContextMenu(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }

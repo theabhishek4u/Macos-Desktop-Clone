@@ -43,6 +43,7 @@ const DESKTOP_ICONS: DesktopIcon[] = [
 export default function DesktopIcons() {
   const { openApp } = useMacOSStore()
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [hoveredId, setHoveredId] = useState<string | null>(null)
 
   const handleDoubleClick = useCallback(
     (appId: string) => {
@@ -67,30 +68,37 @@ export default function DesktopIcons() {
       {DESKTOP_ICONS.map(icon => {
         const IconComponent = icon.icon
         const isSelected = selectedId === icon.id
+        const isHovered = hoveredId === icon.id
 
         return (
           <div
             key={icon.id}
-            className={`flex flex-col items-center justify-center w-[80px] h-[88px] rounded-lg cursor-default select-none transition-all duration-150 ${
-              isSelected ? 'bg-blue-500/30' : 'hover:bg-white/8'
+            className={`flex flex-col items-center justify-center w-[88px] h-[98px] rounded-lg cursor-default select-none transition-all duration-150 ${
+              isSelected ? 'bg-blue-500/30' : isHovered ? 'bg-white/10' : ''
             }`}
             onClick={(e) => {
               e.stopPropagation()
               handleClick(icon.id)
             }}
             onDoubleClick={() => handleDoubleClick(icon.appId)}
+            onMouseEnter={() => setHoveredId(icon.id)}
+            onMouseLeave={() => setHoveredId(null)}
           >
             {/* Icon container with gradient background */}
             <div
-              className="flex items-center justify-center rounded-[12px] mb-1.5"
+              className="flex items-center justify-center rounded-[12px] mb-1.5 relative transition-transform duration-150"
               style={{
-                width: 48,
-                height: 48,
+                width: 56,
+                height: 56,
                 background: icon.gradient,
                 boxShadow: isSelected
-                  ? 'inset 0 1px 0 rgba(255,255,255,0.35), inset 0 -1px 0 rgba(0,0,0,0.15), 0 0 0 1.5px rgba(59,130,246,0.6), 0 2px 8px rgba(0,0,0,0.3)'
-                  : 'inset 0 1px 0 rgba(255,255,255,0.35), inset 0 -1px 0 rgba(0,0,0,0.15), 0 2px 8px rgba(0,0,0,0.2)',
+                  ? 'inset 0 1px 0 rgba(255,255,255,0.35), inset 0 -1px 0 rgba(0,0,0,0.15), 0 0 0 1.5px rgba(59,130,246,0.6), 0 2px 8px rgba(0,0,0,0.3), 0 0 12px rgba(59,130,246,0.2)'
+                  : isHovered
+                    ? 'inset 0 1px 0 rgba(255,255,255,0.35), inset 0 -1px 0 rgba(0,0,0,0.15), 0 2px 8px rgba(0,0,0,0.25), 0 0 8px rgba(255,255,255,0.08)'
+                    : 'inset 0 1px 0 rgba(255,255,255,0.35), inset 0 -1px 0 rgba(0,0,0,0.15), 0 2px 4px rgba(0,0,0,0.3)',
                 border: isSelected ? '1px solid rgba(59,130,246,0.5)' : '0.5px solid rgba(255,255,255,0.2)',
+                filter: isHovered && !isSelected ? 'drop-shadow(0 2px 4px rgba(0,0,0,0.3)) brightness(1.05)' : 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))',
+                transform: isHovered ? 'scale(1.05)' : 'scale(1)',
               }}
             >
               {/* Subtle shine overlay */}
@@ -101,18 +109,19 @@ export default function DesktopIcons() {
                 }}
               />
               <IconComponent
-                size={26}
+                size={30}
                 color={icon.iconColor}
                 strokeWidth={1.8}
                 style={{ position: 'relative', zIndex: 1 }}
               />
             </div>
             <span
-              className={`text-[11px] text-center leading-tight font-medium max-w-[72px] truncate px-1 ${
+              className={`text-[11px] text-center leading-tight font-medium max-w-[80px] truncate px-1.5 py-0.5 rounded ${
                 isSelected
-                  ? 'text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]'
-                  : 'text-white/85 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]'
+                  ? 'text-white bg-black/30 backdrop-blur-sm'
+                  : 'text-white/85 bg-black/30 backdrop-blur-sm'
               }`}
+              style={{ textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}
             >
               {icon.name}
             </span>

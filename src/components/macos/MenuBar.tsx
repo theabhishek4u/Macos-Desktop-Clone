@@ -216,8 +216,8 @@ export default function MenuBar() {
 
   return (
     <div
-      className="fixed top-0 left-0 right-0 h-[28px] bg-black/70 backdrop-blur-xl text-white/90 text-[13px] font-sans z-[9999] flex items-center justify-between px-2 select-none"
-      style={{ borderBottom: '0.5px solid rgba(255,255,255,0.1)' }}
+      className="fixed top-0 left-0 right-0 h-[28px] bg-black/70 backdrop-blur-xl text-white/90 text-[13px] font-normal z-[9999] flex items-center justify-between px-2 select-none"
+      style={{ borderBottom: '0.5px solid rgba(255,255,255,0.08)' }}
       ref={menuBarRef}
     >
       {/* Left side */}
@@ -251,7 +251,7 @@ export default function MenuBar() {
         </div>
 
         {/* Active app name */}
-        <span className="font-semibold px-2 h-[28px] flex items-center">
+        <span className="font-semibold text-[13px] px-2 h-[28px] flex items-center">
           {activeAppName}
         </span>
 
@@ -259,7 +259,7 @@ export default function MenuBar() {
         {Object.keys(MENU_ITEMS).map(item => (
           <div key={item} className="relative">
             <button
-              className={`px-2 h-[28px] flex items-center rounded transition-colors ${
+              className={`px-2 h-[28px] flex items-center rounded transition-colors text-[13px] font-normal ${
                 openMenu === item ? 'bg-white/15' : 'hover:bg-white/10'
               }`}
               onClick={() => handleMenuToggle(item)}
@@ -284,25 +284,27 @@ export default function MenuBar() {
       </div>
 
       {/* Right side */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-0">
         <BatteryIconWithLevel />
+        <div className="w-px h-3 bg-white/20 mx-1.5" />
         <Wifi className="h-4 w-4" />
-        <Bluetooth className="h-3.5 w-3.5 opacity-80" />
-        <Search className="h-3.5 w-3.5 opacity-80 cursor-pointer hover:opacity-100 transition-opacity" onClick={toggleSpotlight} />
+        <Bluetooth className="h-3.5 w-3.5 opacity-80 ml-1.5" />
+        <div className="w-px h-3 bg-white/20 mx-1.5" />
+        <Search className="h-3.5 w-3.5 opacity-80 cursor-pointer hover:opacity-100 transition-opacity ml-0.5" onClick={toggleSpotlight} />
         <button
-          className="w-4 h-4 rounded-sm bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors cursor-pointer"
+          className="w-5 h-5 rounded-sm bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors cursor-pointer ml-1"
           onClick={controlCenter.toggle}
           aria-label="Control Center"
         >
           <div className="flex gap-[1.5px] items-end">
-            <div className="w-[3px] h-[4px] bg-white/70 rounded-[0.5px]" />
-            <div className="w-[3px] h-[6px] bg-white/70 rounded-[0.5px]" />
-            <div className="w-[3px] h-[8px] bg-white/70 rounded-[0.5px]" />
-            <div className="w-[3px] h-[10px] bg-white/70 rounded-[0.5px]" />
+            <div className="w-[3px] h-[4px] bg-white/80 rounded-[0.5px]" />
+            <div className="w-[3px] h-[6px] bg-white/80 rounded-[0.5px]" />
+            <div className="w-[3px] h-[8px] bg-white/80 rounded-[0.5px]" />
+            <div className="w-[3px] h-[10px] bg-white/80 rounded-[0.5px]" />
           </div>
         </button>
         <button
-          className="text-[12px] tracking-tight whitespace-nowrap hover:bg-white/10 px-1.5 py-0.5 rounded transition-colors cursor-pointer"
+          className="text-[13px] tracking-tight whitespace-nowrap hover:bg-white/10 px-1.5 py-0.5 rounded transition-colors cursor-pointer ml-0.5"
           onClick={notificationCenter.toggle}
           aria-label="Notification Center"
         >
