@@ -90,7 +90,7 @@ function createDefaultFileSystem(): Record<string, FileSystemNode> {
 // ─── NEOFETCH ASCII ART ──────────────────────────────────────────────────────
 
 const NEOFETCH_ART = [
-  '                    \'c.          <span style="color:#28c840">user</span>@<span style="color:#28c840">macOS</span>',
+  '                    \'c.          <span style="color:#28c840">user</span>@<span style="color:#28c840">MacBook-Pro</span>',
   '                 ,xNMM.          ──────────────',
   '               .OMMMMo           <span style="color:#28c840">OS:</span> macOS 14.0 Sonoma',
   '               OMMM0,            <span style="color:#28c840">Host:</span> MacBook Pro',
@@ -109,6 +109,109 @@ const NEOFETCH_ART = [
   '        .cooc,.    .,coo:.       ',
 ]
 
+// ─── Cowsay Helper ────────────────────────────────────────────────────────────
+
+function cowsay(message: string): string[] {
+  const maxLen = Math.min(message.length, 40)
+  const lines: string[] = []
+  // Word wrap the message
+  const words = message.split(' ')
+  let currentLine = ''
+  const wrappedLines: string[] = []
+  for (const word of words) {
+    if (currentLine.length + word.length + 1 > maxLen) {
+      wrappedLines.push(currentLine)
+      currentLine = word
+    } else {
+      currentLine = currentLine ? currentLine + ' ' + word : word
+    }
+  }
+  if (currentLine) wrappedLines.push(currentLine)
+
+  const lineLen = Math.max(...wrappedLines.map(l => l.length), 1)
+  const border = ' ' + '_'.repeat(lineLen + 2)
+
+  lines.push(border)
+  if (wrappedLines.length === 1) {
+    lines.push(`< ${wrappedLines[0].padEnd(lineLen)} >`)
+  } else {
+    wrappedLines.forEach((line, i) => {
+      const left = i === 0 ? '/' : i === wrappedLines.length - 1 ? '\\' : '|'
+      const right = i === 0 ? '\\' : i === wrappedLines.length - 1 ? '/' : '|'
+      lines.push(`${left} ${line.padEnd(lineLen)} ${right}`)
+    })
+  }
+  lines.push(' ' + '-'.repeat(lineLen + 2))
+  lines.push('        \\   ^__^')
+  lines.push('         \\  (oo)\\_______')
+  lines.push('            (__)\\       )\\/\\')
+  lines.push('                ||----w |')
+  lines.push('                ||     ||')
+
+  return lines
+}
+
+// ─── Fortunes ─────────────────────────────────────────────────────────────────
+
+const FORTUNES = [
+  'The best way to predict the future is to invent it. — Alan Kay',
+  'Any sufficiently advanced technology is indistinguishable from magic. — Arthur C. Clarke',
+  'Talk is cheap. Show me the code. — Linus Torvalds',
+  'First, solve the problem. Then, write the code. — John Johnson',
+  'Simplicity is the soul of efficiency. — Austin Freeman',
+  'Code is like humor. When you have to explain it, it\'s bad. — Cory House',
+  'Fix the cause, not the symptom. — Steve Maguire',
+  'Optimism is an occupational hazard of programming: feedback is the treatment. — Kent Beck',
+  'The most important property of a program is whether it accomplishes the intention of its user. — C.A.R. Hoare',
+  'Programs must be written for people to read, and only incidentally for machines to execute. — Harold Abelson',
+  'The only way to learn a new programming language is by writing programs in it. — Dennis Ritchie',
+  'Perfection is achieved not when there is nothing more to add, but when there is nothing left to take away. — Antoine de Saint-Exupery',
+  'Java is to JavaScript what car is to carpet. — Chris Heilmann',
+  'It\'s not a bug — it\'s an undocumented feature. — Anonymous',
+  'In order to be irreplaceable, one must always be different. — Coco Chanel',
+]
+
+// ─── Matrix Helper ────────────────────────────────────────────────────────────
+
+function generateMatrixLines(): string[] {
+  const chars = 'ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ0123456789'
+  const lines: string[] = []
+  for (let r = 0; r < 4; r++) {
+    let line = ''
+    for (let c = 0; c < 60; c++) {
+      line += chars[Math.floor(Math.random() * chars.length)]
+    }
+    lines.push(line)
+  }
+  return lines
+}
+
+// ─── All Available Commands (for help and tab completion) ────────────────────
+
+const ALL_COMMANDS: [string, string][] = [
+  ['help', 'Show this help message'],
+  ['ls', 'List directory contents'],
+  ['pwd', 'Print working directory'],
+  ['cd <dir>', 'Change directory'],
+  ['whoami', 'Display current user'],
+  ['hostname', 'Display system hostname'],
+  ['uname', 'Print system information'],
+  ['date', 'Display current date and time'],
+  ['echo <text>', 'Display a line of text'],
+  ['clear', 'Clear the terminal'],
+  ['cat <file>', 'Display file contents'],
+  ['mkdir <name>', 'Create a new directory'],
+  ['touch <name>', 'Create a new file'],
+  ['rm <name>', 'Remove a file or directory'],
+  ['uptime', 'Show system uptime'],
+  ['neofetch', 'Display system info with ASCII art'],
+  ['cowsay <msg>', 'ASCII cow saying a message'],
+  ['fortune', 'Display a random fortune/quote'],
+  ['matrix', 'Display a Matrix-style animation'],
+]
+
+const COMMAND_NAMES = ALL_COMMANDS.map(([name]) => name.split(' ')[0])
+
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export default function Terminal() {
@@ -121,6 +224,7 @@ export default function Terminal() {
   const [input, setInput] = useState('')
   const [commandHistory, setCommandHistory] = useState<string[]>([])
   const [historyIndex, setHistoryIndex] = useState(-1)
+  const [tabSuggestions, setTabSuggestions] = useState<string[]>([])
 
   const inputRef = useRef<HTMLInputElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -131,10 +235,6 @@ export default function Terminal() {
     if (currentPath.length === 0) return '~'
     return `~/${currentPath.join('/')}`
   }, [currentPath])
-
-  const getPrompt = useCallback(() => {
-    return `user@macOS ${getPromptPath()} % `
-  }, [getPromptPath])
 
   const resolveNode = useCallback((pathParts: string[]): { node: Record<string, FileSystemNode> | null, path: string[] } => {
     let current = fileSystem
@@ -168,15 +268,45 @@ export default function Terminal() {
     const trimmed = cmd.trim()
     const newOutput: OutputLine[] = []
 
+    // Build the prompt with colored parts
+    const promptHtml = `<span style="color:#28c840;font-weight:600">user@MacBook-Pro</span> <span style="color:#5ac8fa;font-weight:400">${getPromptPath()}</span> % `
+
     // Echo the command with prompt
-    newOutput.push({ text: getPrompt() + trimmed, color: 'text-white' })
+    newOutput.push({ text: promptHtml + trimmed, isHtml: true })
 
     if (trimmed === '') {
       setOutput(prev => [...prev, ...newOutput])
       return
     }
 
-    const parts = trimmed.split(/\s+/)
+    // Parse command with quote handling for echo
+    const parts: string[] = []
+    let current = ''
+    let inQuote = false
+    let quoteChar = ''
+
+    for (let i = 0; i < trimmed.length; i++) {
+      const ch = trimmed[i]
+      if (inQuote) {
+        if (ch === quoteChar) {
+          inQuote = false
+        } else {
+          current += ch
+        }
+      } else if (ch === '"' || ch === "'") {
+        inQuote = true
+        quoteChar = ch
+      } else if (ch === ' ') {
+        if (current) {
+          parts.push(current)
+          current = ''
+        }
+      } else {
+        current += ch
+      }
+    }
+    if (current) parts.push(current)
+
     const command = parts[0]
     const args = parts.slice(1)
 
@@ -184,26 +314,9 @@ export default function Terminal() {
       case 'help': {
         newOutput.push({ text: 'Available commands:', color: 'text-yellow-400' })
         newOutput.push({ text: '' })
-        const cmds = [
-          ['help', 'Show this help message'],
-          ['ls', 'List directory contents'],
-          ['pwd', 'Print working directory'],
-          ['cd <dir>', 'Change directory'],
-          ['whoami', 'Display current user'],
-          ['date', 'Display current date and time'],
-          ['echo <text>', 'Display a line of text'],
-          ['clear', 'Clear the terminal'],
-          ['cat <file>', 'Display file contents'],
-          ['mkdir <name>', 'Create a new directory'],
-          ['touch <name>', 'Create a new file'],
-          ['rm <name>', 'Remove a file or directory'],
-          ['uname', 'Print system information'],
-          ['uptime', 'Show system uptime'],
-          ['neofetch', 'Display system info with ASCII art'],
-        ]
-        cmds.forEach(([name, desc]) => {
+        ALL_COMMANDS.forEach(([name, desc]) => {
           newOutput.push({
-            text: `  ${name.padEnd(14)}${desc}`,
+            text: `  ${name.padEnd(16)}${desc}`,
             color: 'text-gray-300',
           })
         })
@@ -216,11 +329,9 @@ export default function Terminal() {
         if (entries.length === 0) {
           // Empty directory, no output (like real ls)
         } else {
-          // Sort: directories first, then files
           const dirs = entries.filter(e => e.type === 'directory').sort((a, b) => a.name.localeCompare(b.name))
           const files = entries.filter(e => e.type === 'file').sort((a, b) => a.name.localeCompare(b.name))
 
-          // Check for -a or -la flags
           const showHidden = args.includes('-a') || args.includes('-la') || args.includes('-al')
 
           let allEntries = [...dirs, ...files]
@@ -264,11 +375,9 @@ export default function Terminal() {
           break
         }
 
-        // Handle absolute-like paths starting with ~/
         let pathParts: string[]
         if (target.startsWith('~/')) {
           pathParts = target.slice(2).split('/').filter(Boolean)
-          // Resolve from root
           const { node, path } = resolveNode(pathParts)
           if (!node) {
             newOutput.push({ text: `cd: no such file or directory: ${target}`, color: 'text-red-400' })
@@ -278,7 +387,6 @@ export default function Terminal() {
           break
         }
 
-        // Relative path
         const fullPath = [...currentPath, ...target.split('/')].filter(Boolean)
         const { node, path } = resolveNode(fullPath)
 
@@ -295,6 +403,20 @@ export default function Terminal() {
         break
       }
 
+      case 'hostname': {
+        newOutput.push({ text: 'MacBook-Pro.local', color: 'text-gray-200' })
+        break
+      }
+
+      case 'uname': {
+        if (args.includes('-a')) {
+          newOutput.push({ text: 'Darwin MacBook-Pro.local 23.0.0 Darwin Kernel Version 23.0.0: Mon Sep 25 20:57:52 PDT 2023; root:xnu-10002.1.13~1/RELEASE_ARM_T6030 arm64', color: 'text-gray-200' })
+        } else {
+          newOutput.push({ text: 'Darwin', color: 'text-gray-200' })
+        }
+        break
+      }
+
       case 'date': {
         newOutput.push({ text: new Date().toString(), color: 'text-gray-200' })
         break
@@ -302,7 +424,6 @@ export default function Terminal() {
 
       case 'echo': {
         const text = args.join(' ')
-        // Handle basic escape sequences
         newOutput.push({ text, color: 'text-gray-200' })
         break
       }
@@ -358,7 +479,6 @@ export default function Terminal() {
             current[dirName] = { type: 'directory', name: dirName, children: {} }
             return newFs
           })
-          newOutput.push({ text: ``, color: 'text-gray-200' })
         }
         break
       }
@@ -373,7 +493,6 @@ export default function Terminal() {
         const currentDir = getCurrentDir()
 
         if (currentDir[fileName]) {
-          // touch on existing file just updates timestamp - no output
           break
         }
 
@@ -389,7 +508,6 @@ export default function Terminal() {
             current[fileName] = { type: 'file', name: fileName, content: '' }
             return newFs
           })
-          // No output on success, like real touch
         }
         break
       }
@@ -418,16 +536,6 @@ export default function Terminal() {
             delete current[fileName]
             return newFs
           })
-          // No output on success, like real rm
-        }
-        break
-      }
-
-      case 'uname': {
-        if (args.includes('-a')) {
-          newOutput.push({ text: 'Darwin macOS.local 23.0.0 Darwin Kernel Version 23.0.0 RELEASE_ARM_T6030 arm64', color: 'text-gray-200' })
-        } else {
-          newOutput.push({ text: 'Darwin', color: 'text-gray-200' })
         }
         break
       }
@@ -453,6 +561,31 @@ export default function Terminal() {
         break
       }
 
+      case 'cowsay': {
+        const message = args.length > 0 ? args.join(' ') : 'Moo!'
+        const cowLines = cowsay(message)
+        cowLines.forEach(line => {
+          newOutput.push({ text: line, color: 'text-gray-200' })
+        })
+        break
+      }
+
+      case 'fortune': {
+        const fortune = FORTUNES[Math.floor(Math.random() * FORTUNES.length)]
+        newOutput.push({ text: fortune, color: 'text-yellow-300' })
+        break
+      }
+
+      case 'matrix': {
+        const matrixLines = generateMatrixLines()
+        matrixLines.forEach(line => {
+          newOutput.push({ text: line, color: 'text-green-400' })
+        })
+        newOutput.push({ text: '', color: 'text-gray-200' })
+        newOutput.push({ text: 'Wake up, Neo...', color: 'text-green-500' })
+        break
+      }
+
       default: {
         newOutput.push({ text: `zsh: command not found: ${command}`, color: 'text-red-400' })
         break
@@ -460,7 +593,7 @@ export default function Terminal() {
     }
 
     setOutput(prev => [...prev, ...newOutput])
-  }, [getPrompt, getCurrentDir, resolveNode, currentPath, fileSystem])
+  }, [getPromptPath, getCurrentDir, resolveNode, currentPath, fileSystem])
 
   // ─── Event Handlers ─────────────────────────────────────────────────────
 
@@ -474,9 +607,55 @@ export default function Terminal() {
     }
     setInput('')
     setHistoryIndex(-1)
+    setTabSuggestions([])
   }, [input, executeCommand])
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Tab') {
+      e.preventDefault()
+      // Tab completion
+      const trimmed = input.trim()
+      const parts = trimmed.split(/\s+/)
+      const isFirstWord = parts.length <= 1
+
+      if (isFirstWord) {
+        // Complete command name
+        const partial = parts[0] || ''
+        const matches = COMMAND_NAMES.filter(cmd => cmd.startsWith(partial))
+        if (matches.length === 1) {
+          setInput(matches[0] + ' ')
+          setTabSuggestions([])
+        } else if (matches.length > 1) {
+          setTabSuggestions(matches)
+        } else {
+          setTabSuggestions([])
+        }
+      } else {
+        // Complete file/directory name
+        const partial = parts[parts.length - 1] || ''
+        const currentDir = getCurrentDir()
+        const entries = Object.keys(currentDir)
+        const matches = entries.filter(name => name.startsWith(partial))
+        if (matches.length === 1) {
+          const completed = matches[0]
+          const isDir = currentDir[completed]?.type === 'directory'
+          const newParts = [...parts.slice(0, -1), completed + (isDir ? '/' : '')]
+          setInput(newParts.join(' '))
+          setTabSuggestions([])
+        } else if (matches.length > 1) {
+          setTabSuggestions(matches)
+        } else {
+          setTabSuggestions([])
+        }
+      }
+      return
+    }
+
+    // Clear tab suggestions on any other key
+    if (tabSuggestions.length > 0) {
+      setTabSuggestions([])
+    }
+
     if (e.key === 'ArrowUp') {
       e.preventDefault()
       if (commandHistory.length === 0) return
@@ -494,7 +673,7 @@ export default function Terminal() {
       }
       setHistoryIndex(newIndex)
     }
-  }, [commandHistory, historyIndex])
+  }, [commandHistory, historyIndex, input, getCurrentDir, tabSuggestions])
 
   const handleTerminalClick = useCallback(() => {
     inputRef.current?.focus()
@@ -506,12 +685,11 @@ export default function Terminal() {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
     }
-  }, [output])
+  }, [output, tabSuggestions])
 
   // ─── Auto-focus on mount ────────────────────────────────────────────────
 
   useEffect(() => {
-    // Small delay to ensure DOM is ready
     const timer = setTimeout(() => {
       inputRef.current?.focus()
     }, 100)
@@ -520,15 +698,18 @@ export default function Terminal() {
 
   // ─── Render ─────────────────────────────────────────────────────────────
 
+  const promptPath = getPromptPath()
+
   return (
     <div
-      className="flex flex-col w-full h-full bg-[#1e1e1e] font-mono text-[13px] leading-[1.4] cursor-text select-text"
+      className="flex flex-col w-full h-full bg-[#1e1e1e] text-[13px] leading-[1.4] cursor-text select-text"
       onClick={handleTerminalClick}
+      style={{ fontFamily: "'SF Mono', 'Fira Code', 'Cascadia Code', 'Menlo', monospace" }}
     >
       {/* Title bar subtitle area */}
       <div className="flex items-center justify-center h-[26px] shrink-0 bg-[#3a3a3a] border-b border-white/5 px-3">
-        <span className="text-[11px] text-white/50 font-mono tracking-wide">
-          user@macOS — zsh — 80×24
+        <span className="text-[11px] text-white/50 tracking-wide" style={{ fontFamily: "'SF Mono', 'Fira Code', 'Cascadia Code', 'Menlo', monospace" }}>
+          user@MacBook-Pro — zsh — 80×24
         </span>
       </div>
 
@@ -556,8 +737,8 @@ export default function Terminal() {
             background: rgba(255,255,255,0.25);
           }
           @keyframes terminal-blink {
-            0%, 50% { opacity: 1; }
-            51%, 100% { opacity: 0; }
+            0%, 49% { opacity: 1; }
+            50%, 100% { opacity: 0; }
           }
           .terminal-cursor {
             animation: terminal-blink 1s step-end infinite;
@@ -578,9 +759,19 @@ export default function Terminal() {
           </div>
         ))}
 
+        {/* Tab suggestions */}
+        {tabSuggestions.length > 0 && (
+          <div className="whitespace-pre-wrap break-all">
+            <span className="text-gray-500">{tabSuggestions.join('  ')}</span>
+          </div>
+        )}
+
         {/* Input line */}
         <form onSubmit={handleSubmit} className="flex items-center whitespace-pre">
-          <span className="text-[#28c840] font-semibold shrink-0">{getPrompt()}</span>
+          <span className="text-[#28c840] font-semibold shrink-0">user@MacBook-Pro</span>
+          <span className="text-white/50 shrink-0"> </span>
+          <span className="text-[#5ac8fa] shrink-0">{promptPath}</span>
+          <span className="text-white/70 shrink-0"> % </span>
           <div className="relative flex-1 min-w-0">
             <input
               ref={inputRef}
@@ -588,14 +779,17 @@ export default function Terminal() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              className="w-full bg-transparent text-gray-200 outline-none border-none p-0 m-0 font-mono text-[13px] caret-transparent"
-              style={{ caretColor: 'transparent' }}
+              className="w-full bg-transparent text-gray-200 outline-none border-none p-0 m-0 text-[13px] caret-transparent"
+              style={{
+                caretColor: 'transparent',
+                fontFamily: "'SF Mono', 'Fira Code', 'Cascadia Code', 'Menlo', monospace",
+              }}
               spellCheck={false}
               autoComplete="off"
               autoCapitalize="off"
               autoCorrect="off"
             />
-            {/* Custom cursor */}
+            {/* Custom blinking cursor */}
             <span
               className="terminal-cursor absolute top-0 pointer-events-none text-gray-200"
               style={{

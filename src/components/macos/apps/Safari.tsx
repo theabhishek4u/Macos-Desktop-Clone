@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useCallback, useRef, useMemo } from 'react'
+import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react'
 import {
   ArrowLeft,
   ArrowRight,
@@ -12,6 +12,12 @@ import {
   Lock,
   Search,
   Star,
+  Laptop,
+  Smartphone,
+  Watch,
+  Headphones,
+  Monitor,
+  Cpu,
 } from 'lucide-react'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -21,6 +27,8 @@ interface Tab {
   title: string
   url: string
   favicon: string
+  isLoading: boolean
+  loadingProgress: number
 }
 
 interface BookmarkItem {
@@ -33,10 +41,11 @@ interface BookmarkItem {
 
 const BOOKMARKS: BookmarkItem[] = [
   { name: 'Apple', url: 'apple.com', favicon: '' },
-  { name: 'Google', url: 'google.com', favicon: '' },
-  { name: 'YouTube', url: 'youtube.com', favicon: '' },
   { name: 'GitHub', url: 'github.com', favicon: '' },
   { name: 'Wikipedia', url: 'wikipedia.org', favicon: '' },
+  { name: 'Google', url: 'google.com', favicon: '' },
+  { name: 'YouTube', url: 'youtube.com', favicon: '' },
+  { name: 'Reddit', url: 'reddit.com', favicon: '' },
 ]
 
 const FAVICON_MAP: Record<string, string> = {
@@ -45,6 +54,7 @@ const FAVICON_MAP: Record<string, string> = {
   'youtube.com': '',
   'github.com': '',
   'wikipedia.org': '',
+  'reddit.com': '',
 }
 
 const PAGE_TITLES: Record<string, string> = {
@@ -52,7 +62,8 @@ const PAGE_TITLES: Record<string, string> = {
   'google.com': 'Google',
   'youtube.com': 'YouTube',
   'github.com': 'GitHub',
-  'wikipedia.org': 'Wikipedia',
+  'wikipedia.org': 'macOS — Wikipedia',
+  'reddit.com': 'Reddit',
   'localhost:3000': 'Safari Start Page',
 }
 
@@ -70,6 +81,8 @@ function createTab(url: string = 'localhost:3000', title?: string): Tab {
     title: resolvedTitle,
     url,
     favicon: FAVICON_MAP[url] ?? '',
+    isLoading: false,
+    loadingProgress: 0,
   }
 }
 
@@ -94,7 +107,7 @@ function AppleStartPage() {
         <h2 className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-4 px-1">
           Favorites
         </h2>
-        <div className="grid grid-cols-5 gap-4">
+        <div className="grid grid-cols-6 gap-4">
           {BOOKMARKS.map((bm) => (
             <div
               key={bm.url}
@@ -154,6 +167,100 @@ function AppleStartPage() {
             In the last seven days, Safari has prevented trackers from profiling you.
           </p>
         </div>
+      </div>
+    </div>
+  )
+}
+
+function ApplePage() {
+  const products = [
+    { name: 'MacBook Air', tagline: 'Lean. Mean. M3 machine.', icon: Laptop, color: 'from-gray-800 to-gray-600', price: 'From $1,099' },
+    { name: 'iPhone 16 Pro', tagline: 'Hello, Apple Intelligence.', icon: Smartphone, color: 'from-blue-900 to-blue-700', price: 'From $999' },
+    { name: 'Apple Watch Ultra 2', tagline: 'New finish. Tough as ever.', icon: Watch, color: 'from-orange-700 to-amber-600', price: 'From $799' },
+    { name: 'AirPods Pro 2', tagline: 'Intelligent noise cancellation.', icon: Headphones, color: 'from-gray-100 to-gray-300', price: 'From $249' },
+    { name: 'iMac', tagline: 'All-in-one. All in M3.', icon: Monitor, color: 'from-green-600 to-emerald-500', price: 'From $1,299' },
+    { name: 'Mac Studio', tagline: 'Supercharged by M4 Max and M4 Ultra.', icon: Cpu, color: 'from-gray-700 to-gray-500', price: 'From $1,999' },
+  ]
+
+  return (
+    <div className="flex flex-col w-full min-h-full bg-white">
+      {/* Nav */}
+      <div className="flex items-center justify-between px-8 py-3 bg-[#fbfbfd] border-b border-gray-200/80 shrink-0">
+        <span className="text-xl">🍎</span>
+        <nav className="flex items-center gap-6 text-[12px] text-gray-500 font-medium">
+          <span className="hover:text-gray-900 cursor-pointer transition-colors">Store</span>
+          <span className="hover:text-gray-900 cursor-pointer transition-colors">Mac</span>
+          <span className="hover:text-gray-900 cursor-pointer transition-colors">iPad</span>
+          <span className="hover:text-gray-900 cursor-pointer transition-colors">iPhone</span>
+          <span className="hover:text-gray-900 cursor-pointer transition-colors">Watch</span>
+          <span className="hover:text-gray-900 cursor-pointer transition-colors">AirPods</span>
+          <span className="hover:text-gray-900 cursor-pointer transition-colors">TV & Home</span>
+          <span className="hover:text-gray-900 cursor-pointer transition-colors">Support</span>
+        </nav>
+        <div className="flex items-center gap-4">
+          <Search size={16} className="text-gray-400 cursor-pointer hover:text-gray-600 transition-colors" />
+          <span className="text-gray-400 cursor-pointer hover:text-gray-600 transition-colors text-sm">👜</span>
+        </div>
+      </div>
+
+      {/* Hero */}
+      <div className="bg-black text-white text-center py-16 px-6 shrink-0">
+        <h1 className="text-5xl font-semibold tracking-tight mb-3">iPhone 16 Pro</h1>
+        <p className="text-xl text-gray-300 mb-6">Hello, Apple Intelligence.</p>
+        <div className="flex items-center justify-center gap-4">
+          <button className="px-5 py-2 bg-blue-600 hover:bg-blue-700 rounded-full text-sm font-medium transition-colors">
+            Learn more
+          </button>
+          <button className="px-5 py-2 border border-blue-500 text-blue-400 hover:border-blue-400 rounded-full text-sm font-medium transition-colors">
+            Buy
+          </button>
+        </div>
+        <div className="mt-8 flex justify-center">
+          <div className="w-48 h-80 rounded-[2.5rem] bg-gradient-to-b from-gray-800 to-gray-900 border-2 border-gray-700 flex items-center justify-center">
+            <Smartphone size={60} className="text-gray-500" />
+          </div>
+        </div>
+      </div>
+
+      {/* Product Grid */}
+      <div className="flex-1 p-8">
+        <h2 className="text-2xl font-semibold text-gray-900 mb-6">Explore the lineup.</h2>
+        <div className="grid grid-cols-3 gap-5">
+          {products.map((product) => {
+            const Icon = product.icon
+            return (
+              <div
+                key={product.name}
+                className="group rounded-2xl border border-gray-200 overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer"
+              >
+                <div className={`bg-gradient-to-br ${product.color} p-8 flex items-center justify-center min-h-[160px]`}>
+                  <Icon size={56} className="text-white/80 group-hover:scale-110 transition-transform duration-300" />
+                </div>
+                <div className="p-5">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-1">{product.name}</h3>
+                  <p className="text-sm text-gray-500 mb-2">{product.tagline}</p>
+                  <p className="text-sm text-gray-700 font-medium">{product.price}</p>
+                  <div className="flex items-center gap-3 mt-3">
+                    <span className="text-sm text-blue-600 hover:underline cursor-pointer">Learn more</span>
+                    <span className="text-sm text-blue-600 hover:underline cursor-pointer">Buy</span>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="bg-[#f5f5f7] px-8 py-6 border-t border-gray-200 shrink-0">
+        <div className="flex flex-wrap justify-center gap-6 text-[11px] text-gray-400">
+          <span className="hover:text-gray-600 cursor-pointer">Privacy Policy</span>
+          <span className="hover:text-gray-600 cursor-pointer">Terms of Use</span>
+          <span className="hover:text-gray-600 cursor-pointer">Sales and Refunds</span>
+          <span className="hover:text-gray-600 cursor-pointer">Legal</span>
+          <span className="hover:text-gray-600 cursor-pointer">Site Map</span>
+        </div>
+        <p className="text-center text-[11px] text-gray-400 mt-2">Copyright © 2025 Apple Inc. All rights reserved.</p>
       </div>
     </div>
   )
@@ -320,7 +427,7 @@ function GitHubPage() {
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-6">
         <div className="max-w-3xl mx-auto">
-          <h2 class="text-lg font-semibold text-gray-100 mb-4">Trending Repositories</h2>
+          <h2 className="text-lg font-semibold text-gray-100 mb-4">Trending Repositories</h2>
           <div className="space-y-0 border border-gray-700/50 rounded-lg overflow-hidden">
             {repos.map((repo, i) => (
               <div
@@ -333,29 +440,29 @@ function GitHubPage() {
                   <div className="flex items-center gap-1 mb-1">
                     <span className="text-blue-400 hover:underline cursor-pointer font-medium text-sm">
                       {repo.name}
-                  </span>
-                  <span className="text-[11px] border border-gray-600 rounded-full px-2 py-0.5 text-gray-400">
-                    Public
-                  </span>
+                    </span>
+                    <span className="text-[11px] border border-gray-600 rounded-full px-2 py-0.5 text-gray-400">
+                      Public
+                    </span>
+                  </div>
+                  <p className="text-[13px] text-gray-400 leading-snug">{repo.desc}</p>
+                  <div className="flex items-center gap-4 mt-2">
+                    <span className="flex items-center gap-1 text-[12px] text-gray-400">
+                      <span className="w-3 h-3 rounded-full inline-block" style={{ backgroundColor: repo.langColor }} />
+                      {repo.lang}
+                    </span>
+                    <span className="flex items-center gap-1 text-[12px] text-gray-400">
+                      <Star size={12} /> {repo.stars}
+                    </span>
+                    <span className="text-[12px] text-gray-400">
+                      🄯 {repo.forks}
+                    </span>
+                  </div>
                 </div>
-                <p className="text-[13px] text-gray-400 leading-snug">{repo.desc}</p>
-                <div className="flex items-center gap-4 mt-2">
-                  <span className="flex items-center gap-1 text-[12px] text-gray-400">
-                    <span className="w-3 h-3 rounded-full inline-block" style={{ backgroundColor: repo.langColor }} />
-                    {repo.lang}
-                  </span>
-                  <span className="flex items-center gap-1 text-[12px] text-gray-400">
-                    <Star size={12} /> {repo.stars}
-                  </span>
-                  <span className="text-[12px] text-gray-400">
-                    🄯 {repo.forks}
-                  </span>
-                </div>
+                <button className="shrink-0 px-3 py-1 text-[12px] bg-[#21262d] border border-gray-600 rounded-md text-gray-300 hover:bg-[#30363d] hover:border-gray-500 transition-colors">
+                  ⭐ Star
+                </button>
               </div>
-              <button className="shrink-0 px-3 py-1 text-[12px] bg-[#21262d] border border-gray-600 rounded-md text-gray-300 hover:bg-[#30363d] hover:border-gray-500 transition-colors">
-                ⭐ Star
-              </button>
-            </div>
             ))}
           </div>
         </div>
@@ -490,13 +597,94 @@ function WikipediaPage() {
   )
 }
 
+function RedditPage() {
+  const posts = [
+    { subreddit: 'r/programming', title: 'Next.js 16 just dropped — here are the highlights', author: 'u/dev_master', upvotes: '12.4k', comments: '847', time: '3h' },
+    { subreddit: 'r/webdev', title: 'I built a full-stack app in 2 hours with AI assistance', author: 'u/aicoder', upvotes: '8.9k', comments: '623', time: '5h' },
+    { subreddit: 'r/react', title: 'React Server Components: A practical guide for 2025', author: 'u/reactfan', upvotes: '6.2k', comments: '412', time: '7h' },
+    { subreddit: 'r/typescript', title: 'TypeScript 6.0 roadmap announced', author: 'u/ts_dev', upvotes: '15.1k', comments: '1.2k', time: '2h' },
+    { subreddit: 'r/technology', title: 'Apple announces M5 chip with groundbreaking performance', author: 'u/technews', upvotes: '23.7k', comments: '2.4k', time: '1h' },
+    { subreddit: 'r/design', title: 'The death of flat design? New trends emerging for 2025', author: 'u/designpro', upvotes: '5.8k', comments: '329', time: '9h' },
+  ]
+
+  return (
+    <div className="flex flex-col w-full min-h-full bg-[#dae0e6]">
+      {/* Header */}
+      <div className="flex items-center px-4 py-2 bg-white border-b border-gray-200 shrink-0">
+        <span className="text-2xl mr-2">🟠</span>
+        <span className="font-bold text-gray-900 text-lg">reddit</span>
+        <div className="flex-1 max-w-md mx-auto ml-6">
+          <div className="flex items-center border border-gray-200 rounded-full px-4 py-1.5 bg-gray-50">
+            <Search size={16} className="text-gray-400 mr-2" />
+            <input
+              type="text"
+              placeholder="Search Reddit"
+              className="flex-1 text-sm outline-none bg-transparent"
+            />
+          </div>
+        </div>
+        <div className="flex items-center gap-3 ml-4">
+          <button className="px-4 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-full text-sm font-medium text-gray-700 transition-colors">
+            Log In
+          </button>
+          <button className="px-4 py-1.5 bg-orange-500 hover:bg-orange-600 rounded-full text-sm font-medium text-white transition-colors">
+            Sign Up
+          </button>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto p-4">
+        <div className="max-w-2xl mx-auto space-y-3">
+          {posts.map((post) => (
+            <div
+              key={post.title}
+              className="bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-colors cursor-pointer"
+            >
+              <div className="flex">
+                {/* Vote column */}
+                <div className="flex flex-col items-center py-3 px-2 bg-gray-50 rounded-l-lg gap-1">
+                  <button className="text-gray-400 hover:text-orange-500 transition-colors">▲</button>
+                  <span className="text-xs font-bold text-gray-700">{post.upvotes}</span>
+                  <button className="text-gray-400 hover:text-blue-500 transition-colors">▼</button>
+                </div>
+                {/* Post content */}
+                <div className="flex-1 p-3">
+                  <div className="flex items-center gap-2 text-[12px] text-gray-500 mb-1">
+                    <span className="font-semibold text-gray-800">{post.subreddit}</span>
+                    <span>·</span>
+                    <span>Posted by {post.author}</span>
+                    <span>·</span>
+                    <span>{post.time} ago</span>
+                  </div>
+                  <h3 className="text-[15px] font-medium text-gray-900 mb-1 leading-snug">
+                    {post.title}
+                  </h3>
+                  <div className="flex items-center gap-4 text-[12px] text-gray-500 mt-2">
+                    <span className="flex items-center gap-1 hover:text-gray-700 cursor-pointer">
+                      💬 {post.comments} Comments
+                    </span>
+                    <span className="hover:text-gray-700 cursor-pointer">Share</span>
+                    <span className="hover:text-gray-700 cursor-pointer">Save</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function GenericPage({ url }: { url: string }) {
   return (
     <div className="flex flex-col items-center justify-center w-full min-h-full bg-white">
       <div className="text-center px-8">
         <Globe size={48} className="mx-auto mb-4 text-gray-300" />
-        <h2 className="text-lg font-medium text-gray-700 mb-2">{url}</h2>
-        <p className="text-sm text-gray-400 max-w-sm">
+        <h2 className="text-lg font-medium text-gray-700 mb-2">Page Loaded</h2>
+        <p className="text-sm text-gray-500 mb-1 font-medium">{url}</p>
+        <p className="text-sm text-gray-400 max-w-sm mx-auto">
           This page is a simulated version of {url}. In a real browser, this would load the actual website content.
         </p>
       </div>
@@ -509,21 +697,24 @@ function GenericPage({ url }: { url: string }) {
 function resolvePageContent(url: string) {
   const normalized = url.toLowerCase().replace(/^https?:\/\//, '').replace(/\/$/, '')
   if (normalized === 'localhost:3000' || normalized === '') return <AppleStartPage />
+  if (normalized.includes('apple')) return <ApplePage />
   if (normalized.includes('google')) return <GooglePage />
   if (normalized.includes('youtube')) return <YouTubePage />
   if (normalized.includes('github')) return <GitHubPage />
   if (normalized.includes('wikipedia')) return <WikipediaPage />
+  if (normalized.includes('reddit')) return <RedditPage />
   return <GenericPage url={url} />
 }
 
 function resolvePageTitle(url: string): string {
   const normalized = url.toLowerCase().replace(/^https?:\/\//, '').replace(/\/$/, '')
   if (normalized === 'localhost:3000' || normalized === '') return 'Safari Start Page'
+  if (normalized.includes('apple')) return 'Apple'
   if (normalized.includes('google')) return 'Google'
-  if (normalized.includes('youtube')) return 'YouTube'
   if (normalized.includes('youtube')) return 'YouTube'
   if (normalized.includes('github')) return 'GitHub'
   if (normalized.includes('wikipedia')) return 'macOS — Wikipedia'
+  if (normalized.includes('reddit')) return 'Reddit'
   return normalized
 }
 
@@ -534,6 +725,7 @@ function resolveFavicon(url: string): string {
   if (normalized.includes('github')) return ''
   if (normalized.includes('wikipedia')) return ''
   if (normalized.includes('apple')) return ''
+  if (normalized.includes('reddit')) return ''
   return ''
 }
 
@@ -552,6 +744,8 @@ export default function Safari() {
   })
 
   const urlInputRef = useRef<HTMLInputElement>(null)
+  const loadingTimersRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
+  const loadingIntervalsRef = useRef<Record<string, ReturnType<typeof setInterval>>>({})
 
   const activeTab = useMemo(() => tabs.find((t) => t.id === activeTabId) ?? tabs[0], [tabs, activeTabId])
 
@@ -565,19 +759,76 @@ export default function Safari() {
     return hist ? hist.index < hist.urls.length - 1 : false
   }, [tabHistories, activeTabId])
 
+  // Simulate loading with progress bar
+  const simulateLoading = useCallback((tabId: string, url: string) => {
+    // Clear any existing timers for this tab
+    if (loadingTimersRef.current[tabId]) {
+      clearTimeout(loadingTimersRef.current[tabId])
+    }
+    if (loadingIntervalsRef.current[tabId]) {
+      clearInterval(loadingIntervalsRef.current[tabId])
+    }
+
+    // Start loading
+    setTabs((prev) =>
+      prev.map((t) =>
+        t.id === tabId ? { ...t, isLoading: true, loadingProgress: 0, url, title: resolvePageTitle(url), favicon: resolveFavicon(url) } : t
+      )
+    )
+
+    // Animate progress bar
+    let progress = 0
+    const loadDuration = 1000 + Math.random() * 1000 // 1-2 seconds
+    const intervalMs = 50
+    const incrementPerTick = 80 / (loadDuration / intervalMs) // Reach ~80% gradually
+
+    loadingIntervalsRef.current[tabId] = setInterval(() => {
+      progress += incrementPerTick + Math.random() * 2
+      if (progress >= 85) {
+        progress = 85
+        if (loadingIntervalsRef.current[tabId]) {
+          clearInterval(loadingIntervalsRef.current[tabId])
+        }
+      }
+      setTabs((prev) =>
+        prev.map((t) =>
+          t.id === tabId ? { ...t, loadingProgress: Math.min(progress, 85) } : t
+        )
+      )
+    }, intervalMs)
+
+    // Complete loading after duration
+    loadingTimersRef.current[tabId] = setTimeout(() => {
+      if (loadingIntervalsRef.current[tabId]) {
+        clearInterval(loadingIntervalsRef.current[tabId])
+      }
+      setTabs((prev) =>
+        prev.map((t) =>
+          t.id === tabId ? { ...t, isLoading: false, loadingProgress: 100 } : t
+        )
+      )
+      // Reset progress after animation
+      setTimeout(() => {
+        setTabs((prev) =>
+          prev.map((t) =>
+            t.id === tabId ? { ...t, loadingProgress: 0 } : t
+          )
+        )
+      }, 200)
+    }, loadDuration)
+  }, [])
+
   // Navigate to URL (pushes history)
   const navigateToUrl = useCallback(
     (url: string) => {
       const normalizedUrl = url.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/$/, '') || 'localhost:3000'
       const displayUrl = normalizedUrl === 'localhost:3000' ? 'localhost:3000' : normalizedUrl
-      const title = resolvePageTitle(displayUrl)
-      const favicon = resolveFavicon(displayUrl)
 
-      setTabs((prev) =>
-        prev.map((t) =>
-          t.id === activeTabId ? { ...t, url: displayUrl, title, favicon } : t
-        )
-      )
+      // Only show loading animation if actually changing URL
+      const currentTab = tabs.find((t) => t.id === activeTabId)
+      if (currentTab?.url !== displayUrl) {
+        simulateLoading(activeTabId, displayUrl)
+      }
 
       setTabHistories((prev) => {
         const hist = prev[activeTabId] ?? { urls: ['localhost:3000'], index: 0 }
@@ -588,7 +839,7 @@ export default function Safari() {
         }
       })
     },
-    [activeTabId]
+    [activeTabId, tabs, simulateLoading]
   )
 
   const goBack = useCallback(() => {
@@ -596,38 +847,26 @@ export default function Safari() {
     if (!hist || hist.index <= 0) return
     const newIndex = hist.index - 1
     const url = hist.urls[newIndex]
-    const title = resolvePageTitle(url)
-    const favicon = resolveFavicon(url)
+    simulateLoading(activeTabId, url)
 
-    setTabs((prev) =>
-      prev.map((t) =>
-        t.id === activeTabId ? { ...t, url, title, favicon } : t
-      )
-    )
     setTabHistories((prev) => ({
       ...prev,
       [activeTabId]: { ...prev[activeTabId], index: newIndex },
     }))
-  }, [activeTabId, tabHistories])
+  }, [activeTabId, tabHistories, simulateLoading])
 
   const goForward = useCallback(() => {
     const hist = tabHistories[activeTabId]
     if (!hist || hist.index >= hist.urls.length - 1) return
     const newIndex = hist.index + 1
     const url = hist.urls[newIndex]
-    const title = resolvePageTitle(url)
-    const favicon = resolveFavicon(url)
+    simulateLoading(activeTabId, url)
 
-    setTabs((prev) =>
-      prev.map((t) =>
-        t.id === activeTabId ? { ...t, url, title, favicon } : t
-      )
-    )
     setTabHistories((prev) => ({
       ...prev,
       [activeTabId]: { ...prev[activeTabId], index: newIndex },
     }))
-  }, [activeTabId, tabHistories])
+  }, [activeTabId, tabHistories, simulateLoading])
 
   const addTab = useCallback(() => {
     const newTab = createTab('localhost:3000', 'Safari Start Page')
@@ -643,12 +882,18 @@ export default function Safari() {
   const closeTab = useCallback(
     (tabId: string, e?: React.MouseEvent) => {
       e?.stopPropagation()
+      // Clear loading timers
+      if (loadingTimersRef.current[tabId]) {
+        clearTimeout(loadingTimersRef.current[tabId])
+      }
+      if (loadingIntervalsRef.current[tabId]) {
+        clearInterval(loadingIntervalsRef.current[tabId])
+      }
       setTabs((prev) => {
         if (prev.length <= 1) return prev // Don't close last tab
         const idx = prev.findIndex((t) => t.id === tabId)
         const newTabs = prev.filter((t) => t.id !== tabId)
         if (tabId === activeTabId) {
-          // Switch to adjacent tab
           const newIdx = Math.min(idx, newTabs.length - 1)
           setActiveTabId(newTabs[newIdx].id)
         }
@@ -690,6 +935,14 @@ export default function Safari() {
     },
     [navigateToUrl]
   )
+
+  // Cleanup timers on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(loadingTimersRef.current).forEach(clearTimeout)
+      Object.values(loadingIntervalsRef.current).forEach(clearInterval)
+    }
+  }, [])
 
   return (
     <div className="flex flex-col w-full h-full bg-white text-gray-900 text-sm select-none overflow-hidden">
@@ -805,8 +1058,14 @@ export default function Safari() {
                   </>
                 )}
 
-                {/* Favicon */}
-                <span className="text-[13px] shrink-0">{tab.favicon || ''}</span>
+                {/* Favicon / Loading spinner */}
+                <span className="text-[13px] shrink-0">
+                  {tab.isLoading ? (
+                    <span className="inline-block w-3 h-3 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
+                  ) : (
+                    tab.favicon || ''
+                  )}
+                </span>
 
                 {/* Title */}
                 <span className="truncate flex-1 font-medium">{tab.title}</span>
@@ -825,13 +1084,18 @@ export default function Safari() {
           })}
 
           {/* Add Tab Button */}
-          <button
-            className="shrink-0 p-1.5 rounded-md hover:bg-gray-300/40 text-gray-500 transition-colors mb-0.5"
-            onClick={addTab}
-            title="New Tab"
-          >
-            <Plus size={14} />
-          </button>
+          <div className="flex items-center gap-1 mb-0.5">
+            <button
+              className="shrink-0 p-1.5 rounded-md hover:bg-gray-300/40 text-gray-500 transition-colors"
+              onClick={addTab}
+              title="New Tab"
+            >
+              <Plus size={14} />
+            </button>
+            <span className="text-[11px] text-gray-400 px-1">
+              {tabs.length} tab{tabs.length !== 1 ? 's' : ''}
+            </span>
+          </div>
         </div>
       </div>
 
@@ -849,8 +1113,18 @@ export default function Safari() {
         ))}
       </div>
 
+      {/* ─── Loading Progress Bar ──────────────────────────────────────── */}
+      {activeTab.isLoading && (
+        <div className="relative h-[2px] bg-transparent shrink-0 overflow-hidden">
+          <div
+            className="absolute top-0 left-0 h-full bg-blue-500 transition-all duration-100 ease-out"
+            style={{ width: `${activeTab.loadingProgress}%` }}
+          />
+        </div>
+      )}
+
       {/* ─── Content Area ──────────────────────────────────────────────── */}
-      <div className="flex-1 overflow-auto min-h-0">
+      <div className="flex-1 overflow-auto min-h-0 relative">
         {showTabOverview ? (
           <TabOverview
             tabs={tabs}
@@ -862,6 +1136,13 @@ export default function Safari() {
             onCloseTab={closeTab}
             onAddTab={addTab}
           />
+        ) : activeTab.isLoading ? (
+          <div className="flex flex-col items-center justify-center w-full h-full bg-white">
+            <div className="flex flex-col items-center gap-3">
+              <div className="w-8 h-8 border-3 border-gray-200 border-t-blue-500 rounded-full animate-spin" />
+              <p className="text-sm text-gray-400">Loading {activeTab.url}...</p>
+            </div>
+          </div>
         ) : (
           resolvePageContent(activeTab.url)
         )}

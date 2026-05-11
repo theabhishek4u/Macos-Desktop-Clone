@@ -383,10 +383,13 @@ export default function Notes() {
 
                 {/* Notes in this group */}
                 {groupNotes.map((note) => (
-                  <button
+                  <div
                     key={note.id}
+                    role="button"
+                    tabIndex={0}
                     onClick={() => setSelectedId(note.id)}
-                    className={`group relative w-full px-3 py-2 text-left transition-all duration-150 border-l-[3px] rounded-r-md mx-1 ${
+                    onKeyDown={(e) => { if (e.key === 'Enter') setSelectedId(note.id) }}
+                    className={`group relative w-full px-3 py-2 text-left transition-all duration-150 border-l-[3px] rounded-r-md mx-1 cursor-default ${
                       note.id === selectedId
                         ? 'bg-blue-50/70 border-blue-500'
                         : 'bg-transparent border-transparent hover:bg-black/[0.03]'
@@ -419,7 +422,7 @@ export default function Notes() {
                         <Trash2 className="h-3 w-3" />
                       </button>
                     </div>
-                  </button>
+                  </div>
                 ))}
               </div>
             );

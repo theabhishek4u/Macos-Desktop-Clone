@@ -44,6 +44,7 @@ export default function Window({ windowId, children }: WindowProps) {
   const updateWindowSize = useMacOSStore((s) => s.updateWindowSize)
 
   const [trafficHover, setTrafficHover] = useState(false)
+  const [isClosing, setIsClosing] = useState(false)
 
   // Use refs for drag/resize state to avoid re-renders during interaction
   const dragRef = useRef<{
@@ -198,6 +199,13 @@ export default function Window({ windowId, children }: WindowProps) {
     [windowId, windowState, focusWindow, updateWindowPosition, updateWindowSize]
   )
 
+  const handleClose = useCallback(() => {
+    setIsClosing(true)
+    setTimeout(() => {
+      closeWindow(windowId)
+    }, 200)
+  }, [closeWindow, windowId])
+
   if (!windowState) return null
 
   const { id, title, x, y, width, height, isMinimized, isMaximized } = windowState
@@ -215,13 +223,13 @@ export default function Window({ windowId, children }: WindowProps) {
             height,
             zIndex: windowState.zIndex,
           }}
-          initial={false}
+          initial={{ scale: 0.95, opacity: 0 }}
           animate={{
-            scale: 1,
-            opacity: 1,
+            scale: isClosing ? 0.92 : 1,
+            opacity: isClosing ? 0 : 1,
           }}
           exit={{
-            scale: 0.4,
+            scale: 0.92,
             opacity: 0,
           }}
           transition={{
@@ -242,42 +250,52 @@ export default function Window({ windowId, children }: WindowProps) {
               background: '#1e1e1e',
             }}
           >
+            {/* Top highlight line */}
+            <div
+              className="w-full h-[1px] shrink-0"
+              style={{
+                background: isActive
+                  ? 'linear-gradient(90deg, transparent, rgba(255,255,255,0.1) 20%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.1) 80%, transparent)'
+                  : 'linear-gradient(90deg, transparent, rgba(255,255,255,0.05) 20%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.05) 80%, transparent)',
+              }}
+            />
+
             {/* Title Bar */}
             <div
               className={`flex items-center h-[38px] shrink-0 select-none px-3 transition-colors duration-150 ${
                 isActive
-                  ? 'bg-[#3a3a3a] border-b border-white/10'
-                  : 'bg-[#2d2d2d] border-b border-white/5'
+                  ? 'bg-[#3a3a3a]/95 backdrop-blur-md border-b border-white/10'
+                  : 'bg-[#2d2d2d]/95 backdrop-blur-md border-b border-white/5'
               }`}
               onMouseDown={handleDragMouseDown}
               onDoubleClick={() => maximizeWindow(windowId)}
             >
               {/* Traffic Light Buttons */}
               <div
-                className="flex items-center gap-2 mr-3"
+                className="flex items-center gap-[8px] mr-3"
                 onMouseEnter={() => setTrafficHover(true)}
                 onMouseLeave={() => setTrafficHover(false)}
               >
                 {/* Close */}
                 <button
                   data-traffic-light
-                  className={`w-3 h-3 rounded-full flex items-center justify-center transition-colors duration-150 ${
+                  className={`w-[13px] h-[13px] rounded-full flex items-center justify-center transition-colors duration-150 ${
                     isActive ? 'bg-[#ff5f57]' : 'bg-[#4a4a4a]'
                   } ${trafficHover ? 'hover:brightness-90' : ''}`}
                   onClick={(e) => {
                     e.stopPropagation()
-                    closeWindow(windowId)
+                    handleClose()
                   }}
                 >
                   {trafficHover && isActive && (
-                    <span className="text-[9px] leading-none text-black/80 font-bold">✕</span>
+                    <span className="text-[10px] leading-none text-black/80 font-bold">✕</span>
                   )}
                 </button>
 
                 {/* Minimize */}
                 <button
                   data-traffic-light
-                  className={`w-3 h-3 rounded-full flex items-center justify-center transition-colors duration-150 ${
+                  className={`w-[13px] h-[13px] rounded-full flex items-center justify-center transition-colors duration-150 ${
                     isActive ? 'bg-[#febc2e]' : 'bg-[#4a4a4a]'
                   } ${trafficHover ? 'hover:brightness-90' : ''}`}
                   onClick={(e) => {
@@ -286,14 +304,14 @@ export default function Window({ windowId, children }: WindowProps) {
                   }}
                 >
                   {trafficHover && isActive && (
-                    <span className="text-[11px] leading-none text-black/80 font-bold -mt-[1px]">−</span>
+                    <span className="text-[12px] leading-none text-black/80 font-bold -mt-[1px]">−</span>
                   )}
                 </button>
 
                 {/* Maximize */}
                 <button
                   data-traffic-light
-                  className={`w-3 h-3 rounded-full flex items-center justify-center transition-colors duration-150 ${
+                  className={`w-[13px] h-[13px] rounded-full flex items-center justify-center transition-colors duration-150 ${
                     isActive ? 'bg-[#28c840]' : 'bg-[#4a4a4a]'
                   } ${trafficHover ? 'hover:brightness-90' : ''}`}
                   onClick={(e) => {
@@ -302,7 +320,7 @@ export default function Window({ windowId, children }: WindowProps) {
                   }}
                 >
                   {trafficHover && isActive && (
-                    <span className="text-[10px] leading-none text-black/80 font-bold">+</span>
+                    <span className="text-[11px] leading-none text-black/80 font-bold">+</span>
                   )}
                 </button>
               </div>

@@ -30,7 +30,7 @@ export const APP_CONFIGS: Record<string, AppConfig> = {
   finder: {
     id: 'finder',
     name: 'Finder',
-    icon: '📁',
+    icon: 'finder',
     defaultWidth: 750,
     defaultHeight: 500,
     minWidth: 400,
@@ -39,7 +39,7 @@ export const APP_CONFIGS: Record<string, AppConfig> = {
   calculator: {
     id: 'calculator',
     name: 'Calculator',
-    icon: '🧮',
+    icon: 'calculator',
     defaultWidth: 320,
     defaultHeight: 500,
     minWidth: 280,
@@ -48,7 +48,7 @@ export const APP_CONFIGS: Record<string, AppConfig> = {
   notes: {
     id: 'notes',
     name: 'Notes',
-    icon: '📝',
+    icon: 'notes',
     defaultWidth: 700,
     defaultHeight: 500,
     minWidth: 400,
@@ -57,7 +57,7 @@ export const APP_CONFIGS: Record<string, AppConfig> = {
   terminal: {
     id: 'terminal',
     name: 'Terminal',
-    icon: '💻',
+    icon: 'terminal',
     defaultWidth: 650,
     defaultHeight: 420,
     minWidth: 400,
@@ -66,7 +66,7 @@ export const APP_CONFIGS: Record<string, AppConfig> = {
   calendar: {
     id: 'calendar',
     name: 'Calendar',
-    icon: '📅',
+    icon: 'calendar',
     defaultWidth: 700,
     defaultHeight: 550,
     minWidth: 500,
@@ -75,7 +75,7 @@ export const APP_CONFIGS: Record<string, AppConfig> = {
   safari: {
     id: 'safari',
     name: 'Safari',
-    icon: '🧭',
+    icon: 'safari',
     defaultWidth: 900,
     defaultHeight: 600,
     minWidth: 500,
@@ -84,7 +84,7 @@ export const APP_CONFIGS: Record<string, AppConfig> = {
   settings: {
     id: 'settings',
     name: 'System Preferences',
-    icon: '⚙️',
+    icon: 'settings',
     defaultWidth: 680,
     defaultHeight: 520,
     minWidth: 500,
@@ -93,7 +93,7 @@ export const APP_CONFIGS: Record<string, AppConfig> = {
   clock: {
     id: 'clock',
     name: 'Clock',
-    icon: '🕐',
+    icon: 'clock',
     defaultWidth: 400,
     defaultHeight: 450,
     minWidth: 350,
@@ -102,7 +102,7 @@ export const APP_CONFIGS: Record<string, AppConfig> = {
   photos: {
     id: 'photos',
     name: 'Photos',
-    icon: '🖼️',
+    icon: 'photos',
     defaultWidth: 750,
     defaultHeight: 550,
     minWidth: 500,
@@ -111,7 +111,7 @@ export const APP_CONFIGS: Record<string, AppConfig> = {
   music: {
     id: 'music',
     name: 'Music',
-    icon: '🎵',
+    icon: 'music',
     defaultWidth: 700,
     defaultHeight: 500,
     minWidth: 500,
@@ -120,7 +120,7 @@ export const APP_CONFIGS: Record<string, AppConfig> = {
   textedit: {
     id: 'textedit',
     name: 'TextEdit',
-    icon: '📄',
+    icon: 'textedit',
     defaultWidth: 650,
     defaultHeight: 450,
     minWidth: 400,
@@ -129,11 +129,20 @@ export const APP_CONFIGS: Record<string, AppConfig> = {
   weather: {
     id: 'weather',
     name: 'Weather',
-    icon: '🌤️',
+    icon: 'weather',
     defaultWidth: 500,
     defaultHeight: 450,
     minWidth: 400,
     minHeight: 350,
+  },
+  launchpad: {
+    id: 'launchpad',
+    name: 'Launchpad',
+    icon: 'launchpad',
+    defaultWidth: 0,
+    defaultHeight: 0,
+    minWidth: 0,
+    minHeight: 0,
   },
 }
 
@@ -172,7 +181,7 @@ const useMacOSStore = create<MacOSState>((set, get) => ({
   activeWindowId: null,
   nextZIndex: 100,
   dockApps: [
-    'finder', 'safari', 'notes', 'terminal', 'calculator',
+    'launchpad', 'finder', 'safari', 'notes', 'terminal', 'calculator',
     'calendar', 'photos', 'music', 'settings', 'clock',
     'textedit', 'weather',
   ],
@@ -181,6 +190,8 @@ const useMacOSStore = create<MacOSState>((set, get) => ({
   wallpaperIndex: 0,
 
   openApp: (appId: string) => {
+    // Launchpad is not a window app - it's an overlay handled separately
+    if (appId === 'launchpad') return
     const config = APP_CONFIGS[appId]
     if (!config) return
 

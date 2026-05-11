@@ -2,7 +2,25 @@
 
 import React, { useRef, useState, useCallback, useMemo, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import {
+  FolderOpen,
+  Compass,
+  NotebookPen,
+  Terminal,
+  Calculator,
+  CalendarIcon,
+  ImageIcon,
+  Music as MusicIcon,
+  Settings,
+  Clock as ClockIcon,
+  FileText,
+  CloudSun,
+  Trash2,
+  Rocket,
+  type LucideIcon,
+} from 'lucide-react'
 import useMacOSStore, { APP_CONFIGS } from '@/store/macos-store'
+import { useLaunchpad } from '@/components/macos/Launchpad'
 
 // Magnification parameters
 const ICON_SIZE = 52
@@ -12,8 +30,84 @@ const SIGMA = 70 // gaussian spread
 const ICON_GAP = 6 // gap between icons (gap-1.5 = 6px)
 const DOCK_PADDING_X = 16 // px-4 = 16px
 
+// Icon configuration mapping
+interface IconConfig {
+  gradient: string
+  icon: LucideIcon
+  iconColor?: string // Override icon color for light backgrounds
+}
+
+const ICON_MAP: Record<string, IconConfig> = {
+  finder: { gradient: 'linear-gradient(135deg, #4FC3F7, #2196F3)', icon: FolderOpen },
+  safari: { gradient: 'linear-gradient(135deg, #64B5F6, #E3F2FD)', icon: Compass, iconColor: '#1a73e8' },
+  notes: { gradient: 'linear-gradient(135deg, #FFD54F, #FFC107)', icon: NotebookPen, iconColor: '#5D4037' },
+  terminal: { gradient: 'linear-gradient(135deg, #37474F, #263238)', icon: Terminal },
+  calculator: { gradient: 'linear-gradient(135deg, #FF8A65, #FF7043)', icon: Calculator },
+  calendar: { gradient: 'linear-gradient(135deg, #FFFFFF, #F5F5F5)', icon: CalendarIcon, iconColor: '#E53935' },
+  photos: { gradient: 'linear-gradient(135deg, #FF6F61, #FFB74D, #4FC3F7, #81C784, #BA68C8)', icon: ImageIcon },
+  music: { gradient: 'linear-gradient(135deg, #FF5252, #E91E63)', icon: MusicIcon },
+  settings: { gradient: 'linear-gradient(135deg, #78909C, #546E7A)', icon: Settings },
+  clock: { gradient: 'linear-gradient(135deg, #212121, #424242)', icon: ClockIcon },
+  textedit: { gradient: 'linear-gradient(135deg, #E8EAF6, #C5CAE9)', icon: FileText, iconColor: '#3949AB' },
+  weather: { gradient: 'linear-gradient(135deg, #64B5F6, #42A5F5)', icon: CloudSun },
+  trash: { gradient: 'linear-gradient(135deg, #90A4AE, #78909C)', icon: Trash2 },
+  launchpad: { gradient: 'linear-gradient(135deg, #424242, #757575)', icon: Rocket },
+}
+
+// Dock App Icon component
+function DockAppIcon({ appId, size }: { appId: string; size: number }) {
+  const config = ICON_MAP[appId]
+  if (!config) {
+    return (
+      <div
+        className="flex items-center justify-center rounded-[22%]"
+        style={{
+          width: size,
+          height: size,
+          background: 'linear-gradient(135deg, #9E9E9E, #757575)',
+        }}
+      >
+        <span className="text-white text-xs">?</span>
+      </div>
+    )
+  }
+
+  const IconComponent = config.icon
+  const iconColor = config.iconColor || 'white'
+  const iconSize = Math.round(size * 0.52)
+
+  return (
+    <div
+      className="flex items-center justify-center rounded-[22%] relative overflow-hidden"
+      style={{
+        width: size,
+        height: size,
+        background: config.gradient,
+        boxShadow:
+          'inset 0 1px 0 rgba(255,255,255,0.35), inset 0 -1px 0 rgba(0,0,0,0.15), 0 1px 3px rgba(0,0,0,0.2)',
+        border: '0.5px solid rgba(255,255,255,0.2)',
+      }}
+    >
+      {/* Subtle shine overlay */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: 'linear-gradient(180deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0) 50%, rgba(0,0,0,0.05) 100%)',
+          borderRadius: 'inherit',
+        }}
+      />
+      <IconComponent
+        size={iconSize}
+        color={iconColor}
+        strokeWidth={1.8}
+        style={{ position: 'relative', zIndex: 1 }}
+      />
+    </div>
+  )
+}
+
 // Trash config (not in APP_CONFIGS since it's not an app)
-const TRASH_CONFIG = { id: 'trash', name: 'Trash', icon: '🗑️' }
+const TRASH_CONFIG = { id: 'trash', name: 'Trash', icon: 'trash' }
 
 interface DockIconProps {
   appId: string
@@ -29,9 +123,9 @@ interface DockIconProps {
 }
 
 function DockIcon({
-  icon,
-  name,
+  appId,
   scale,
+  name,
   isRunning,
   isBouncing,
   onClick,
@@ -74,6 +168,7 @@ function DockIcon({
       {/* Icon */}
       <motion.button
         onClick={onClick}
+        aria-label={name}
         animate={{
           width: currentSize,
           height: currentSize,
@@ -96,8 +191,6 @@ function DockIcon({
         }
         className="flex items-center justify-center rounded-[12px] transition-shadow duration-200 hover:shadow-[0_0_15px_rgba(255,255,255,0.15)]"
         style={{
-          fontSize: Math.round(currentSize * 0.55),
-          lineHeight: 1,
           background: isTrash
             ? 'linear-gradient(135deg, rgba(255,255,255,0.18), rgba(255,255,255,0.06))'
             : 'linear-gradient(145deg, rgba(255,255,255,0.25), rgba(255,255,255,0.1))',
@@ -105,9 +198,10 @@ function DockIcon({
           border: '1px solid rgba(255,255,255,0.22)',
           boxShadow:
             'inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.1)',
+          padding: 0,
         }}
       >
-        <span className="select-none">{icon}</span>
+        <DockAppIcon appId={appId} size={currentSize * 0.85} />
       </motion.button>
 
       {/* Running indicator dot */}
@@ -196,14 +290,20 @@ export default function Dock() {
     setMouseX(null)
   }, [])
 
+  const { toggle: toggleLaunchpad } = useLaunchpad()
+
   const handleClick = useCallback(
     (appId: string, isTrash: boolean) => {
       if (isTrash) return
+      if (appId === 'launchpad') {
+        toggleLaunchpad()
+        return
+      }
       setBouncingApp(appId)
       setTimeout(() => setBouncingApp(null), 1200)
       openApp(appId)
     },
-    [openApp]
+    [openApp, toggleLaunchpad]
   )
 
   // Keep dockRect updated on mount
@@ -226,7 +326,7 @@ export default function Dock() {
         ref={dockRef}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
-        className="relative flex items-end gap-1.5 overflow-hidden rounded-[18px] border border-white/20 bg-white/[0.15] px-4 pb-2.5 pt-2 shadow-2xl shadow-black/20 backdrop-blur-2xl"
+        className="relative flex items-end gap-1.5 overflow-visible rounded-[18px] border border-white/20 bg-white/[0.15] px-4 pb-2.5 pt-2 shadow-2xl shadow-black/20 backdrop-blur-2xl"
         style={{
           boxShadow:
             'inset 0 1px 0 rgba(255,255,255,0.3), 0 8px 32px rgba(0,0,0,0.25), 0 2px 8px rgba(0,0,0,0.15)',

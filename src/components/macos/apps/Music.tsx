@@ -37,7 +37,7 @@ function formatDuration(seconds: number): string {
   return `${m}:${String(s).padStart(2, '0')}`;
 }
 
-export default function Music() {
+export default function MusicApp() {
   const [songs, setSongs] = useState<Song[]>(SONGS);
   const [activeSection, setActiveSection] = useState<SidebarItem>('songs');
   const [currentSongId, setCurrentSongId] = useState<number>(1);

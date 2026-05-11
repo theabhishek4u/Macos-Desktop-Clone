@@ -13,6 +13,8 @@ const DesktopIcons = dynamic(() => import('@/components/macos/DesktopIcons'), { 
 const Spotlight = dynamic(() => import('@/components/macos/Spotlight'), { ssr: false })
 const AboutThisMac = dynamic(() => import('@/components/macos/AboutThisMac'), { ssr: false })
 const ControlCenter = dynamic(() => import('@/components/macos/ControlCenter'), { ssr: false })
+const NotificationCenter = dynamic(() => import('@/components/macos/NotificationCenter'), { ssr: false })
+const Launchpad = dynamic(() => import('@/components/macos/Launchpad'), { ssr: false })
 
 const Finder = dynamic(() => import('@/components/macos/apps/Finder'), { ssr: false })
 const Calculator = dynamic(() => import('@/components/macos/apps/Calculator'), { ssr: false })
@@ -63,6 +65,8 @@ export default function MacOSDesktop() {
       <Spotlight />
       <AboutThisMac />
       <ControlCenter />
+      <NotificationCenter />
+      <Launchpad />
     </Desktop>
   )
 }

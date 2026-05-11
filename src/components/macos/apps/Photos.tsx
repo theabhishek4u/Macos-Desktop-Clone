@@ -91,7 +91,7 @@ export default function Photos() {
 
   const sidebarItems = [
     { section: 'Library', items: [
-      { id: 'all' as SidebarSection, label: 'All Photos', icon: Image, count: photos.length },
+      { id: 'all' as SidebarSection, label: 'All Photos', icon: ImageIcon, count: photos.length },
       { id: 'favorites' as SidebarSection, label: 'Favorites', icon: Heart, count: photos.filter(p => p.favorited).length },
       { id: 'recents' as SidebarSection, label: 'Recents', icon: Clock, count: photos.filter(p => p.date === 'Today' || p.date === 'Yesterday').length },
     ]},

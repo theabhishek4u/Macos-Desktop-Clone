@@ -14,6 +14,9 @@ import {
   CloudSnow,
   CloudLightning,
   ChevronDown,
+  MapPin,
+  Sunrise as SunriseIcon,
+  Sunset as SunsetIcon,
 } from 'lucide-react';
 
 interface HourlyForecast {
@@ -37,6 +40,26 @@ interface WeatherDetail {
   sublabel?: string;
 }
 
+interface AirQualityData {
+  aqi: number;
+  category: string;
+  description: string;
+  color: string;
+  percent: number;
+}
+
+interface UVData {
+  value: number;
+  category: string;
+  color: string;
+  percent: number;
+}
+
+interface SunData {
+  sunrise: string;
+  sunset: string;
+}
+
 interface CityWeather {
   city: string;
   currentTemp: number;
@@ -48,6 +71,9 @@ interface CityWeather {
   hourly: HourlyForecast[];
   daily: DailyForecast[];
   details: WeatherDetail[];
+  airQuality: AirQualityData;
+  uvIndex: UVData;
+  sun: SunData;
 }
 
 function getWeatherIcon(icon: string, size: number = 16) {
@@ -133,13 +159,30 @@ const CITY_DATA: CityWeather[] = [
       { day: 'Sun', icon: 'partly-cloudy', high: 63, low: 52, condition: 'Partly Cloudy' },
     ],
     details: [
-      { label: 'UV Index', value: '4', icon: <Sun className="h-4 w-4" />, sublabel: 'Moderate' },
       { label: 'Wind', value: '12 mph', icon: <Wind className="h-4 w-4" />, sublabel: 'W NW' },
       { label: 'Rainfall', value: '0"', icon: <Droplets className="h-4 w-4" />, sublabel: 'in last 24h' },
       { label: 'Humidity', value: '72%', icon: <Droplets className="h-4 w-4" />, sublabel: 'The dew point is 54°' },
       { label: 'Visibility', value: '10 mi', icon: <Eye className="h-4 w-4" />, sublabel: 'Clear' },
       { label: 'Pressure', value: '30.12', icon: <Gauge className="h-4 w-4" />, sublabel: 'inHg' },
+      { label: 'Feels Like', value: '61°', icon: <Thermometer className="h-4 w-4" />, sublabel: 'Similar to actual' },
     ],
+    airQuality: {
+      aqi: 42,
+      category: 'Good',
+      description: 'Air quality is satisfactory, and air pollution poses little or no risk.',
+      color: '#22c55e',
+      percent: 28,
+    },
+    uvIndex: {
+      value: 5,
+      category: 'Moderate',
+      color: '#f59e0b',
+      percent: 45,
+    },
+    sun: {
+      sunrise: '6:42 AM',
+      sunset: '7:58 PM',
+    },
   },
   {
     city: 'New York',
@@ -173,13 +216,30 @@ const CITY_DATA: CityWeather[] = [
       { day: 'Sun', icon: 'sunny', high: 50, low: 38, condition: 'Sunny' },
     ],
     details: [
-      { label: 'UV Index', value: '1', icon: <Sun className="h-4 w-4" />, sublabel: 'Low' },
       { label: 'Wind', value: '18 mph', icon: <Wind className="h-4 w-4" />, sublabel: 'NE' },
       { label: 'Rainfall', value: '0.2"', icon: <Droplets className="h-4 w-4" />, sublabel: 'in last 24h' },
       { label: 'Humidity', value: '85%', icon: <Droplets className="h-4 w-4" />, sublabel: 'The dew point is 34°' },
       { label: 'Visibility', value: '7 mi', icon: <Eye className="h-4 w-4" />, sublabel: 'Hazy' },
       { label: 'Pressure', value: '29.85', icon: <Gauge className="h-4 w-4" />, sublabel: 'inHg' },
+      { label: 'Feels Like', value: '33°', icon: <Thermometer className="h-4 w-4" />, sublabel: 'Colder than actual' },
     ],
+    airQuality: {
+      aqi: 78,
+      category: 'Moderate',
+      description: 'Air quality is acceptable. However, there may be a risk for some people, particularly those who are unusually sensitive.',
+      color: '#f59e0b',
+      percent: 52,
+    },
+    uvIndex: {
+      value: 1,
+      category: 'Low',
+      color: '#22c55e',
+      percent: 9,
+    },
+    sun: {
+      sunrise: '7:15 AM',
+      sunset: '5:42 PM',
+    },
   },
   {
     city: 'London',
@@ -213,13 +273,30 @@ const CITY_DATA: CityWeather[] = [
       { day: 'Sun', icon: 'partly-cloudy', high: 56, low: 46, condition: 'Partly Cloudy' },
     ],
     details: [
-      { label: 'UV Index', value: '2', icon: <Sun className="h-4 w-4" />, sublabel: 'Low' },
       { label: 'Wind', value: '14 mph', icon: <Wind className="h-4 w-4" />, sublabel: 'SW' },
       { label: 'Rainfall', value: '0.8"', icon: <Droplets className="h-4 w-4" />, sublabel: 'in last 24h' },
       { label: 'Humidity', value: '91%', icon: <Droplets className="h-4 w-4" />, sublabel: 'The dew point is 45°' },
       { label: 'Visibility', value: '5 mi', icon: <Eye className="h-4 w-4" />, sublabel: 'Misty' },
       { label: 'Pressure', value: '29.72', icon: <Gauge className="h-4 w-4" />, sublabel: 'inHg' },
+      { label: 'Feels Like', value: '44°', icon: <Thermometer className="h-4 w-4" />, sublabel: 'Colder than actual' },
     ],
+    airQuality: {
+      aqi: 35,
+      category: 'Good',
+      description: 'Air quality is satisfactory, and air pollution poses little or no risk.',
+      color: '#22c55e',
+      percent: 23,
+    },
+    uvIndex: {
+      value: 2,
+      category: 'Low',
+      color: '#22c55e',
+      percent: 18,
+    },
+    sun: {
+      sunrise: '7:28 AM',
+      sunset: '4:55 PM',
+    },
   },
   {
     city: 'Tokyo',
@@ -253,15 +330,274 @@ const CITY_DATA: CityWeather[] = [
       { day: 'Sun', icon: 'sunny', high: 61, low: 46, condition: 'Sunny' },
     ],
     details: [
-      { label: 'UV Index', value: '5', icon: <Sun className="h-4 w-4" />, sublabel: 'Moderate' },
       { label: 'Wind', value: '8 mph', icon: <Wind className="h-4 w-4" />, sublabel: 'S' },
       { label: 'Rainfall', value: '0"', icon: <Droplets className="h-4 w-4" />, sublabel: 'in last 24h' },
       { label: 'Humidity', value: '58%', icon: <Droplets className="h-4 w-4" />, sublabel: 'The dew point is 40°' },
       { label: 'Visibility', value: '12 mi', icon: <Eye className="h-4 w-4" />, sublabel: 'Clear' },
       { label: 'Pressure', value: '30.25', icon: <Gauge className="h-4 w-4" />, sublabel: 'inHg' },
+      { label: 'Feels Like', value: '53°', icon: <Thermometer className="h-4 w-4" />, sublabel: 'Similar to actual' },
     ],
+    airQuality: {
+      aqi: 62,
+      category: 'Moderate',
+      description: 'Air quality is acceptable. However, there may be a risk for some people who are unusually sensitive to air pollution.',
+      color: '#f59e0b',
+      percent: 41,
+    },
+    uvIndex: {
+      value: 5,
+      category: 'Moderate',
+      color: '#f59e0b',
+      percent: 45,
+    },
+    sun: {
+      sunrise: '5:58 AM',
+      sunset: '6:32 PM',
+    },
   },
 ];
+
+// ─── Weather Map Placeholder ─────────────────────────────────────────────────
+
+function WeatherMapPlaceholder({ condition }: { condition: string }) {
+  // City markers for the map
+  const cityMarkers = [
+    { name: 'SF', x: 12, y: 38 },
+    { name: 'NY', x: 78, y: 32 },
+    { name: 'LN', x: 45, y: 25 },
+    { name: 'TK', x: 85, y: 35 },
+    { name: 'LA', x: 14, y: 42 },
+    { name: 'CH', x: 22, y: 30 },
+  ];
+
+  const mapGradient = condition === 'Rainy'
+    ? 'from-slate-600 via-blue-800 to-slate-700'
+    : condition === 'Cloudy'
+    ? 'from-gray-500 via-gray-600 to-gray-500'
+    : condition === 'Snowy'
+    ? 'from-blue-200 via-blue-300 to-blue-200'
+    : 'from-blue-400 via-cyan-500 to-blue-400';
+
+  return (
+    <div className="rounded-xl bg-white/20 backdrop-blur-md border border-white/15 overflow-hidden">
+      <div className="flex items-center gap-1.5 p-3 pb-2">
+        <MapPin className="h-3.5 w-3.5 text-white/60" />
+        <span className="text-[11px] font-medium text-white/70 uppercase tracking-wide">Weather Map</span>
+      </div>
+      <div className={`relative mx-3 mb-3 rounded-lg overflow-hidden bg-gradient-to-br ${mapGradient}`} style={{ height: '160px' }}>
+        {/* Simulated radar overlay */}
+        <div className="absolute inset-0 opacity-30">
+          <div className="absolute w-32 h-32 rounded-full bg-green-400/40 blur-xl" style={{ top: '10%', left: '5%' }} />
+          <div className="absolute w-24 h-24 rounded-full bg-yellow-400/30 blur-lg" style={{ top: '30%', left: '40%' }} />
+          <div className="absolute w-20 h-20 rounded-full bg-red-400/20 blur-lg" style={{ top: '50%', left: '70%' }} />
+          {condition === 'Rainy' && (
+            <>
+              <div className="absolute w-28 h-28 rounded-full bg-blue-500/40 blur-xl" style={{ top: '20%', left: '55%' }} />
+              <div className="absolute w-16 h-16 rounded-full bg-blue-400/30 blur-md" style={{ top: '60%', left: '25%' }} />
+            </>
+          )}
+        </div>
+
+        {/* Grid lines */}
+        <div className="absolute inset-0 opacity-10">
+          {[20, 40, 60, 80].map((y) => (
+            <div key={`h-${y}`} className="absolute w-full border-t border-white/30" style={{ top: `${y}%` }} />
+          ))}
+          {[20, 40, 60, 80].map((x) => (
+            <div key={`v-${x}`} className="absolute h-full border-l border-white/30" style={{ left: `${x}%` }} />
+          ))}
+        </div>
+
+        {/* City markers */}
+        {cityMarkers.map((city) => (
+          <div
+            key={city.name}
+            className="absolute flex flex-col items-center"
+            style={{ left: `${city.x}%`, top: `${city.y}%`, transform: 'translate(-50%, -50%)' }}
+          >
+            <div className="w-2 h-2 rounded-full bg-white shadow-lg shadow-white/50" />
+            <span className="text-[8px] font-bold text-white/80 mt-0.5 drop-shadow-md">{city.name}</span>
+          </div>
+        ))}
+
+        {/* Legend */}
+        <div className="absolute bottom-2 right-2 flex items-center gap-1 bg-black/30 rounded px-2 py-1 backdrop-blur-sm">
+          <div className="w-2 h-2 rounded-full bg-green-400" />
+          <div className="w-2 h-2 rounded-full bg-yellow-400" />
+          <div className="w-2 h-2 rounded-full bg-red-400" />
+          <span className="text-[7px] text-white/70 ml-1">Precipitation</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Air Quality Component ───────────────────────────────────────────────────
+
+function AirQualitySection({ aq }: { aq: AirQualityData }) {
+  return (
+    <div className="rounded-xl bg-white/20 backdrop-blur-md border border-white/15 p-3">
+      <div className="flex items-center gap-1.5 mb-2">
+        <Wind className="h-3.5 w-3.5 text-white/60" />
+        <span className="text-[11px] font-medium text-white/70 uppercase tracking-wide">Air Quality</span>
+      </div>
+      <div className="flex items-baseline gap-2 mb-1">
+        <span className="text-2xl font-semibold">{aq.aqi}</span>
+        <span className="text-sm font-medium text-white/80">{aq.category}</span>
+      </div>
+      {/* Colored progress bar */}
+      <div className="h-1.5 rounded-full bg-white/15 mb-2 overflow-hidden">
+        <div
+          className="h-full rounded-full transition-all duration-500"
+          style={{
+            width: `${aq.percent}%`,
+            background: 'linear-gradient(90deg, #22c55e, #f59e0b, #ef4444)',
+          }}
+        />
+      </div>
+      {/* AQI scale labels */}
+      <div className="flex justify-between text-[9px] text-white/40 mb-1.5">
+        <span>0</span>
+        <span>50</span>
+        <span>100</span>
+        <span>150</span>
+        <span>200</span>
+      </div>
+      <p className="text-[11px] text-white/50 leading-relaxed">{aq.description}</p>
+    </div>
+  );
+}
+
+// ─── UV Index Component ──────────────────────────────────────────────────────
+
+function UVIndexSection({ uv }: { uv: UVData }) {
+  return (
+    <div className="rounded-xl bg-white/20 backdrop-blur-md border border-white/15 p-3">
+      <div className="flex items-center gap-1.5 mb-2">
+        <Sun className="h-3.5 w-3.5 text-yellow-300" />
+        <span className="text-[11px] font-medium text-white/70 uppercase tracking-wide">UV Index</span>
+      </div>
+      <div className="flex items-baseline gap-2 mb-1">
+        <span className="text-2xl font-semibold">{uv.value}</span>
+        <span className="text-sm font-medium text-white/80">{uv.category}</span>
+      </div>
+      {/* Colored UV scale bar */}
+      <div className="h-1.5 rounded-full bg-white/15 mb-1.5 overflow-hidden relative">
+        <div
+          className="h-full rounded-full"
+          style={{
+            width: '100%',
+            background: 'linear-gradient(90deg, #22c55e, #84cc16, #f59e0b, #ef4444, #9333ea)',
+          }}
+        />
+        {/* Indicator dot */}
+        <div
+          className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full border-2 border-white shadow-lg"
+          style={{
+            left: `${uv.percent}%`,
+            transform: 'translate(-50%, -50%)',
+            backgroundColor: uv.color,
+          }}
+        />
+      </div>
+      <div className="flex justify-between text-[9px] text-white/40">
+        <span>Low</span>
+        <span>Moderate</span>
+        <span>High</span>
+        <span>Very High</span>
+        <span>Extreme</span>
+      </div>
+    </div>
+  );
+}
+
+// ─── Sunrise/Sunset Component ────────────────────────────────────────────────
+
+function SunriseSunsetSection({ sun, conditionIcon }: { sun: SunData; conditionIcon: string }) {
+  // Parse time strings to get hours for the arc
+  const sunriseHour = 6 + 42 / 60; // ~6.7
+  const sunsetHour = 19 + 58 / 60; // ~19.97
+  const nowHour = 12; // Simulate midday for visualization
+  const dayLength = sunsetHour - sunriseHour;
+  const progress = Math.min(1, Math.max(0, (nowHour - sunriseHour) / dayLength));
+
+  return (
+    <div className="rounded-xl bg-white/20 backdrop-blur-md border border-white/15 p-3">
+      <div className="flex items-center gap-1.5 mb-2">
+        <SunriseIcon className="h-3.5 w-3.5 text-orange-300" />
+        <span className="text-[11px] font-medium text-white/70 uppercase tracking-wide">Sunrise & Sunset</span>
+      </div>
+
+      {/* Arc visualization */}
+      <div className="relative h-20 mb-2">
+        <svg viewBox="0 0 200 80" className="w-full h-full" preserveAspectRatio="xMidYMid meet">
+          {/* Arc path (dashed) */}
+          <path
+            d="M 20 70 Q 100 -10 180 70"
+            fill="none"
+            stroke="rgba(255,255,255,0.15)"
+            strokeWidth="2"
+            strokeDasharray="4 3"
+          />
+          {/* Active arc (solid) */}
+          <path
+            d="M 20 70 Q 100 -10 180 70"
+            fill="none"
+            stroke="rgba(255,200,50,0.6)"
+            strokeWidth="2"
+            strokeDasharray={`${progress * 260} 260`}
+          />
+          {/* Current sun position on arc */}
+          {progress > 0 && progress < 1 && (
+            <>
+              <circle
+                cx={20 + progress * 160}
+                cy={70 - Math.sin(progress * Math.PI) * 80}
+                r="6"
+                fill="#fbbf24"
+                stroke="white"
+                strokeWidth="1.5"
+              />
+              {/* Sun glow */}
+              <circle
+                cx={20 + progress * 160}
+                cy={70 - Math.sin(progress * Math.PI) * 80}
+                r="12"
+                fill="rgba(251,191,36,0.15)"
+              />
+            </>
+          )}
+          {/* Sunrise marker */}
+          <circle cx="20" cy="70" r="3" fill="#fb923c" opacity="0.8" />
+          {/* Sunset marker */}
+          <circle cx="180" cy="70" r="3" fill="#f97316" opacity="0.8" />
+          {/* Horizon line */}
+          <line x1="10" y1="70" x2="190" y2="70" stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
+        </svg>
+      </div>
+
+      {/* Times */}
+      <div className="flex justify-between items-center">
+        <div className="flex items-center gap-1.5">
+          <SunriseIcon className="h-3.5 w-3.5 text-orange-300" />
+          <div>
+            <div className="text-[12px] font-semibold">{sun.sunrise}</div>
+            <div className="text-[9px] text-white/40">Sunrise</div>
+          </div>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <SunsetIcon className="h-3.5 w-3.5 text-orange-400" />
+          <div className="text-right">
+            <div className="text-[12px] font-semibold">{sun.sunset}</div>
+            <div className="text-[9px] text-white/40">Sunset</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Main Weather Component ──────────────────────────────────────────────────
 
 export default function Weather() {
   const [selectedCity, setSelectedCity] = useState('San Francisco');
@@ -350,7 +686,7 @@ export default function Weather() {
           </div>
         </div>
 
-        {/* Daily forecast */}
+        {/* 7-Day forecast */}
         <div className="rounded-xl bg-white/20 backdrop-blur-md border border-white/15 p-3 mb-3">
           <div className="flex items-center gap-1.5 mb-2">
             <Cloud className="h-3.5 w-3.5 text-white/60" />
@@ -394,6 +730,22 @@ export default function Weather() {
               );
             })}
           </div>
+        </div>
+
+        {/* Weather Map */}
+        <div className="mb-3">
+          <WeatherMapPlaceholder condition={weather.condition} />
+        </div>
+
+        {/* Air Quality & UV Index row */}
+        <div className="grid grid-cols-2 gap-3 mb-3">
+          <AirQualitySection aq={weather.airQuality} />
+          <UVIndexSection uv={weather.uvIndex} />
+        </div>
+
+        {/* Sunrise/Sunset */}
+        <div className="mb-3">
+          <SunriseSunsetSection sun={weather.sun} conditionIcon={weather.conditionIcon} />
         </div>
 
         {/* Weather details grid */}

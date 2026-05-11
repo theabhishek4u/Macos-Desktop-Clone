@@ -2,19 +2,66 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Wifi, Battery, Search, BatteryFull, BatteryMedium, BatteryLow } from 'lucide-react'
+import { Wifi, Battery, Search, BatteryFull, BatteryMedium, BatteryLow, Bluetooth } from 'lucide-react'
 import useMacOSStore, { APP_CONFIGS } from '@/store/macos-store'
 import { useSpotlight } from '@/components/macos/Spotlight'
 import { useAboutThisMac } from '@/components/macos/AboutThisMac'
 import { useControlCenter } from '@/components/macos/ControlCenter'
+import { useNotificationCenter } from '@/components/macos/NotificationCenter'
 
-const MENU_ITEMS = ['File', 'Edit', 'View', 'Window', 'Help']
+interface MenuItem {
+  label: string
+  shortcut?: string
+  separator?: boolean
+  disabled?: boolean
+  action?: string
+}
 
-const APPLE_MENU_ITEMS = [
+const MENU_ITEMS: Record<string, MenuItem[]> = {
+  File: [
+    { label: 'New Window', shortcut: '⌘N' },
+    { label: 'New Tab', shortcut: '⌘T' },
+    { label: 'Open', shortcut: '⌘O' },
+    { separator: true, label: '' },
+    { label: 'Close Window', shortcut: '⌘W' },
+    { separator: true, label: '' },
+    { label: 'Print', shortcut: '⌘P' },
+  ],
+  Edit: [
+    { label: 'Undo', shortcut: '⌘Z' },
+    { label: 'Redo', shortcut: '⇧⌘Z' },
+    { separator: true, label: '' },
+    { label: 'Cut', shortcut: '⌘X' },
+    { label: 'Copy', shortcut: '⌘C' },
+    { label: 'Paste', shortcut: '⌘V' },
+    { label: 'Select All', shortcut: '⌘A' },
+  ],
+  View: [
+    { label: 'as Icons' },
+    { label: 'as List' },
+    { label: 'as Columns' },
+    { separator: true, label: '' },
+    { label: 'Show Sidebar', shortcut: '⌘S' },
+    { label: 'Show Path Bar' },
+    { label: 'Show Status Bar' },
+  ],
+  Window: [
+    { label: 'Minimize', shortcut: '⌘M' },
+    { label: 'Zoom' },
+    { separator: true, label: '' },
+    { label: 'Bring All to Front' },
+  ],
+  Help: [
+    { label: 'Search' },
+    { label: 'macOS Help' },
+  ],
+}
+
+const APPLE_MENU_ITEMS: MenuItem[] = [
   { label: 'About This Mac', shortcut: '' },
-  { separator: true },
+  { separator: true, label: '' },
   { label: 'System Preferences...', shortcut: '', action: 'settings' },
-  { separator: true },
+  { separator: true, label: '' },
   { label: 'Sleep', shortcut: '' },
   { label: 'Restart...', shortcut: '' },
   { label: 'Shut Down...', shortcut: '' },
@@ -54,14 +101,57 @@ function BatteryIconWithLevel() {
   )
 }
 
+// Dropdown menu component
+function MenuDropdown({ items, onAction }: { items: MenuItem[]; onAction: (item: MenuItem) => void }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -4, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: -4, scale: 0.98 }}
+      transition={{ duration: 0.15, ease: 'easeOut' }}
+      className="absolute top-[28px] left-0 w-[240px] bg-[#2a2a2e]/95 backdrop-blur-2xl rounded-md shadow-2xl border border-white/[0.12] py-1 overflow-hidden"
+    >
+      {items.map((item, idx) => {
+        if (item.separator) {
+          return (
+            <div
+              key={`sep-${idx}`}
+              className="h-px bg-white/10 mx-2 my-1"
+            />
+          )
+        }
+        return (
+          <button
+            key={item.label}
+            className={`w-full text-left px-3 py-[3px] text-[13px] text-white/90 hover:bg-[#0060df] hover:text-white rounded-[4px] mx-1 flex items-center justify-between transition-colors ${
+              item.disabled ? 'opacity-40 pointer-events-none' : ''
+            }`}
+            style={{ width: 'calc(100% - 8px)' }}
+            onClick={() => onAction(item)}
+          >
+            <span>{item.label}</span>
+            {item.shortcut && (
+              <span className="text-white/50 text-[12px] ml-4">
+                {item.shortcut}
+              </span>
+            )}
+          </button>
+        )
+      })}
+    </motion.div>
+  )
+}
+
 export default function MenuBar() {
   const { activeWindowId, windows, openApp } = useMacOSStore()
   const { toggle: toggleSpotlight } = useSpotlight()
   const aboutThisMac = useAboutThisMac()
   const controlCenter = useControlCenter()
+  const notificationCenter = useNotificationCenter()
   const [currentTime, setCurrentTime] = useState<Date>(new Date())
   const [appleMenuOpen, setAppleMenuOpen] = useState(false)
-  const menuRef = useRef<HTMLDivElement>(null)
+  const [openMenu, setOpenMenu] = useState<string | null>(null)
+  const menuBarRef = useRef<HTMLDivElement>(null)
 
   // Determine active app name
   const activeWindow = windows.find(w => w.id === activeWindowId)
@@ -77,47 +167,71 @@ export default function MenuBar() {
     return () => clearInterval(timer)
   }, [])
 
-  // Close apple menu on outside click
+  // Close menus on outside click
   const handleClickOutside = useCallback((e: MouseEvent) => {
-    if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+    if (menuBarRef.current && !menuBarRef.current.contains(e.target as Node)) {
       setAppleMenuOpen(false)
+      setOpenMenu(null)
     }
   }, [])
 
   useEffect(() => {
-    if (appleMenuOpen) {
+    if (appleMenuOpen || openMenu) {
       document.addEventListener('mousedown', handleClickOutside)
     } else {
       document.removeEventListener('mousedown', handleClickOutside)
     }
     return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [appleMenuOpen, handleClickOutside])
+  }, [appleMenuOpen, openMenu, handleClickOutside])
 
-  const handleAppleMenuItemClick = (item: typeof APPLE_MENU_ITEMS[number]) => {
-    if ('separator' in item && item.separator) return
+  const handleAppleMenuItemClick = (item: MenuItem) => {
+    if (item.separator) return
     if (item.label === 'About This Mac') {
       aboutThisMac.open()
       setAppleMenuOpen(false)
       return
     }
-    if ('action' in item && item.action) {
+    if (item.action) {
       openApp(item.action)
     }
     setAppleMenuOpen(false)
+  }
+
+  const handleMenuItemClick = (item: MenuItem) => {
+    if (item.separator) return
+    if (item.action) {
+      openApp(item.action)
+    }
+    setOpenMenu(null)
+  }
+
+  const handleMenuToggle = (menuName: string) => {
+    if (openMenu === menuName) {
+      setOpenMenu(null)
+    } else {
+      setAppleMenuOpen(false)
+      setOpenMenu(menuName)
+    }
   }
 
   return (
     <div
       className="fixed top-0 left-0 right-0 h-[28px] bg-black/70 backdrop-blur-xl text-white/90 text-[13px] font-sans z-[9999] flex items-center justify-between px-2 select-none"
       style={{ borderBottom: '0.5px solid rgba(255,255,255,0.1)' }}
+      ref={menuBarRef}
     >
       {/* Left side */}
       <div className="flex items-center gap-0">
         {/* Apple logo + dropdown */}
-        <div className="relative" ref={menuRef}>
+        <div className="relative">
           <button
-            className="px-2 h-[28px] flex items-center rounded hover:bg-white/10 transition-colors text-[16px] leading-none"
-            onClick={() => setAppleMenuOpen(prev => !prev)}
+            className={`px-2 h-[28px] flex items-center rounded transition-colors text-[16px] leading-none ${
+              appleMenuOpen ? 'bg-white/15' : 'hover:bg-white/10'
+            }`}
+            onClick={() => {
+              setOpenMenu(null)
+              setAppleMenuOpen(prev => !prev)
+            }}
             aria-label="Apple Menu"
           >
             <svg
@@ -131,39 +245,7 @@ export default function MenuBar() {
 
           <AnimatePresence>
             {appleMenuOpen && (
-              <motion.div
-                initial={{ opacity: 0, y: -4, scale: 0.98 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -4, scale: 0.98 }}
-                transition={{ duration: 0.15, ease: 'easeOut' }}
-                className="absolute top-[28px] left-0 w-[240px] bg-[#2a2a2e]/95 backdrop-blur-2xl rounded-md shadow-2xl border border-white/[0.12] py-1 overflow-hidden"
-              >
-                {APPLE_MENU_ITEMS.map((item, idx) => {
-                  if ('separator' in item && item.separator) {
-                    return (
-                      <div
-                        key={`sep-${idx}`}
-                        className="h-px bg-white/10 mx-2 my-1"
-                      />
-                    )
-                  }
-                  return (
-                    <button
-                      key={item.label}
-                      className="w-full text-left px-3 py-[3px] text-[13px] text-white/90 hover:bg-[#0060df] hover:text-white rounded-[4px] mx-1 flex items-center justify-between transition-colors"
-                      style={{ width: 'calc(100% - 8px)' }}
-                      onClick={() => handleAppleMenuItemClick(item)}
-                    >
-                      <span>{item.label}</span>
-                      {item.shortcut && (
-                        <span className="text-white/50 text-[12px] ml-4">
-                          {item.shortcut}
-                        </span>
-                      )}
-                    </button>
-                  )
-                })}
-              </motion.div>
+              <MenuDropdown items={APPLE_MENU_ITEMS} onAction={handleAppleMenuItemClick} />
             )}
           </AnimatePresence>
         </div>
@@ -174,13 +256,30 @@ export default function MenuBar() {
         </span>
 
         {/* Menu items */}
-        {MENU_ITEMS.map(item => (
-          <button
-            key={item}
-            className="px-2 h-[28px] flex items-center rounded hover:bg-white/10 transition-colors"
-          >
-            {item}
-          </button>
+        {Object.keys(MENU_ITEMS).map(item => (
+          <div key={item} className="relative">
+            <button
+              className={`px-2 h-[28px] flex items-center rounded transition-colors ${
+                openMenu === item ? 'bg-white/15' : 'hover:bg-white/10'
+              }`}
+              onClick={() => handleMenuToggle(item)}
+              onMouseEnter={() => {
+                // If any menu is open, switch to hovered menu
+                if (openMenu !== null || appleMenuOpen) {
+                  setAppleMenuOpen(false)
+                  setOpenMenu(item)
+                }
+              }}
+            >
+              {item}
+            </button>
+
+            <AnimatePresence>
+              {openMenu === item && (
+                <MenuDropdown items={MENU_ITEMS[item]} onAction={handleMenuItemClick} />
+              )}
+            </AnimatePresence>
+          </div>
         ))}
       </div>
 
@@ -188,6 +287,7 @@ export default function MenuBar() {
       <div className="flex items-center gap-3">
         <BatteryIconWithLevel />
         <Wifi className="h-4 w-4" />
+        <Bluetooth className="h-3.5 w-3.5 opacity-80" />
         <Search className="h-3.5 w-3.5 opacity-80 cursor-pointer hover:opacity-100 transition-opacity" onClick={toggleSpotlight} />
         <button
           className="w-4 h-4 rounded-sm bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors cursor-pointer"
@@ -201,9 +301,13 @@ export default function MenuBar() {
             <div className="w-[3px] h-[10px] bg-white/70 rounded-[0.5px]" />
           </div>
         </button>
-        <span className="text-[12px] tracking-tight whitespace-nowrap">
+        <button
+          className="text-[12px] tracking-tight whitespace-nowrap hover:bg-white/10 px-1.5 py-0.5 rounded transition-colors cursor-pointer"
+          onClick={notificationCenter.toggle}
+          aria-label="Notification Center"
+        >
           {formatDateTime(currentTime)}
-        </span>
+        </button>
       </div>
     </div>
   )

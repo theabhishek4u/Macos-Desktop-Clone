@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 
-type Operation = '+' | '−' | '×' | '÷' | null;
+type Operation = '+' | '−' | '×' | '÷' | 'xʸ' | null;
 
 interface CalcState {
   display: string;
@@ -11,6 +11,7 @@ interface CalcState {
   waitingForOperand: boolean;
   justEvaluated: boolean;
   expression: string;
+  openParens: number;
 }
 
 const initialState: CalcState = {
@@ -20,6 +21,7 @@ const initialState: CalcState = {
   waitingForOperand: false,
   justEvaluated: false,
   expression: '',
+  openParens: 0,
 };
 
 function formatDisplay(value: string): string {
@@ -40,10 +42,17 @@ function formatDisplay(value: string): string {
   return num.toLocaleString('en-US', { maximumFractionDigits: 10 });
 }
 
-function getDisplayFontSize(display: string): string {
+function getDisplayFontSize(display: string, isScientific: boolean): string {
   const formatted = formatDisplay(display);
-  if (formatted.length > 12) return 'text-3xl';
-  if (formatted.length > 9) return 'text-4xl';
+  const len = formatted.length;
+  if (isScientific) {
+    if (len > 14) return 'text-xl';
+    if (len > 11) return 'text-2xl';
+    if (len > 8) return 'text-3xl';
+    return 'text-4xl';
+  }
+  if (len > 12) return 'text-3xl';
+  if (len > 9) return 'text-4xl';
   return 'text-5xl';
 }
 
@@ -58,22 +67,27 @@ function performCalculation(left: number, operation: Operation, right: number): 
     case '÷':
       if (right === 0) return NaN; // Division by zero
       return left / right;
+    case 'xʸ':
+      return Math.pow(left, right);
     default:
       return right;
   }
 }
 
 function operationSymbol(op: Operation): string {
+  if (op === 'xʸ') return '^';
   return op ?? '';
 }
 
 export default function Calculator() {
   const [state, setState] = useState<CalcState>(initialState);
   const [activeKey, setActiveKey] = useState<string | null>(null);
+  const [isScientific, setIsScientific] = useState(false);
+  const [memory, setMemory] = useState(0);
   const activeKeyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const clearAll = useCallback(() => {
-    setState(initialState);
+    setState({ ...initialState });
   }, []);
 
   const inputDigit = useCallback((digit: string) => {
@@ -97,7 +111,6 @@ export default function Calculator() {
       }
 
       if (prev.justEvaluated) {
-        // Starting a new calculation after pressing =
         return {
           ...prev,
           display: digit,
@@ -175,7 +188,6 @@ export default function Calculator() {
       let newValue: number;
 
       if (prev.operation && prev.previousValue !== null) {
-        // If in the middle of an operation, calculate percentage of previousValue
         newValue = prev.previousValue * (currentValue / 100);
       } else {
         newValue = currentValue / 100;
@@ -200,7 +212,6 @@ export default function Calculator() {
       const currentValue = parseFloat(prev.display);
 
       if (prev.previousValue !== null && prev.operation && !prev.waitingForOperand) {
-        // Chain operation: calculate the pending operation first
         const result = performCalculation(prev.previousValue, prev.operation, currentValue);
         if (isNaN(result)) {
           return {
@@ -262,6 +273,7 @@ export default function Calculator() {
         expression: fullExpression,
         waitingForOperand: false,
         justEvaluated: true,
+        openParens: 0,
       };
     });
   }, []);
@@ -269,20 +281,142 @@ export default function Calculator() {
   const clearEntry = useCallback(() => {
     setState((prev) => {
       if (prev.display === 'Error') {
-        return initialState;
+        return { ...initialState };
       }
-      // If we just evaluated, AC resets everything
       if (prev.justEvaluated) {
-        return initialState;
+        return { ...initialState };
       }
       return { ...prev, display: '0' };
     });
   }, []);
 
-  // Keyboard support
+  // ─── Scientific Functions ─────────────────────────────────────────────
+
+  const applyScientific = useCallback((fn: string) => {
+    setState((prev) => {
+      if (prev.display === 'Error') return prev;
+      const val = parseFloat(prev.display);
+      let result: number;
+
+      switch (fn) {
+        case 'sin':
+          result = Math.sin(val);
+          break;
+        case 'cos':
+          result = Math.cos(val);
+          break;
+        case 'tan':
+          result = Math.tan(val);
+          break;
+        case 'log':
+          result = Math.log10(val);
+          break;
+        case 'ln':
+          result = Math.log(val);
+          break;
+        case '√':
+          result = Math.sqrt(val);
+          break;
+        case 'x²':
+          result = val * val;
+          break;
+        default:
+          return prev;
+      }
+
+      if (isNaN(result) || !isFinite(result)) {
+        return { ...prev, display: 'Error' };
+      }
+
+      const resultStr = parseFloat(result.toFixed(10)).toString();
+      return {
+        ...prev,
+        display: resultStr,
+        justEvaluated: false,
+      };
+    });
+  }, []);
+
+  const insertConstant = useCallback((constant: 'π' | 'e') => {
+    const val = constant === 'π' ? Math.PI : Math.E;
+    setState((prev) => {
+      const valStr = parseFloat(val.toFixed(10)).toString();
+      if (prev.waitingForOperand || prev.justEvaluated) {
+        return {
+          ...prev,
+          display: valStr,
+          waitingForOperand: false,
+          justEvaluated: false,
+          ...(prev.justEvaluated ? { previousValue: null, operation: null, expression: '' } : {}),
+        };
+      }
+      if (prev.display === '0') {
+        return { ...prev, display: valStr };
+      }
+      return { ...prev, display: prev.display + valStr };
+    });
+  }, []);
+
+  const openParen = useCallback(() => {
+    setState((prev) => ({
+      ...prev,
+      openParens: prev.openParens + 1,
+      waitingForOperand: true,
+      justEvaluated: false,
+    }));
+  }, []);
+
+  const closeParen = useCallback(() => {
+    setState((prev) => {
+      if (prev.openParens <= 0) return prev;
+      return {
+        ...prev,
+        openParens: prev.openParens - 1,
+        waitingForOperand: false,
+        justEvaluated: false,
+      };
+    });
+  }, []);
+
+  // ─── Memory Functions ─────────────────────────────────────────────
+
+  const memoryClear = useCallback(() => {
+    setMemory(0);
+  }, []);
+
+  const memoryRecall = useCallback(() => {
+    setState((prev) => ({
+      ...prev,
+      display: memory.toString(),
+      waitingForOperand: false,
+      justEvaluated: false,
+    }));
+  }, [memory]);
+
+  const memoryAdd = useCallback(() => {
+    setState((prev) => {
+      const val = parseFloat(prev.display);
+      if (!isNaN(val)) {
+        setMemory(m => m + val);
+      }
+      return prev;
+    });
+  }, []);
+
+  const memorySubtract = useCallback(() => {
+    setState((prev) => {
+      const val = parseFloat(prev.display);
+      if (!isNaN(val)) {
+        setMemory(m => m - val);
+      }
+      return prev;
+    });
+  }, []);
+
+  // ─── Keyboard Support ─────────────────────────────────────────────
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Prevent default for keys we handle
       if (
         (e.key >= '0' && e.key <= '9') ||
         e.key === '.' ||
@@ -299,7 +433,6 @@ export default function Calculator() {
         e.preventDefault();
       }
 
-      // Visual feedback
       const keyMap: Record<string, string> = {
         '0': '0', '1': '1', '2': '2', '3': '3', '4': '4',
         '5': '5', '6': '6', '7': '7', '8': '8', '9': '9',
@@ -346,18 +479,45 @@ export default function Calculator() {
   }, [inputDigit, inputDecimal, handleOperation, evaluate, clearAll, inputPercent, clearEntry]);
 
   const isClearButtonC = state.display !== '0' && !state.waitingForOperand && state.display !== 'Error';
-
-  // Determine active operator
   const activeOperator = state.waitingForOperand ? state.operation : null;
 
-  // Button definitions
+  // ─── Button Definitions ─────────────────────────────────────────────
+
   type ButtonDef = {
     label: string;
     action: () => void;
-    type: 'number' | 'operator' | 'function';
+    type: 'number' | 'operator' | 'function' | 'scientific' | 'memory';
     wide?: boolean;
     key: string;
   };
+
+  const scientificRows: ButtonDef[][] = [
+    [
+      { label: 'sin', action: () => applyScientific('sin'), type: 'scientific', key: 'sin' },
+      { label: 'cos', action: () => applyScientific('cos'), type: 'scientific', key: 'cos' },
+      { label: 'tan', action: () => applyScientific('tan'), type: 'scientific', key: 'tan' },
+      { label: 'π', action: () => insertConstant('π'), type: 'scientific', key: 'π' },
+    ],
+    [
+      { label: 'log', action: () => applyScientific('log'), type: 'scientific', key: 'log' },
+      { label: 'ln', action: () => applyScientific('ln'), type: 'scientific', key: 'ln' },
+      { label: '√', action: () => applyScientific('√'), type: 'scientific', key: '√' },
+      { label: 'x²', action: () => applyScientific('x²'), type: 'scientific', key: 'x²' },
+    ],
+    [
+      { label: '(', action: openParen, type: 'scientific', key: '(' },
+      { label: ')', action: closeParen, type: 'scientific', key: ')' },
+      { label: 'e', action: () => insertConstant('e'), type: 'scientific', key: 'e' },
+      { label: 'xʸ', action: () => handleOperation('xʸ'), type: 'operator', key: 'xʸ' },
+    ],
+  ];
+
+  const memoryRow: ButtonDef[] = [
+    { label: 'MC', action: memoryClear, type: 'memory', key: 'MC' },
+    { label: 'MR', action: memoryRecall, type: 'memory', key: 'MR' },
+    { label: 'M+', action: memoryAdd, type: 'memory', key: 'M+' },
+    { label: 'M-', action: memorySubtract, type: 'memory', key: 'M-' },
+  ];
 
   const buttons: ButtonDef[][] = [
     [
@@ -392,49 +552,129 @@ export default function Calculator() {
   ];
 
   const getButtonClasses = (btn: ButtonDef, isActive: boolean): string => {
+    const btnSize = isScientific ? 'h-[44px]' : 'h-[56px]';
+    const wideSize = isScientific ? 'h-[44px] col-span-2' : 'h-[56px] col-span-2';
+    const roundSize = isScientific ? 'h-[44px] w-[44px]' : 'h-[56px] w-[56px]';
+
     const base =
       'relative flex items-center justify-center rounded-full font-normal select-none cursor-pointer transition-all duration-75 active:scale-[0.92] focus:outline-none focus:ring-0 focus:ring-offset-0';
-    const size = btn.wide ? 'h-[56px] col-span-2' : 'h-[56px] w-[56px]';
+    const size = btn.wide ? wideSize : roundSize;
     const pressed = isActive ? 'scale-[0.92]' : '';
 
+    if (btn.type === 'memory') {
+      const memSize = isScientific ? 'h-[28px] text-[9px]' : 'h-[28px] text-[10px]';
+      return `${base} ${memSize} bg-transparent hover:bg-white/10 text-[#8e8e8e] hover:text-white rounded-md ${pressed}`;
+    }
+
+    if (btn.type === 'scientific') {
+      const sciFontSize = isScientific ? 'text-[13px]' : 'text-[14px]';
+      return `${base} ${size} bg-[#3a3a3a] hover:bg-[#4a4a4a] text-white ${sciFontSize} ${pressed}`;
+    }
+
     if (btn.type === 'function') {
-      return `${base} ${size} bg-[#a5a5a5] hover:bg-[#c5c5c5] text-black text-[20px] ${pressed}`;
+      const funcFontSize = isScientific ? 'text-[16px]' : 'text-[20px]';
+      return `${base} ${size} bg-[#a5a5a5] hover:bg-[#c5c5c5] text-black ${funcFontSize} ${pressed}`;
     }
     if (btn.type === 'operator') {
-      // Active operator: white background, orange text
+      const opFontSize = isScientific ? 'text-[18px]' : 'text-[24px]';
       const opKey = btn.key;
       const isActiveOp = activeOperator && opKey === activeOperator;
       if (isActiveOp) {
-        return `${base} ${size} bg-white text-orange-500 text-[24px] font-medium ${pressed}`;
+        return `${base} ${size} bg-white text-orange-500 ${opFontSize} font-medium ${pressed}`;
       }
-      return `${base} ${size} bg-orange-500 hover:bg-orange-400 text-white text-[24px] font-medium ${pressed}`;
+      return `${base} ${size} bg-orange-500 hover:bg-orange-400 text-white ${opFontSize} font-medium ${pressed}`;
     }
     // Number buttons
-    return `${base} ${size} bg-[#505050] hover:bg-[#606060] text-white text-[22px] ${pressed}`;
+    const numFontSize = isScientific ? 'text-[18px]' : 'text-[22px]';
+    return `${base} ${size} bg-[#505050] hover:bg-[#606060] text-white ${numFontSize} ${pressed}`;
   };
+
+  const gap = isScientific ? 'gap-[6px]' : 'gap-[10px]';
+  const px = isScientific ? 'px-2' : 'px-3';
 
   return (
     <div className="flex flex-col h-full w-full bg-[#1c1c1c] rounded-xl overflow-hidden select-none">
+      {/* Mode Toggle */}
+      <div className="flex items-center justify-between px-3 pt-2">
+        <button
+          onClick={() => setIsScientific(!isScientific)}
+          className="text-[10px] text-[#8e8e8e] hover:text-white transition-colors px-2 py-0.5 rounded hover:bg-white/10"
+        >
+          {isScientific ? '◁ Basic' : 'Scientific ▷'}
+        </button>
+        {memory !== 0 && (
+          <span className="text-[10px] text-[#8e8e8e]">M</span>
+        )}
+      </div>
+
       {/* Display Area */}
-      <div className="flex flex-col items-end justify-end px-5 pt-2 pb-1 min-h-[100px]">
+      <div className="flex flex-col items-end justify-end px-4 pt-1 pb-1 min-h-[80px]">
         {/* Expression line */}
         <div className="text-[#8e8e8e] text-xs h-5 text-right w-full truncate mb-1">
           {state.expression}
+          {state.openParens > 0 && <span className="text-orange-400/60"> {'('.repeat(state.openParens)}</span>}
         </div>
         {/* Main display */}
         <div className="text-right w-full overflow-hidden">
           <span
-            className={`text-white font-light tracking-tight ${getDisplayFontSize(state.display)} leading-tight`}
+            className={`text-white font-light tracking-tight ${getDisplayFontSize(state.display, isScientific)} leading-tight`}
           >
             {state.display === 'Error' ? 'Error' : formatDisplay(state.display)}
           </span>
         </div>
       </div>
 
+      {/* Memory Row (only in basic mode) */}
+      {!isScientific && (
+        <div className={`grid grid-cols-4 ${px} gap-1 pb-1`}>
+          {memoryRow.map((btn) => (
+            <button
+              key={btn.key}
+              className={getButtonClasses(btn, activeKey === btn.key)}
+              onClick={btn.action}
+            >
+              {btn.label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Scientific Buttons */}
+      {isScientific && (
+        <div className={`flex flex-col ${gap} ${px} pb-1`}>
+          {/* Memory row in scientific mode (inline) */}
+          <div className={`grid grid-cols-4 gap-[4px]`}>
+            {memoryRow.map((btn) => (
+              <button
+                key={btn.key}
+                className="flex items-center justify-center h-[28px] rounded-md text-[9px] text-[#8e8e8e] hover:text-white hover:bg-white/10 transition-colors select-none cursor-pointer"
+                onClick={btn.action}
+              >
+                {btn.label}
+              </button>
+            ))}
+          </div>
+          {scientificRows.map((row, rowIdx) => (
+            <div key={`sci-${rowIdx}`} className={`grid grid-cols-4 ${gap}`}>
+              {row.map((btn) => (
+                <button
+                  key={btn.key}
+                  className={getButtonClasses(btn, activeKey === btn.key)}
+                  onClick={btn.action}
+                  style={!btn.wide ? { justifySelf: 'center' } : undefined}
+                >
+                  {btn.label}
+                </button>
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Buttons Grid */}
-      <div className="flex flex-col gap-[10px] px-3 pb-3">
+      <div className={`flex flex-col ${gap} ${px} pb-3 flex-1`}>
         {buttons.map((row, rowIdx) => (
-          <div key={rowIdx} className="grid grid-cols-4 gap-[10px]">
+          <div key={`basic-${rowIdx}`} className={`grid grid-cols-4 ${gap}`}>
             {row.map((btn) => (
               <button
                 key={btn.key}
@@ -445,9 +685,8 @@ export default function Calculator() {
                 onMouseLeave={() => setActiveKey(null)}
                 style={btn.wide ? {} : { justifySelf: 'center' }}
               >
-                {/* Wide 0 button: left-align the text with padding */}
                 {btn.wide ? (
-                  <span className="pl-5 self-center text-left w-full">{btn.label}</span>
+                  <span className="pl-4 self-center text-left w-full">{btn.label}</span>
                 ) : (
                   btn.label
                 )}
