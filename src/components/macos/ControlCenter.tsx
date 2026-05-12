@@ -11,6 +11,13 @@ import {
   Volume2,
   Music,
   Monitor,
+  Keyboard,
+  Airplay,
+  Focus,
+  Battery,
+  ChevronDown,
+  SunDim,
+  SunMedium,
 } from 'lucide-react'
 import useDarkModeStore from '@/store/dark-mode-store'
 
@@ -69,23 +76,23 @@ function ToggleTile({ icon, label, sublabel, active, onClick, color }: ToggleTil
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-3 p-3 rounded-2xl transition-all duration-200 text-left w-full ${
+      className={`flex items-center gap-2.5 p-2.5 rounded-[14px] transition-all duration-200 text-left w-full ${
         active
           ? `${color || 'bg-[#0a84ff]'} text-white`
-          : 'bg-white/10 text-white/80 hover:bg-white/15'
+          : 'bg-white/[0.08] text-white/80 hover:bg-white/[0.12]'
       }`}
     >
       <div
-        className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+        className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${
           active ? 'bg-white/20' : 'bg-white/10'
         }`}
       >
         {icon}
       </div>
       <div className="min-w-0 flex-1">
-        <div className="text-[13px] font-medium truncate">{label}</div>
+        <div className="text-[12px] font-medium truncate leading-tight">{label}</div>
         {sublabel && (
-          <div className={`text-[11px] truncate ${active ? 'text-white/70' : 'text-white/40'}`}>
+          <div className={`text-[10px] truncate leading-tight mt-0.5 ${active ? 'text-white/70' : 'text-white/35'}`}>
             {sublabel}
           </div>
         )}
@@ -94,43 +101,110 @@ function ToggleTile({ icon, label, sublabel, active, onClick, color }: ToggleTil
   )
 }
 
-// --- Slider Component ---
+// --- Slider Component with icons ---
 interface SliderTileProps {
-  icon: React.ReactNode
+  iconLow: React.ReactNode
+  iconHigh: React.ReactNode
   label: string
   value: number
   onChange: (value: number) => void
+  color?: string
 }
 
-function SliderTile({ icon, label, value, onChange }: SliderTileProps) {
+function SliderTile({ iconLow, iconHigh, label, value, onChange, color }: SliderTileProps) {
+  const isActive = value > 0
   return (
-    <div className="p-3 bg-white/10 rounded-2xl">
-      <div className="flex items-center gap-3 mb-2">
-        <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center shrink-0">
-          {icon}
+    <div className={`p-2.5 rounded-[14px] transition-colors duration-200 ${isActive ? (color || 'bg-white/[0.12]') : 'bg-white/[0.08]'}`}>
+      <div className="flex items-center gap-2 mb-1.5">
+        <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${isActive ? 'bg-white/15' : 'bg-white/10'}`}>
+          {iconLow}
         </div>
-        <div className="text-[13px] font-medium text-white/80">{label}</div>
+        <div className="text-[12px] font-medium text-white/80">{label}</div>
       </div>
-      <div className="flex items-center gap-2 px-1">
+      <div className="flex items-center gap-1.5 px-1">
+        <div className="shrink-0">{iconLow}</div>
         <input
           type="range"
           min={0}
           max={100}
           value={value}
           onChange={(e) => onChange(Number(e.target.value))}
-          className="flex-1 h-1.5 appearance-none rounded-full bg-white/20 outline-none cursor-pointer
+          className="flex-1 h-1.5 appearance-none rounded-full outline-none cursor-pointer
             [&::-webkit-slider-thumb]:appearance-none
-            [&::-webkit-slider-thumb]:w-4
-            [&::-webkit-slider-thumb]:h-4
+            [&::-webkit-slider-thumb]:w-3.5
+            [&::-webkit-slider-thumb]:h-3.5
             [&::-webkit-slider-thumb]:rounded-full
             [&::-webkit-slider-thumb]:bg-white
             [&::-webkit-slider-thumb]:shadow-md
             [&::-webkit-slider-thumb]:cursor-pointer
             [&::-webkit-slider-thumb]:transition-transform
             [&::-webkit-slider-thumb]:hover:scale-110"
+          style={{
+            background: `linear-gradient(to right, rgba(255,255,255,0.5) ${value}%, rgba(255,255,255,0.15) ${value}%)`,
+          }}
         />
-        <span className="text-[11px] text-white/50 w-8 text-right">{value}%</span>
+        <div className="shrink-0">{iconHigh}</div>
       </div>
+    </div>
+  )
+}
+
+// --- Sound Output Selector ---
+interface SoundOutputSelectorProps {
+  selected: string
+  onSelect: (value: string) => void
+}
+
+const AUDIO_OUTPUTS = [
+  { id: 'internal', name: 'Internal Speakers', icon: <Volume2 className="w-3.5 h-3.5" /> },
+  { id: 'airpods', name: 'AirPods Pro', icon: <Music className="w-3.5 h-3.5" /> },
+]
+
+function SoundOutputSelector({ selected, onSelect }: SoundOutputSelectorProps) {
+  const [isOpen, setIsOpen] = useState(false)
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-2 w-full p-2 rounded-lg bg-white/[0.06] hover:bg-white/[0.1] transition-colors text-left"
+      >
+        {AUDIO_OUTPUTS.find(o => o.id === selected)?.icon}
+        <span className="text-[11px] text-white/60 flex-1 truncate">
+          {AUDIO_OUTPUTS.find(o => o.id === selected)?.name}
+        </span>
+        <ChevronDown className={`w-3 h-3 text-white/30 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            className="absolute bottom-full left-0 right-0 mb-1 bg-[#3a3a3c]/95 backdrop-blur-xl rounded-lg border border-white/[0.08] overflow-hidden z-10"
+            initial={{ opacity: 0, y: 4, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 4, scale: 0.97 }}
+            transition={{ duration: 0.15 }}
+          >
+            {AUDIO_OUTPUTS.map(output => (
+              <button
+                key={output.id}
+                onClick={() => {
+                  onSelect(output.id)
+                  setIsOpen(false)
+                }}
+                className={`flex items-center gap-2 w-full px-3 py-2 text-left hover:bg-white/[0.08] transition-colors ${
+                  selected === output.id ? 'bg-white/[0.06]' : ''
+                }`}
+              >
+                {output.icon}
+                <span className="text-[11px] text-white/80 flex-1">{output.name}</span>
+                {selected === output.id && (
+                  <span className="text-[#007AFF] text-[10px]">✓</span>
+                )}
+              </button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
@@ -145,10 +219,15 @@ export default function ControlCenter() {
   const [bluetooth, setBluetooth] = useState(true)
   const [airdrop, setAirdrop] = useState(false)
   const [focus, setFocus] = useState(false)
+  const [screenMirroring, setScreenMirroring] = useState(false)
 
   // Slider states
   const [brightness, setBrightness] = useState(80)
   const [volume, setVolume] = useState(65)
+  const [keyboardBrightness, setKeyboardBrightness] = useState(60)
+
+  // Sound output
+  const [audioOutput, setAudioOutput] = useState('internal')
 
   // Now playing state (simulated)
   const [nowPlaying] = useState({
@@ -166,7 +245,6 @@ export default function ControlCenter() {
     }
 
     if (isOpen) {
-      // Delay to avoid the same click that opened it
       const timer = setTimeout(() => {
         document.addEventListener('mousedown', handleClickOutside)
       }, 50)
@@ -203,36 +281,47 @@ export default function ControlCenter() {
             {/* Toggle tiles - 2 column grid */}
             <div className="grid grid-cols-2 gap-2">
               <ToggleTile
-                icon={<Wifi className="w-4 h-4" />}
+                icon={<Wifi className="w-3.5 h-3.5" />}
                 label="Wi-Fi"
-                sublabel={wifi ? 'Connected' : 'Off'}
+                sublabel={wifi ? 'Home Network' : 'Off'}
                 active={wifi}
                 onClick={() => setWifi(!wifi)}
+                color="bg-[#007AFF]"
               />
               <ToggleTile
-                icon={<Bluetooth className="w-4 h-4" />}
+                icon={<Bluetooth className="w-3.5 h-3.5" />}
                 label="Bluetooth"
                 sublabel={bluetooth ? 'On' : 'Off'}
                 active={bluetooth}
                 onClick={() => setBluetooth(!bluetooth)}
+                color="bg-[#007AFF]"
               />
               <ToggleTile
-                icon={<Share className="w-4 h-4" />}
+                icon={<Share className="w-3.5 h-3.5" />}
                 label="AirDrop"
                 sublabel={airdrop ? 'Everyone' : 'Off'}
                 active={airdrop}
                 onClick={() => setAirdrop(!airdrop)}
+                color="bg-[#007AFF]"
               />
               <ToggleTile
-                icon={focus ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+                icon={<Focus className="w-3.5 h-3.5" />}
                 label="Focus"
-                sublabel={focus ? 'On' : 'Off'}
+                sublabel={focus ? 'Do Not Disturb' : 'Off'}
                 active={focus}
                 onClick={() => setFocus(!focus)}
                 color="bg-[#5e5ce6]"
               />
               <ToggleTile
-                icon={isDarkMode ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+                icon={<Airplay className="w-3.5 h-3.5" />}
+                label="Screen Mirroring"
+                sublabel={screenMirroring ? 'On' : 'Off'}
+                active={screenMirroring}
+                onClick={() => setScreenMirroring(!screenMirroring)}
+                color="bg-[#007AFF]"
+              />
+              <ToggleTile
+                icon={isDarkMode ? <Moon className="w-3.5 h-3.5" /> : <Sun className="w-3.5 h-3.5" />}
                 label="Dark Mode"
                 sublabel={isDarkMode ? 'On' : 'Off'}
                 active={isDarkMode}
@@ -241,33 +330,73 @@ export default function ControlCenter() {
               />
             </div>
 
-            {/* Display brightness */}
+            {/* Display brightness with sun icons */}
             <SliderTile
-              icon={<Monitor className="w-4 h-4 text-white/80" />}
+              iconLow={<SunDim className="w-3 h-3 text-white/60" />}
+              iconHigh={<Sun className="w-3.5 h-3.5 text-white/80" />}
               label="Display"
               value={brightness}
               onChange={setBrightness}
             />
 
-            {/* Sound volume */}
+            {/* Keyboard brightness */}
             <SliderTile
-              icon={<Volume2 className="w-4 h-4 text-white/80" />}
-              label="Sound"
-              value={volume}
-              onChange={setVolume}
+              iconLow={<Keyboard className="w-3 h-3 text-white/60" />}
+              iconHigh={<Keyboard className="w-3.5 h-3.5 text-white/80" />}
+              label="Keyboard Brightness"
+              value={keyboardBrightness}
+              onChange={setKeyboardBrightness}
             />
+
+            {/* Sound volume with output selector */}
+            <div className="p-2.5 rounded-[14px] bg-white/[0.08]">
+              <div className="flex items-center gap-2 mb-1.5">
+                <div className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center shrink-0">
+                  <Volume2 className="w-3.5 h-3.5 text-white/80" />
+                </div>
+                <div className="text-[12px] font-medium text-white/80">Sound</div>
+              </div>
+              <div className="flex items-center gap-1.5 px-1 mb-1.5">
+                <Volume2 className="w-3 h-3 text-white/40 shrink-0" />
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  value={volume}
+                  onChange={(e) => setVolume(Number(e.target.value))}
+                  className="flex-1 h-1.5 appearance-none rounded-full outline-none cursor-pointer
+                    [&::-webkit-slider-thumb]:appearance-none
+                    [&::-webkit-slider-thumb]:w-3.5
+                    [&::-webkit-slider-thumb]:h-3.5
+                    [&::-webkit-slider-thumb]:rounded-full
+                    [&::-webkit-slider-thumb]:bg-white
+                    [&::-webkit-slider-thumb]:shadow-md
+                    [&::-webkit-slider-thumb]:cursor-pointer
+                    [&::-webkit-slider-thumb]:transition-transform
+                    [&::-webkit-slider-thumb]:hover:scale-110"
+                  style={{
+                    background: `linear-gradient(to right, rgba(255,255,255,0.5) ${volume}%, rgba(255,255,255,0.15) ${volume}%)`,
+                  }}
+                />
+                <Volume2 className="w-3.5 h-3.5 text-white/60 shrink-0" />
+              </div>
+              <SoundOutputSelector
+                selected={audioOutput}
+                onSelect={setAudioOutput}
+              />
+            </div>
 
             {/* Now Playing */}
             {nowPlaying.playing && (
-              <div className="p-3 bg-white/10 rounded-2xl flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-pink-500 via-red-500 to-orange-400 flex items-center justify-center shrink-0">
-                  <Music className="w-5 h-5 text-white" />
+              <div className="p-2.5 rounded-[14px] bg-white/[0.08] flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-pink-500 via-red-500 to-orange-400 flex items-center justify-center shrink-0">
+                  <Music className="w-4 h-4 text-white" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="text-[13px] font-medium text-white/90 truncate">
+                  <div className="text-[12px] font-medium text-white/90 truncate">
                     {nowPlaying.title}
                   </div>
-                  <div className="text-[11px] text-white/40 truncate">
+                  <div className="text-[10px] text-white/35 truncate">
                     {nowPlaying.artist}
                   </div>
                 </div>
@@ -276,7 +405,7 @@ export default function ControlCenter() {
                   {[3, 5, 2, 4].map((h, i) => (
                     <motion.div
                       key={i}
-                      className="w-[3px] bg-[#0a84ff] rounded-full"
+                      className="w-[2.5px] bg-[#007AFF] rounded-full"
                       animate={{
                         height: [h, h + 4, h, h + 2, h],
                       }}

@@ -157,33 +157,33 @@ function createTab(url: string = 'localhost:3000', title?: string): Tab {
 
 function AppleStartPage() {
   return (
-    <div className="flex flex-col items-center w-full min-h-full bg-gradient-to-b from-white to-gray-50">
-      {/* Hero Section */}
-      <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
-        <div className="text-6xl mb-6"></div>
-        <h1 className="text-4xl font-semibold text-gray-900 tracking-tight mb-3">
-          Welcome to Safari
-        </h1>
-        <p className="text-lg text-gray-500 max-w-md">
-          Your personal browsing experience starts here.
-        </p>
+    <div
+      className="flex flex-col items-center w-full min-h-full bg-gradient-to-b from-[#f5f5f7] to-[#e8e8ed]"
+      style={{ fontFamily: "'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" }}
+    >
+      {/* Search/URL Bar at top */}
+      <div className="w-full max-w-xl px-6 pt-10 pb-6">
+        <div className="flex items-center bg-white/90 rounded-xl px-4 py-[10px] shadow-[0_1px_4px_rgba(0,0,0,0.06),0_0_0_0.5px_rgba(0,0,0,0.08)] hover:shadow-[0_2px_6px_rgba(0,0,0,0.08),0_0_0_0.5px_rgba(0,0,0,0.1)] transition-shadow cursor-text">
+          <Search size={16} className="text-gray-400 mr-2.5 shrink-0" />
+          <span className="text-[14px] text-gray-400">Search or enter website name</span>
+        </div>
       </div>
 
       {/* Favorites Grid */}
-      <div className="w-full max-w-2xl px-8 pb-12">
-        <h2 className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-4 px-1">
+      <div className="w-full max-w-2xl px-10 pb-10">
+        <h2 className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-5 px-1">
           Favorites
         </h2>
-        <div className="grid grid-cols-6 gap-4">
+        <div className="grid grid-cols-6 gap-6">
           {BOOKMARKS.map((bm) => (
             <div
               key={bm.url}
-              className="flex flex-col items-center gap-2 group cursor-pointer"
+              className="flex flex-col items-center gap-2.5 group cursor-pointer"
             >
-              <div className="w-14 h-14 rounded-2xl bg-white shadow-md border border-gray-100 flex items-center justify-center group-hover:shadow-lg group-hover:scale-105 transition-all duration-200">
+              <div className="w-[52px] h-[52px] rounded-xl bg-white/90 shadow-[0_1px_3px_rgba(0,0,0,0.06),0_0_0_0.5px_rgba(0,0,0,0.04)] flex items-center justify-center group-hover:shadow-[0_2px_8px_rgba(0,0,0,0.1),0_0_0_0.5px_rgba(0,0,0,0.06)] group-hover:scale-105 transition-all duration-200">
                 <FaviconIcon url={bm.url} />
               </div>
-              <span className="text-[11px] text-gray-500 group-hover:text-gray-700 truncate w-full text-center transition-colors">
+              <span className="text-[11px] text-gray-500 group-hover:text-gray-800 truncate w-full text-center transition-colors duration-150">
                 {bm.name}
               </span>
             </div>
@@ -192,11 +192,11 @@ function AppleStartPage() {
       </div>
 
       {/* Reading List */}
-      <div className="w-full max-w-2xl px-8 pb-12">
-        <h2 className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-4 px-1">
+      <div className="w-full max-w-2xl px-10 pb-8">
+        <h2 className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-4 px-1">
           Reading List
         </h2>
-        <div className="space-y-3">
+        <div className="space-y-2">
           {[
             { title: 'The Future of Web Development', source: 'web.dev', time: '5 min read' },
             { title: 'Understanding SwiftUI Layouts', source: 'developer.apple.com', time: '8 min read' },
@@ -204,13 +204,13 @@ function AppleStartPage() {
           ].map((item) => (
             <div
               key={item.title}
-              className="flex items-center gap-4 p-3 rounded-xl bg-white border border-gray-100 shadow-sm hover:shadow-md cursor-pointer transition-all duration-200"
+              className="flex items-center gap-3.5 p-3 rounded-lg bg-white/70 hover:bg-white/90 border border-gray-200/40 hover:border-gray-200/60 cursor-pointer transition-all duration-150"
             >
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center text-sm">
+              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center text-sm shrink-0">
                 📖
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium text-gray-800 truncate">{item.title}</div>
+                <div className="text-[12.5px] font-medium text-gray-800 truncate">{item.title}</div>
                 <div className="text-[11px] text-gray-400">
                   {item.source} · {item.time}
                 </div>
@@ -221,14 +221,14 @@ function AppleStartPage() {
       </div>
 
       {/* Privacy Report */}
-      <div className="w-full max-w-2xl px-8 pb-16">
-        <h2 className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-4 px-1">
+      <div className="w-full max-w-2xl px-10 pb-12">
+        <h2 className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-4 px-1">
           Privacy Report
         </h2>
-        <div className="p-4 rounded-xl bg-white border border-gray-100 shadow-sm">
-          <div className="flex items-center gap-3 mb-2">
-            <Lock size={18} className="text-green-600" />
-            <span className="text-sm font-medium text-gray-800">Safari blocked 14 trackers</span>
+        <div className="p-3.5 rounded-lg bg-white/70 border border-gray-200/40">
+          <div className="flex items-center gap-2.5 mb-1.5">
+            <Lock size={16} className="text-green-600" />
+            <span className="text-[12.5px] font-medium text-gray-800">Safari blocked 14 trackers</span>
           </div>
           <p className="text-[11px] text-gray-400 ml-7">
             In the last seven days, Safari has prevented trackers from profiling you.
@@ -1012,7 +1012,61 @@ export default function Safari() {
   }, [])
 
   return (
-    <div className="flex flex-col w-full h-full bg-white text-gray-900 text-sm select-none overflow-hidden">
+    <div className="flex flex-col w-full h-full bg-white text-gray-900 text-sm select-none overflow-hidden" style={{ fontFamily: "'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" }}>
+      {/* ─── Tab Bar (pill-shaped, macOS Safari style) ────────────── */}
+      <div className="shrink-0 bg-[#ddd]" style={{ paddingTop: '6px', paddingBottom: '0' }}>
+        <div className="flex items-center gap-[3px] px-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+          {tabs.map((tab) => {
+            const isActive = tab.id === activeTabId
+            return (
+              <div
+                key={tab.id}
+                className={`group flex items-center gap-1.5 pl-2.5 pr-1.5 py-[4px] min-w-[120px] max-w-[200px] text-[11.5px] cursor-pointer transition-all duration-150 relative ${
+                  isActive
+                    ? 'bg-white text-gray-800 rounded-lg shadow-sm'
+                    : 'bg-[#c8c8c8]/60 text-gray-600 hover:bg-[#c8c8c8]/90 rounded-lg'
+                }`}
+                onClick={() => {
+                  setActiveTabId(tab.id)
+                  setShowTabOverview(false)
+                }}
+              >
+                {/* Favicon / Loading spinner */}
+                <span className="shrink-0">
+                  {tab.isLoading ? (
+                    <span className="inline-block w-3 h-3 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
+                  ) : (
+                    <FaviconIcon url={tab.url} size="small" />
+                  )}
+                </span>
+
+                {/* Title */}
+                <span className="truncate flex-1" style={{ fontWeight: isActive ? 500 : 400, fontSize: '11.5px' }}>{tab.title}</span>
+
+                {/* Close button - small circle on hover */}
+                {tabs.length > 1 && (
+                  <button
+                    className="shrink-0 w-4 h-4 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-100 hover:bg-gray-300/70"
+                    onClick={(e) => closeTab(tab.id, e)}
+                  >
+                    <X size={9} className="text-gray-500" />
+                  </button>
+                )}
+              </div>
+            )
+          })}
+
+          {/* Add Tab Button - pill-shaped */}
+          <button
+            className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center hover:bg-[#c8c8c8]/70 text-gray-500 transition-colors duration-100"
+            onClick={addTab}
+            title="New Tab"
+          >
+            <Plus size={14} />
+          </button>
+        </div>
+      </div>
+
       {/* ─── Toolbar ─────────────────────────────────────────────────── */}
       <div className="shrink-0 bg-[#f6f6f6] border-b border-gray-200/80">
         {/* Navigation row */}
@@ -1045,10 +1099,10 @@ export default function Safari() {
             <ArrowRight size={15} />
           </button>
 
-          {/* URL Bar */}
+          {/* URL Bar - more prominent */}
           <div className="flex-1 mx-2">
             <div
-              className="flex items-center bg-white rounded-full shadow-sm border border-gray-200/60 px-3 py-[5px] hover:border-gray-300/80 focus-within:border-gray-300/80 focus-within:shadow transition-all cursor-text"
+              className="flex items-center bg-white rounded-lg shadow-[0_1px_3px_rgba(0,0,0,0.06),0_0_0_0.5px_rgba(0,0,0,0.08)] px-3 py-[6px] hover:shadow-[0_1px_4px_rgba(0,0,0,0.08),0_0_0_0.5px_rgba(0,0,0,0.12)] focus-within:shadow-[0_1px_4px_rgba(0,0,0,0.1),0_0_0_1.5px_rgba(0,122,255,0.3)] transition-all cursor-text"
               onClick={handleUrlClick}
             >
               {isEditingUrl ? (
@@ -1061,13 +1115,14 @@ export default function Safari() {
                   onBlur={handleUrlSubmit}
                   className="flex-1 text-[13px] text-center outline-none bg-transparent text-gray-800"
                   autoFocus
+                  placeholder="Search or enter website name"
                 />
               ) : (
                 <div className="flex items-center justify-center gap-1.5 w-full">
                   <Lock size={11} className="text-gray-400 shrink-0" />
                   <span className="text-[13px] text-gray-500 truncate">
                     {activeTab.url === 'localhost:3000'
-                      ? 'Safari Start Page'
+                      ? 'Search or enter website name'
                       : activeTab.url}
                   </span>
                 </div>
@@ -1098,83 +1153,12 @@ export default function Safari() {
         </div>
       </div>
 
-      {/* ─── Tab Bar ──────────────────────────────────────────────────── */}
-      <div className="shrink-0 bg-[#ececec] border-b border-gray-300/50">
-        <div className="flex items-end px-1 pt-0.5 overflow-x-auto">
-          {tabs.map((tab, tabIdx) => {
-            const isActive = tab.id === activeTabId
-            return (
-              <div
-                key={tab.id}
-                className={`group flex items-center gap-1.5 px-3 py-[5px] min-w-[140px] max-w-[220px] text-[12px] rounded-t-lg cursor-pointer transition-colors relative ${
-                  isActive
-                    ? 'bg-white/95 text-gray-800'
-                    : 'bg-transparent text-gray-500 hover:bg-white/40'
-                }`}
-                style={{
-                  borderRight: tabIdx < tabs.length - 1 ? '1px solid rgba(0,0,0,0.08)' : undefined,
-                }}
-                onClick={() => {
-                  setActiveTabId(tab.id)
-                  setShowTabOverview(false)
-                }}
-              >
-                {/* Tab connector to content */}
-                {isActive && (
-                  <>
-                    <div className="absolute -bottom-px left-0 right-0 h-[2px] bg-white" />
-                    <div className="absolute -bottom-px -left-1 w-2 h-2 bg-[#ececec]" style={{ borderRadius: '0 0 8px 0' }} />
-                    <div className="absolute -bottom-px -right-1 w-2 h-2 bg-[#ececec]" style={{ borderRadius: '0 0 0 8px' }} />
-                  </>
-                )}
-
-                {/* Favicon / Loading spinner */}
-                <span className="shrink-0">
-                  {tab.isLoading ? (
-                    <span className="inline-block w-3 h-3 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
-                  ) : (
-                    <FaviconIcon url={tab.url} size="small" />
-                  )}
-                </span>
-
-                {/* Title */}
-                <span className="truncate flex-1 font-medium">{tab.title}</span>
-
-                {/* Close button */}
-                {tabs.length > 1 && (
-                  <button
-                    className="shrink-0 w-4 h-4 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-gray-300/60 transition-all"
-                    onClick={(e) => closeTab(tab.id, e)}
-                  >
-                    <X size={10} className="text-gray-500" />
-                  </button>
-                )}
-              </div>
-            )
-          })}
-
-          {/* Add Tab Button */}
-          <div className="flex items-center gap-1 mb-0.5">
-            <button
-              className="shrink-0 p-1.5 rounded-md hover:bg-gray-300/40 text-gray-500 transition-colors"
-              onClick={addTab}
-              title="New Tab"
-            >
-              <Plus size={14} />
-            </button>
-            <span className="text-[11px] text-gray-400 px-1">
-              {tabs.length} tab{tabs.length !== 1 ? 's' : ''}
-            </span>
-          </div>
-        </div>
-      </div>
-
       {/* ─── Bookmarks Bar ────────────────────────────────────────────── */}
-      <div className="shrink-0 flex items-center gap-1 px-3 py-1 bg-[#fafafa] border-b border-gray-200/80">
+      <div className="shrink-0 flex items-center gap-0.5 px-3 py-[3px] bg-[#fafafa] border-b border-gray-200/80">
         {BOOKMARKS.map((bm) => (
           <button
             key={bm.url}
-            className="flex items-center gap-1.5 px-2.5 py-[3px] rounded-md hover:bg-gray-200/60 text-[12px] text-gray-600 hover:text-gray-800 transition-colors"
+            className="flex items-center gap-1.5 px-2.5 py-[3px] rounded-full hover:bg-gray-200/60 text-[11.5px] text-gray-600 hover:text-gray-800 transition-colors duration-100"
             onClick={() => handleBookmarkClick(bm)}
           >
             <FaviconIcon url={bm.url} size="small" />

@@ -35,7 +35,7 @@ const RESIZE_HANDLES: { direction: ResizeDirection; className: string }[] = [
 ]
 
 // Apps that use light window chrome (light title bar, light frame)
-const LIGHT_WINDOW_APPS = new Set(['notes', 'textedit', 'calculator', 'calendar', 'clock', 'settings', 'finder', 'photos'])
+const LIGHT_WINDOW_APPS = new Set(['notes', 'textedit', 'calculator', 'calendar', 'clock', 'settings', 'finder', 'photos', 'maps', 'reminders'])
 
 const SNAP_ZONE_SIZE = 20
 
@@ -486,19 +486,22 @@ export default function Window({ windowId, children }: WindowProps) {
 
               {/* Title Bar */}
               <div
-                className={`flex items-center h-[36px] shrink-0 select-none px-3 transition-colors duration-150 relative`}
+                className={`flex items-center h-[38px] shrink-0 select-none px-3 transition-all duration-200 relative`}
                 style={{
                   background: isLightWindow
                     ? isActive
-                      ? 'linear-gradient(180deg, rgba(255,255,255,0.8) 0%, rgba(245,245,245,0.8) 100%)'
-                      : 'linear-gradient(180deg, rgba(240,240,240,0.8) 0%, rgba(232,232,232,0.8) 100%)'
+                      ? 'linear-gradient(180deg, #f8f8f8 0%, #ececec 100%)'
+                      : 'linear-gradient(180deg, #f0f0f0 0%, #e6e6e6 100%)'
                     : isActive
-                      ? 'rgba(45,45,48,0.95)'
-                      : 'rgba(38,38,40,0.95)',
-                  backdropFilter: 'blur(16px)',
+                      ? 'linear-gradient(180deg, #3a3a3c 0%, #2c2c2e 100%)'
+                      : 'linear-gradient(180deg, #333335 0%, #28282a 100%)',
                   borderBottom: isLightWindow
-                    ? '0.5px solid rgba(0,0,0,0.12)'
-                    : '0.5px solid rgba(255,255,255,0.08)',
+                    ? isActive
+                      ? '0.5px solid rgba(0,0,0,0.15)'
+                      : '0.5px solid rgba(0,0,0,0.1)'
+                    : isActive
+                      ? '0.5px solid rgba(255,255,255,0.08)'
+                      : '0.5px solid rgba(255,255,255,0.05)',
                 }}
                 onMouseDown={handleDragMouseDown}
                 onDoubleClick={() => {
@@ -511,8 +514,8 @@ export default function Window({ windowId, children }: WindowProps) {
               >
                 {/* Traffic Light Buttons */}
                 <div
-                  className={`flex items-center gap-[8px] mr-3 -ml-0.5 -my-1 px-1.5 py-1 rounded-md transition-colors duration-150 ${
-                    trafficHover && isActive ? (isLightWindow ? 'bg-black/5' : 'bg-white/5') : ''
+                  className={`flex items-center gap-[8px] mr-3 -ml-0.5 -my-1 px-[7px] py-[5px] rounded-md transition-all duration-150 ${
+                    trafficHover && isActive ? (isLightWindow ? 'bg-black/[0.04]' : 'bg-white/[0.06]') : ''
                   }`}
                   data-traffic-light
                   onMouseEnter={() => setTrafficHover(true)}
@@ -522,44 +525,44 @@ export default function Window({ windowId, children }: WindowProps) {
                   {/* Close */}
                   <button
                     data-traffic-light
-                    className={`w-[13px] h-[13px] rounded-full flex items-center justify-center transition-all duration-150 ${
+                    className={`w-[12px] h-[12px] rounded-full flex items-center justify-center transition-all duration-150 ${
                       isActive ? 'bg-[#ff5f57]' : ''
                     } ${trafficHover && isActive ? 'hover:brightness-90' : ''}`}
-                    style={!isActive ? { background: inactiveCloseColor, boxShadow: isLightWindow ? 'inset 0 0 0 0.5px rgba(0,0,0,0.12), inset 0 1px 2px rgba(0,0,0,0.06)' : 'inset 0 0 0 0.5px rgba(255,255,255,0.06), inset 0 1px 2px rgba(0,0,0,0.15)' } : undefined}
+                    style={!isActive ? { background: inactiveCloseColor, boxShadow: isLightWindow ? 'inset 0 0 0 0.5px rgba(0,0,0,0.15), inset 0 0.5px 1px rgba(0,0,0,0.06)' : 'inset 0 0 0 0.5px rgba(255,255,255,0.08), inset 0 0.5px 1px rgba(0,0,0,0.2)' } : { boxShadow: 'inset 0 0 0 0.5px rgba(0,0,0,0.12), 0 0.5px 0 rgba(255,255,255,0.1)' }}
                     onClick={(e) => {
                       e.stopPropagation()
                       handleClose()
                     }}
                   >
                     <svg
-                      className="w-[8px] h-[8px] text-black/80 transition-opacity duration-150"
+                      className="w-[7px] h-[7px] text-black/80 transition-opacity duration-150"
                       style={{ opacity: trafficHover && isActive ? 1 : 0 }}
                       viewBox="0 0 8 8"
                       fill="none"
                     >
-                      <path d="M1.5 1.5L6.5 6.5M6.5 1.5L1.5 6.5" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" />
+                      <path d="M1.5 1.5L6.5 6.5M6.5 1.5L1.5 6.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
                     </svg>
                   </button>
 
                   {/* Minimize */}
                   <button
                     data-traffic-light
-                    className={`w-[13px] h-[13px] rounded-full flex items-center justify-center transition-all duration-150 ${
+                    className={`w-[12px] h-[12px] rounded-full flex items-center justify-center transition-all duration-150 ${
                       isActive ? 'bg-[#febc2e]' : ''
                     } ${trafficHover && isActive ? 'hover:brightness-90' : ''}`}
-                    style={!isActive ? { background: inactiveMinColor, boxShadow: isLightWindow ? 'inset 0 0 0 0.5px rgba(0,0,0,0.12), inset 0 1px 2px rgba(0,0,0,0.06)' : 'inset 0 0 0 0.5px rgba(255,255,255,0.06), inset 0 1px 2px rgba(0,0,0,0.15)' } : undefined}
+                    style={!isActive ? { background: inactiveMinColor, boxShadow: isLightWindow ? 'inset 0 0 0 0.5px rgba(0,0,0,0.15), inset 0 0.5px 1px rgba(0,0,0,0.06)' : 'inset 0 0 0 0.5px rgba(255,255,255,0.08), inset 0 0.5px 1px rgba(0,0,0,0.2)' } : { boxShadow: 'inset 0 0 0 0.5px rgba(0,0,0,0.12), 0 0.5px 0 rgba(255,255,255,0.1)' }}
                     onClick={(e) => {
                       e.stopPropagation()
                       minimizeWindow(windowId)
                     }}
                   >
                     <svg
-                      className="w-[8px] h-[8px] text-black/80 transition-opacity duration-150"
+                      className="w-[7px] h-[7px] text-black/80 transition-opacity duration-150"
                       style={{ opacity: trafficHover && isActive ? 1 : 0 }}
                       viewBox="0 0 8 8"
                       fill="none"
                     >
-                      <path d="M1 4H7" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" />
+                      <path d="M1 4H7" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
                     </svg>
                   </button>
 
@@ -567,10 +570,10 @@ export default function Window({ windowId, children }: WindowProps) {
                   <div className="relative">
                     <button
                       data-traffic-light
-                      className={`w-[13px] h-[13px] rounded-full flex items-center justify-center transition-all duration-150 ${
+                      className={`w-[12px] h-[12px] rounded-full flex items-center justify-center transition-all duration-150 ${
                         isActive ? 'bg-[#28c840]' : ''
                       } ${trafficHover && isActive ? 'hover:brightness-90' : ''}`}
-                      style={!isActive ? { background: inactiveMaxColor, boxShadow: isLightWindow ? 'inset 0 0 0 0.5px rgba(0,0,0,0.12), inset 0 1px 2px rgba(0,0,0,0.06)' : 'inset 0 0 0 0.5px rgba(255,255,255,0.06), inset 0 1px 2px rgba(0,0,0,0.15)' } : undefined}
+                      style={!isActive ? { background: inactiveMaxColor, boxShadow: isLightWindow ? 'inset 0 0 0 0.5px rgba(0,0,0,0.15), inset 0 0.5px 1px rgba(0,0,0,0.06)' : 'inset 0 0 0 0.5px rgba(255,255,255,0.08), inset 0 0.5px 1px rgba(0,0,0,0.2)' } : { boxShadow: 'inset 0 0 0 0.5px rgba(0,0,0,0.12), 0 0.5px 0 rgba(255,255,255,0.1)' }}
                       onClick={(e) => {
                         e.stopPropagation()
                         setShowTilingMenu(false)
@@ -589,13 +592,13 @@ export default function Window({ windowId, children }: WindowProps) {
                       }}
                     >
                       <svg
-                        className="w-[8px] h-[8px] text-black/80 transition-opacity duration-150"
+                        className="w-[7px] h-[7px] text-black/80 transition-opacity duration-150"
                         style={{ opacity: trafficHover && isActive ? 1 : 0 }}
                         viewBox="0 0 8 8"
                         fill="none"
                       >
-                        <path d="M1 5.5L1 7L2.5 7M7 2.5L7 1L5.5 1" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round" />
-                        <path d="M7 7L4.5 4.5M1 1L3.5 3.5" stroke="currentColor" strokeWidth="0.7" strokeLinecap="round" />
+                        <path d="M1 5.5L1 7L2.5 7M7 2.5L7 1L5.5 1" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M7 7L4.5 4.5M1 1L3.5 3.5" stroke="currentColor" strokeWidth="0.8" strokeLinecap="round" />
                       </svg>
                     </button>
 
@@ -676,12 +679,12 @@ export default function Window({ windowId, children }: WindowProps) {
                 {/* Window Title */}
                 <div className="flex-1 text-center pr-14">
                   <span
-                    className={`transition-colors duration-150 ${
+                    className={`transition-all duration-200 ${
                       isLightWindow
-                        ? isActive ? 'text-[#333]' : 'text-black/40'
-                        : isActive ? 'text-white/85' : 'text-white/40'
+                        ? isActive ? 'text-[#2d2d2d]' : 'text-black/30'
+                        : isActive ? 'text-white/85' : 'text-white/30'
                     }`}
-                    style={{ fontSize: '13px', fontWeight: 600 }}
+                    style={{ fontSize: '13px', fontWeight: 600, fontFamily: "'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" }}
                   >
                     {title}
                   </span>
@@ -689,7 +692,7 @@ export default function Window({ windowId, children }: WindowProps) {
               </div>
 
               {/* Content */}
-              <div className={`flex-1 overflow-hidden transition-opacity duration-200 ${isActive ? 'opacity-100' : 'opacity-90'}`}>
+              <div className={`flex-1 overflow-hidden transition-all duration-200 ${isActive ? 'opacity-100' : 'opacity-85 saturate-[0.85]'}`}>
                 {children}
               </div>
             </div>
