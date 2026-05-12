@@ -204,7 +204,7 @@ function DockIcon({
           backdropFilter: 'blur(8px)',
           border: '1px solid rgba(255,255,255,0.22)',
           boxShadow:
-            'inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.1)',
+            'inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.15)',
           padding: 0,
         }}
       >
@@ -218,16 +218,16 @@ function DockIcon({
           animate={{ 
             scale: 1,
             boxShadow: [
-              '0 0 3px rgba(255,255,255,0.5)',
-              '0 0 8px rgba(255,255,255,0.8)',
-              '0 0 3px rgba(255,255,255,0.5)',
+              '0 0 2px rgba(255,255,255,0.4)',
+              '0 0 6px rgba(255,255,255,0.6)',
+              '0 0 2px rgba(255,255,255,0.4)',
             ]
           }}
           transition={{
             scale: { type: 'spring', stiffness: 400, damping: 25 },
-            boxShadow: { duration: 2, repeat: Infinity, ease: 'easeInOut' },
+            boxShadow: { duration: 2.5, repeat: Infinity, ease: 'easeInOut' },
           }}
-          className="mt-0.5 h-[5px] w-[5px] rounded-full bg-white"
+          className="mt-0.5 h-[4px] w-[4px] rounded-full bg-white/80"
         />
       )}
     </div>
@@ -419,14 +419,15 @@ export default function Dock() {
         ref={dockRef}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
-        className="relative flex items-end gap-1.5 overflow-visible rounded-[18px] border border-white/[0.18] px-4 pb-2.5 pt-2 shadow-2xl shadow-black/20 backdrop-blur-2xl"
+        className="relative flex items-end gap-1.5 overflow-visible rounded-[18px] px-4 pb-2.5 pt-2 shadow-2xl shadow-black/20 backdrop-blur-3xl"
         style={{
-          background: 'rgba(40, 40, 40, 0.45)',
+          background: 'rgba(30, 30, 30, 0.35)',
+          border: '0.5px solid rgba(255,255,255,0.15)',
           boxShadow:
             'inset 0 1px 0 rgba(255,255,255,0.25), 0 8px 32px rgba(0,0,0,0.35), 0 2px 8px rgba(0,0,0,0.2)',
           backgroundImage: `
-            linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px)
+            linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px)
           `,
           backgroundSize: '12px 12px',
         }}
@@ -439,7 +440,7 @@ export default function Dock() {
           className="pointer-events-none absolute inset-x-0 top-0 h-[1px]"
           style={{
             background:
-              'linear-gradient(90deg, transparent, rgba(255,255,255,0.4) 20%, rgba(255,255,255,0.6) 50%, rgba(255,255,255,0.4) 80%, transparent)',
+              'linear-gradient(90deg, transparent, rgba(255,255,255,0.35) 15%, rgba(255,255,255,0.55) 50%, rgba(255,255,255,0.35) 85%, transparent)',
           }}
         />
         {/* Subtle gradient reflection below the highlight line */}
@@ -471,8 +472,8 @@ export default function Dock() {
                 <div
                   className="mx-1.5 h-10 w-[1px] self-center"
                   style={{
-                    background: 'linear-gradient(180deg, transparent, rgba(255,255,255,0.3) 20%, rgba(255,255,255,0.3) 80%, transparent)',
-                    boxShadow: '0 0 4px rgba(255,255,255,0.12), 0 0 1px rgba(255,255,255,0.2)',
+                    background: 'linear-gradient(180deg, transparent, rgba(255,255,255,0.25) 20%, rgba(255,255,255,0.25) 80%, transparent)',
+                    boxShadow: '0 0 6px rgba(255,255,255,0.08), 0 0 2px rgba(255,255,255,0.15)',
                   }}
                 />
               )}

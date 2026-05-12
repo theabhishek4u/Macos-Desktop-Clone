@@ -599,3 +599,73 @@ Stage Summary:
 - **System Preferences**: Emoji icons replaced with colored circle + Lucide icons, Appearance pane controls global dark mode
 - **Desktop Icons**: Better grid spacing with 8px gaps and adjusted top position
 - No changes to: Dock component, page.tsx, or any app components not mentioned
+
+---
+Task ID: 12-a
+Agent: Styling Improvements Agent
+Task: Major visual styling improvements to macOS desktop interface
+
+Work Log:
+- Read worklog.md and all 5 target component files + globals.css + macos-store.ts
+- **MenuBar.tsx**: Apple logo 16px, 13px SF Pro font, backdrop-blur-3xl, translucent bg, hover effects on status icons, improved bottom border
+- **Dock.tsx**: Frosted glass rgba(30,30,30,0.35), backdrop-blur-3xl, 0.5px border, 4px running dots with softer glow, icon bottom shadows, softer separator
+- **Window.tsx**: Desaturated inactive traffic lights (#c8c8c8/#555), inner shadow overlay, improved title bar borders
+- **DesktopIcons.tsx**: Larger icons (58x58), wider containers (96px), bg-blue-500/30 selection, rounded-[8px], enhanced text shadows, scale(1.02) on selection
+- **globals.css**: SF Pro font stack on * selector
+- All lint checks pass, dev server compiles 200 OK, no store changes
+
+Stage Summary:
+- Major visual styling improvements across 5 component files + globals.css
+- MenuBar: 13px SF Pro, translucent glass, hover states on all icons
+- Dock: Realistic frosted glass, smaller dots, icon shadows
+- Window: Desaturated inactive lights, inner depth shadow
+- DesktopIcons: Larger icons, blue selection, enhanced shadows
+- Global SF Pro typography applied
+- No breaking changes to Zustand store or functionality
+
+---
+Task ID: 12
+Agent: Main Agent (Cron Review Session 12)
+Task: QA testing, bug fixes, major styling improvements, new features (window snapping, About This Mac, enhanced Notification Center, desktop icon drag & drop)
+
+Work Log:
+- Read worklog.md and assessed project status (11+ prior sessions completed, 14 apps, visual fidelity ~7/10)
+- Verified dev server and lint status — both passing, 200 OK responses
+- Ran agent-browser QA test with VLM analysis:
+  - Initial desktop rated 3/10 (VLM kept seeing login screen)
+  - Identified critical bug: Login screen auto-login was broken — auto-focus on password input triggered `handleInteraction`, which set `hasInteracted=true` and cancelled the 1.5s auto-login timer
+  - Fixed LoginScreen.tsx: Added `isProgrammaticFocus` ref that is set to true before auto-focus, and checked in the `onFocus` handler to prevent programmatic focus from cancelling auto-login
+  - After fix, VLM confirmed desktop is visible and rated 6/10 with apps open
+- Dispatched 2 parallel agents for improvements:
+  - Agent 12-a (Styling Improvements):
+    - MenuBar: Apple logo w-[14px]→w-[16px], font 12.5px→13px with SF Pro Text font stack, backdrop-blur-xl→backdrop-blur-3xl, more translucent background (bg-black/40 light, bg-black/70 dark), hover effects on all status icon groups
+    - Dock: Frosted glass rgba(30,30,30,0.35) with backdrop-blur-3xl, subtle 0.5px border, running indicator dots 5px→4px with softer glow pulse, added bottom shadow on dock icons
+    - Window: Desaturated inactive traffic lights (#c8c8c8 light / #555555 dark), inner shadow overlay for depth, improved title bar with subtle bottom border for light inactive windows
+    - DesktopIcons: Icons 52x52→58x58, containers w-[90px]→w-[96px], selection bg-blue-500/30 with rounded-[8px], scale animation on selected, enhanced text shadows
+    - globals.css: SF Pro font stack applied to `*` selector globally
+  - Agent 12-b (Features Addition):
+    - Window Snapping: Added snapPosition to WindowState, snapWindow/unsnapWindow actions in store, visual preview overlay (semi-transparent blue) when dragging near edges (20px threshold), snap to left/right 50% or maximize on top, unsnap on drag away
+    - About This Mac Dialog: Sonoma gradient background, Apple logo, macOS Sonoma + Version 14.5, MacBook Pro with Apple M3 Pro / 18 GB / Serial Number, System Report + Software Update buttons
+    - Enhanced Notification Center: ClockWidget (real-time 48px clock), WeatherWidget (72°F Cupertino with stats), CalendarWidget (mini calendar with today highlighted), RemindersWidget (3 sample reminders), ScreenTimeWidget (5h 23m with 7-day chart), frosted glass styling on all widgets, Edit Widgets button
+    - Desktop Icon Drag & Drop: Absolute positioning with stored positions, 5px drag threshold, scale to 1.08x with elevated shadow during drag, grid snapping (100px horizontal, 90px vertical) on drop, double-click preserved for opening Finder
+- Final VLM QA with apps open: rated 7/10 (up from 3/10 initial, 6/10 with apps)
+- All lint checks pass, dev server compiles 200 OK
+
+Stage Summary:
+- **Critical bug fix**: Login screen auto-login now works (programmatic focus no longer cancels auto-login timer)
+- **Major styling improvements**: Menu bar (larger Apple logo, 13px SF Pro font, stronger blur), Dock (frosted glass, softer indicators), Window (desaturated inactive lights, inner shadows), Desktop icons (larger, better selection), Global SF Pro font stack
+- **Window Snapping**: Full implementation with visual preview overlay, left/right/top snap, unsnap on drag
+- **About This Mac**: Sonoma-styled dialog with system specs and action buttons
+- **Enhanced Notification Center**: 5 real widgets (Clock, Weather, Calendar, Reminders, Screen Time) with frosted glass styling
+- **Desktop Icon Drag & Drop**: Full drag support with grid snapping and visual feedback
+- VLM rating: 3/10 → 7/10 (desktop), 6/10 → 7/10 (with apps open)
+- All lint checks pass, dev server compiles 200 OK
+
+Unresolved Issues / Next Steps:
+- Could add real map tiles (Leaflet.js/MapLibre) for Maps app
+- Could add more detailed dock icon gradients/gloss for higher fidelity
+- Could add Touch ID / Face ID animation on login
+- Could add window tiling feature (multiple windows side by side)
+- Could add real Terminal command execution
+- Could improve wallpaper with higher quality rendering or actual image
+- Could add more app-specific keyboard shortcuts

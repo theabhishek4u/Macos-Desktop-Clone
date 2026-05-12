@@ -14,6 +14,7 @@ export interface WindowState {
   isMaximized: boolean
   zIndex: number
   prevBounds?: { x: number; y: number; width: number; height: number }
+  snapPosition?: 'left' | 'right' | null
 }
 
 export interface AppConfig {
@@ -180,6 +181,8 @@ interface MacOSState {
   focusWindow: (windowId: string) => void
   updateWindowPosition: (windowId: string, x: number, y: number) => void
   updateWindowSize: (windowId: string, width: number, height: number) => void
+  snapWindow: (windowId: string, position: 'left' | 'right') => void
+  unsnapWindow: (windowId: string) => void
   setContextMenu: (menu: { x: number; y: number; items: ContextMenuItem[] } | null) => void
   setWallpaperIndex: (index: number) => void
 }
@@ -350,6 +353,63 @@ const useMacOSStore = create<MacOSState>((set, get) => ({
       windows: state.windows.map(w =>
         w.id === windowId ? { ...w, width, height } : w
       ),
+    }))
+  },
+
+  snapWindow: (windowId: string, position: 'left' | 'right') => {
+    set(state => ({
+      windows: state.windows.map(w => {
+        if (w.id !== windowId) return w
+        // Save current bounds as prevBounds if not already saved
+        const prevBounds = w.prevBounds ?? { x: w.x, y: w.y, width: w.width, height: w.height }
+        const screenW = typeof window !== 'undefined' ? window.innerWidth : 1920
+        const screenH = typeof window !== 'undefined' ? window.innerHeight : 1080
+        const menuBarH = 28
+        const dockH = 80
+
+        if (position === 'left') {
+          return {
+            ...w,
+            prevBounds,
+            snapPosition: 'left',
+            isMaximized: false,
+            x: 0,
+            y: menuBarH,
+            width: Math.floor(screenW / 2),
+            height: screenH - menuBarH - dockH,
+          }
+        } else {
+          return {
+            ...w,
+            prevBounds,
+            snapPosition: 'right',
+            isMaximized: false,
+            x: Math.floor(screenW / 2),
+            y: menuBarH,
+            width: Math.floor(screenW / 2),
+            height: screenH - menuBarH - dockH,
+          }
+        }
+      }),
+    }))
+  },
+
+  unsnapWindow: (windowId: string) => {
+    set(state => ({
+      windows: state.windows.map(w => {
+        if (w.id !== windowId) return w
+        if (!w.snapPosition) return w
+        return {
+          ...w,
+          snapPosition: null,
+          isMaximized: false,
+          x: w.prevBounds?.x ?? w.x,
+          y: w.prevBounds?.y ?? w.y,
+          width: w.prevBounds?.width ?? w.width,
+          height: w.prevBounds?.height ?? w.height,
+          prevBounds: undefined,
+        }
+      }),
     }))
   },
 

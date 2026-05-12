@@ -115,6 +115,7 @@ function LoginPhase({ onLogin }: { onLogin: () => void }) {
   const inputRef = useRef<HTMLInputElement>(null)
   const hasInteracted = useRef(false)
   const autoLoginTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const isProgrammaticFocus = useRef(false)
 
   // Clock update
   useEffect(() => {
@@ -140,10 +141,13 @@ function LoginPhase({ onLogin }: { onLogin: () => void }) {
     }
   }, [])
 
-  // Focus password input after animation
+  // Focus password input after animation (without triggering handleInteraction)
   useEffect(() => {
     const timer = setTimeout(() => {
+      isProgrammaticFocus.current = true
       inputRef.current?.focus()
+      // Reset flag after focus event fires
+      setTimeout(() => { isProgrammaticFocus.current = false }, 100)
     }, 1200)
     return () => clearTimeout(timer)
   }, [])
@@ -284,7 +288,9 @@ function LoginPhase({ onLogin }: { onLogin: () => void }) {
               setPassword(e.target.value)
             }}
             onKeyDown={handleKeyDown}
-            onFocus={handleInteraction}
+            onFocus={() => {
+              if (!isProgrammaticFocus.current) handleInteraction()
+            }}
             className="w-60 px-4 py-2.5 rounded-full bg-white/15 backdrop-blur-md border border-white/25 text-white text-sm placeholder:text-white/40 outline-none focus:border-white/50 focus:bg-white/20 transition-all text-center"
           />
         </motion.div>

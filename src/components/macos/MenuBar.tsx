@@ -616,10 +616,14 @@ export default function MenuBar() {
 
   return (
     <div
-      className={`fixed top-0 left-0 right-0 h-[25px] backdrop-blur-xl text-white/90 text-[12.5px] font-medium z-[9999] flex items-center justify-between px-2 select-none ${
-        isDarkMode ? 'bg-black/80' : 'bg-black/50'
+      className={`fixed top-0 left-0 right-0 h-[25px] backdrop-blur-3xl text-white/90 z-[9999] flex items-center justify-between px-2 select-none ${
+        isDarkMode ? 'bg-black/70' : 'bg-black/40'
       }`}
-      style={{ borderBottom: '0.5px solid rgba(255,255,255,0.08)' }}
+      style={{
+        font: "13px -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif",
+        fontWeight: 500,
+        borderBottom: '0.5px solid rgba(255,255,255,0.1)',
+      }}
       ref={menuBarRef}
     >
       {/* Left side */}
@@ -637,7 +641,7 @@ export default function MenuBar() {
             aria-label="Apple Menu"
           >
             <svg
-              className="w-[14px] h-[14px]"
+              className="w-[16px] h-[16px]"
               viewBox="0 0 170 170"
               fill="currentColor"
             >
@@ -653,7 +657,7 @@ export default function MenuBar() {
         </div>
 
         {/* Active app name */}
-        <span className="font-bold text-[12.5px] px-2 h-[25px] flex items-center">
+        <span className="font-bold px-2 h-[25px] flex items-center" style={{ font: "bold 13px -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif" }}>
           {activeAppName}
         </span>
 
@@ -661,7 +665,7 @@ export default function MenuBar() {
         {currentMenus.map(section => (
           <div key={section.name} className="relative">
             <button
-              className={`px-2 h-[25px] flex items-center rounded transition-colors text-[12.5px] font-medium ${
+              className={`px-2 h-[25px] flex items-center rounded transition-colors ${
                 openMenu === section.name ? 'bg-white/15' : 'hover:bg-white/10'
               }`}
               onClick={() => handleMenuToggle(section.name)}
@@ -687,34 +691,41 @@ export default function MenuBar() {
 
       {/* Right side */}
       <div className="flex items-center gap-0">
-        <BatteryIconWithLevel />
-        <div className="w-px h-3 bg-white/20 mx-1.5" />
-        <Wifi className="h-4 w-4" />
-        <Bluetooth className="h-3.5 w-3.5 opacity-80 ml-1.5" />
-        <div className="w-px h-3 bg-white/20 mx-1.5" />
-        <Search className="h-3.5 w-3.5 opacity-80 cursor-pointer hover:opacity-100 transition-opacity ml-0.5" onClick={toggleSpotlight} />
+        <div className="flex items-center gap-1 hover:bg-white/10 rounded px-1.5 py-0.5 transition-colors cursor-default">
+          <BatteryIconWithLevel />
+        </div>
+        <div className="w-px h-3 bg-white/15 mx-1" />
+        <div className="flex items-center gap-1.5 hover:bg-white/10 rounded px-1.5 py-0.5 transition-colors cursor-default">
+          <Wifi className="h-[14px] w-[14px]" />
+          <Bluetooth className="h-[12px] w-[12px] opacity-80" />
+        </div>
+        <div className="w-px h-3 bg-white/15 mx-1" />
+        <div className="flex items-center hover:bg-white/10 rounded px-1.5 py-0.5 transition-colors">
+          <Search className="h-[13px] w-[13px] opacity-70 cursor-pointer hover:opacity-100 transition-opacity" onClick={toggleSpotlight} />
+        </div>
         {/* Control Center - pill-shaped icon matching macOS */}
         <button
-          className="flex items-center gap-[3px] rounded-full px-1.5 py-[3px] hover:bg-white/15 transition-colors cursor-pointer ml-1"
+          className="flex items-center gap-[3px] rounded-md px-1.5 py-[2px] hover:bg-white/15 transition-colors cursor-pointer"
           onClick={controlCenter.toggle}
           aria-label="Control Center"
         >
           <div className="flex gap-[2px] items-end">
-            <div className="w-[2.5px] h-[3px] bg-white/70 rounded-[0.5px]" />
-            <div className="w-[2.5px] h-[5px] bg-white/70 rounded-[0.5px]" />
-            <div className="w-[2.5px] h-[7px] bg-white/70 rounded-[0.5px]" />
-            <div className="w-[2.5px] h-[9px] bg-white/70 rounded-[0.5px]" />
+            <div className="w-[2.5px] h-[3px] bg-white/60 rounded-[0.5px]" />
+            <div className="w-[2.5px] h-[5px] bg-white/60 rounded-[0.5px]" />
+            <div className="w-[2.5px] h-[7px] bg-white/60 rounded-[0.5px]" />
+            <div className="w-[2.5px] h-[9px] bg-white/60 rounded-[0.5px]" />
           </div>
           <div className="flex gap-[2px] items-start">
-            <div className="w-[2.5px] h-[3px] bg-white/70 rounded-[0.5px]" />
-            <div className="w-[2.5px] h-[5px] bg-white/70 rounded-[0.5px]" />
+            <div className="w-[2.5px] h-[3px] bg-white/60 rounded-[0.5px]" />
+            <div className="w-[2.5px] h-[5px] bg-white/60 rounded-[0.5px]" />
           </div>
         </button>
         {/* Date and Time */}
         <button
-          className="text-[13px] tracking-tight whitespace-nowrap hover:bg-white/10 px-1.5 py-0.5 rounded transition-colors cursor-pointer ml-0.5 flex items-center gap-1.5"
+          className="tracking-tight whitespace-nowrap hover:bg-white/10 px-1.5 py-0.5 rounded transition-colors cursor-pointer flex items-center gap-1.5"
           onClick={notificationCenter.toggle}
           aria-label="Notification Center"
+          style={{ font: "13px -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif", fontWeight: 500 }}
         >
           <span className="text-white/60">{formatDateShort(currentTime)}</span>
           <span>{formatTimeOnly(currentTime)}</span>

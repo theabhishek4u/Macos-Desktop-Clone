@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import useMacOSStore from '@/store/macos-store'
 
 interface DesktopIcon {
@@ -37,25 +37,47 @@ const DESKTOP_ICONS: DesktopIcon[] = [
   },
 ]
 
+// Grid snapping constants
+const GRID_X = 100
+const GRID_Y = 90
+const MARGIN_TOP = 32 + 12 // menu bar + padding
+const MARGIN_RIGHT = 16
+
+// Default positions (right-aligned, top to bottom)
+function getDefaultPositions(): Record<string, { x: number; y: number }> {
+  if (typeof window === 'undefined') return {}
+  const rightEdge = window.innerWidth - MARGIN_RIGHT - 90
+  const result: Record<string, { x: number; y: number }> = {}
+  DESKTOP_ICONS.forEach((icon, index) => {
+    result[icon.id] = {
+      x: rightEdge,
+      y: MARGIN_TOP + index * GRID_Y,
+    }
+  })
+  return result
+}
+
+// Snap to grid
+function snapToGrid(x: number, y: number): { x: number; y: number } {
+  return {
+    x: Math.round(x / GRID_X) * GRID_X,
+    y: Math.round((y - MARGIN_TOP) / GRID_Y) * GRID_Y + MARGIN_TOP,
+  }
+}
+
 // macOS-style hard drive icon SVG
 function HardDriveIcon() {
   return (
     <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-      {/* Drive body */}
       <rect x="8" y="14" width="48" height="36" rx="4" fill="url(#hd-gradient)" />
-      {/* Top face */}
       <path d="M12 14h40a4 4 0 0 1 4 4v2H8v-2a4 4 0 0 1 4-4z" fill="url(#hd-top-gradient)" />
-      {/* Drive detail line */}
       <rect x="12" y="40" width="40" height="1" fill="rgba(255,255,255,0.15)" />
-      {/* LED indicator */}
       <circle cx="48" cy="44" r="2" fill="#4ade80" opacity="0.9" />
       <circle cx="48" cy="44" r="2" fill="#4ade80" opacity="0.4">
         <animate attributeName="opacity" values="0.4;0.9;0.4" dur="2s" repeatCount="indefinite" />
       </circle>
-      {/* Drive slot */}
       <rect x="14" y="30" width="36" height="2" rx="1" fill="rgba(0,0,0,0.3)" />
       <rect x="14" y="30" width="36" height="1" rx="0.5" fill="rgba(255,255,255,0.08)" />
-      {/* Border highlight */}
       <rect x="8" y="14" width="48" height="36" rx="4" stroke="rgba(255,255,255,0.15)" strokeWidth="0.5" fill="none" />
       <defs>
         <linearGradient id="hd-gradient" x1="8" y1="14" x2="8" y2="50">
@@ -72,19 +94,13 @@ function HardDriveIcon() {
   )
 }
 
-// macOS-style folder icon SVG (blue folder)
 function FolderBlueIcon() {
   return (
     <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-      {/* Folder back */}
       <path d="M6 18C6 15.7909 7.79086 14 10 14H24L28 18H54C56.2091 18 58 19.7909 58 22V48C58 50.2091 56.2091 52 54 52H10C7.79086 52 6 50.2091 6 48V18Z" fill="url(#fb-gradient)" />
-      {/* Folder front tab */}
       <path d="M6 18C6 15.7909 7.79086 14 10 14H24L28 18H10C7.79086 18 6 19.7909 6 22V18Z" fill="url(#fb-tab-gradient)" />
-      {/* Folder front face */}
       <path d="M6 22H58V48C58 50.2091 56.2091 52 54 52H10C7.79086 52 6 50.2091 6 48V22Z" fill="url(#fb-front-gradient)" />
-      {/* Shine overlay */}
       <path d="M6 22H58V28H6V22Z" fill="rgba(255,255,255,0.12)" />
-      {/* Border */}
       <path d="M6 18C6 15.7909 7.79086 14 10 14H24L28 18H54C56.2091 18 58 19.7909 58 22V48C58 50.2091 56.2091 52 54 52H10C7.79086 52 6 50.2091 6 48V18Z" stroke="rgba(0,0,0,0.15)" strokeWidth="0.5" fill="none" />
       <defs>
         <linearGradient id="fb-gradient" x1="6" y1="14" x2="6" y2="52">
@@ -105,22 +121,15 @@ function FolderBlueIcon() {
   )
 }
 
-// Downloads folder icon (with down arrow emblem)
 function FolderDownloadsIcon() {
   return (
     <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-      {/* Folder back */}
       <path d="M6 18C6 15.7909 7.79086 14 10 14H24L28 18H54C56.2091 18 58 19.7909 58 22V48C58 50.2091 56.2091 52 54 52H10C7.79086 52 6 50.2091 6 48V18Z" fill="url(#fd-gradient)" />
-      {/* Folder front tab */}
       <path d="M6 18C6 15.7909 7.79086 14 10 14H24L28 18H10C7.79086 18 6 19.7909 6 22V18Z" fill="url(#fd-tab-gradient)" />
-      {/* Folder front face */}
       <path d="M6 22H58V48C58 50.2091 56.2091 52 54 52H10C7.79086 52 6 50.2091 6 48V22Z" fill="url(#fd-front-gradient)" />
-      {/* Shine overlay */}
       <path d="M6 22H58V28H6V22Z" fill="rgba(255,255,255,0.12)" />
-      {/* Download arrow emblem */}
       <circle cx="46" cy="42" r="8" fill="rgba(255,255,255,0.9)" />
       <path d="M46 38L46 45M46 45L43 42M46 45L49 42" stroke="#1E88E5" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      {/* Border */}
       <path d="M6 18C6 15.7909 7.79086 14 10 14H24L28 18H54C56.2091 18 58 19.7909 58 22V48C58 50.2091 56.2091 52 54 52H10C7.79086 52 6 50.2091 6 48V18Z" stroke="rgba(0,0,0,0.15)" strokeWidth="0.5" fill="none" />
       <defs>
         <linearGradient id="fd-gradient" x1="6" y1="14" x2="6" y2="52">
@@ -141,25 +150,17 @@ function FolderDownloadsIcon() {
   )
 }
 
-// Pictures folder icon (with landscape photo emblem)
 function FolderPicturesIcon() {
   return (
     <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-      {/* Folder back */}
       <path d="M6 18C6 15.7909 7.79086 14 10 14H24L28 18H54C56.2091 18 58 19.7909 58 22V48C58 50.2091 56.2091 52 54 52H10C7.79086 52 6 50.2091 6 48V18Z" fill="url(#fp-gradient)" />
-      {/* Folder front tab */}
       <path d="M6 18C6 15.7909 7.79086 14 10 14H24L28 18H10C7.79086 18 6 19.7909 6 22V18Z" fill="url(#fp-tab-gradient)" />
-      {/* Folder front face */}
       <path d="M6 22H58V48C58 50.2091 56.2091 52 54 52H10C7.79086 52 6 50.2091 6 48V22Z" fill="url(#fp-front-gradient)" />
-      {/* Shine overlay */}
       <path d="M6 22H58V28H6V22Z" fill="rgba(255,255,255,0.12)" />
-      {/* Photo emblem */}
       <rect x="36" y="34" width="18" height="14" rx="2" fill="rgba(255,255,255,0.9)" />
-      {/* Mini landscape */}
       <rect x="37.5" y="35.5" width="15" height="11" rx="1" fill="#81C784" />
       <path d="M37.5 43L42 39L45.5 42L48 40L52.5 43V46.5H37.5V43Z" fill="#4CAF50" />
       <circle cx="49" cy="38.5" r="1.5" fill="#FFD54F" />
-      {/* Border */}
       <path d="M6 18C6 15.7909 7.79086 14 10 14H24L28 18H54C56.2091 18 58 19.7909 58 22V48C58 50.2091 56.2091 52 54 52H10C7.79086 52 6 50.2091 6 48V18Z" stroke="rgba(0,0,0,0.15)" strokeWidth="0.5" fill="none" />
       <defs>
         <linearGradient id="fp-gradient" x1="6" y1="14" x2="6" y2="52">
@@ -193,20 +194,93 @@ function IconRenderer({ iconType }: { iconType: DesktopIcon['iconType'] }) {
   }
 }
 
+interface IconPosition {
+  x: number
+  y: number
+}
+
 export default function DesktopIcons() {
   const { openApp } = useMacOSStore()
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [draggingId, setDraggingId] = useState<string | null>(null)
+  const [positions, setPositions] = useState<Record<string, IconPosition>>(() => getDefaultPositions())
+  const didDragRef = useRef(false)
 
-  const handleDoubleClick = useCallback(
+  // Re-calculate positions on window resize
+  useEffect(() => {
+    const handleResize = () => {
+      setPositions(getDefaultPositions())
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  const handleIconMouseDown = useCallback(
+    (id: string, e: React.MouseEvent) => {
+      e.stopPropagation()
+      e.preventDefault()
+      setSelectedId(id)
+      didDragRef.current = false
+
+      const startPos = positions[id] ?? { x: 0, y: 0 }
+      let hasDragged = false
+
+      const startMouseX = e.clientX
+      const startMouseY = e.clientY
+      const iconStartX = startPos.x
+      const iconStartY = startPos.y
+
+      const handleMouseMove = (ev: MouseEvent) => {
+        const dx = ev.clientX - startMouseX
+        const dy = ev.clientY - startMouseY
+
+        // Only start dragging after moving 5px
+        if (!hasDragged && (Math.abs(dx) > 5 || Math.abs(dy) > 5)) {
+          hasDragged = true
+          didDragRef.current = true
+          setDraggingId(id)
+        }
+
+        if (hasDragged) {
+          const newX = iconStartX + dx
+          const newY = Math.max(MARGIN_TOP, iconStartY + dy)
+          setPositions(prev => ({
+            ...prev,
+            [id]: { x: newX, y: newY },
+          }))
+        }
+      }
+
+      const handleMouseUp = () => {
+        if (hasDragged) {
+          // Snap to grid on drop
+          setPositions(prev => {
+            const pos = prev[id]
+            if (!pos) return prev
+            const snapped = snapToGrid(pos.x, pos.y)
+            return {
+              ...prev,
+              [id]: snapped,
+            }
+          })
+        }
+        setDraggingId(null)
+        document.removeEventListener('mousemove', handleMouseMove)
+        document.removeEventListener('mouseup', handleMouseUp)
+      }
+
+      document.addEventListener('mousemove', handleMouseMove)
+      document.addEventListener('mouseup', handleMouseUp)
+    },
+    [positions]
+  )
+
+  const handleIconDoubleClick = useCallback(
     (appId: string) => {
       openApp(appId)
     },
     [openApp]
   )
-
-  const handleClick = useCallback((id: string) => {
-    setSelectedId(id)
-  }, [])
 
   const handleDesktopClick = useCallback(() => {
     setSelectedId(null)
@@ -214,48 +288,65 @@ export default function DesktopIcons() {
 
   return (
     <div
-      className="absolute top-[32px] right-[16px] flex flex-col items-end gap-[8px] z-10"
+      className="absolute inset-0 z-10"
       onClick={handleDesktopClick}
     >
       {DESKTOP_ICONS.map(icon => {
         const isSelected = selectedId === icon.id
+        const isDragging = draggingId === icon.id
+        const pos = positions[icon.id]
 
         return (
           <div
             key={icon.id}
-            className={`flex flex-col items-center justify-center w-[90px] py-2 cursor-default select-none transition-all duration-100 rounded-[6px] ${
-              isSelected ? 'bg-blue-500/35' : 'hover:bg-white/[0.06]'
+            className={`absolute flex flex-col items-center justify-center w-[96px] py-2.5 cursor-default select-none rounded-[8px] ${
+              isSelected && !isDragging ? 'bg-blue-500/30' : !isDragging ? 'hover:bg-white/[0.06]' : ''
             }`}
-            onClick={(e) => {
-              e.stopPropagation()
-              handleClick(icon.id)
+            style={{
+              left: pos?.x ?? 0,
+              top: pos?.y ?? MARGIN_TOP,
+              filter: isDragging
+                ? 'drop-shadow(0 8px 20px rgba(0,0,0,0.5))'
+                : undefined,
+              transform: isDragging ? 'scale(1.08)' : 'scale(1)',
+              transition: isDragging ? 'filter 0.05s, transform 0.05s' : 'filter 0.15s, transform 0.15s, background-color 0.1s',
+              zIndex: isDragging ? 50 : 10,
             }}
-            onDoubleClick={() => handleDoubleClick(icon.appId)}
+            onMouseDown={(e) => handleIconMouseDown(icon.id, e)}
+            onDoubleClick={(e) => {
+              e.stopPropagation()
+              if (!didDragRef.current) {
+                handleIconDoubleClick(icon.appId)
+              }
+            }}
           >
             {/* Icon container with shadow */}
             <div
-              className="relative mb-1"
+              className="relative mb-1 transition-transform duration-150"
               style={{
-                width: 52,
-                height: 52,
-                filter: isSelected
-                  ? 'drop-shadow(0 2px 6px rgba(59,130,246,0.3)) drop-shadow(0 1px 3px rgba(0,0,0,0.4))'
-                  : 'drop-shadow(0 2px 4px rgba(0,0,0,0.45))',
+                width: 58,
+                height: 58,
+                filter: isDragging
+                  ? 'drop-shadow(0 4px 12px rgba(0,0,0,0.6))'
+                  : isSelected
+                    ? 'drop-shadow(0 2px 6px rgba(59,130,246,0.3)) drop-shadow(0 1px 3px rgba(0,0,0,0.4))'
+                    : 'drop-shadow(0 2px 4px rgba(0,0,0,0.45))',
+                transform: isSelected && !isDragging ? 'scale(1.02)' : 'scale(1)',
               }}
             >
               <IconRenderer iconType={icon.iconType} />
             </div>
             {/* Label */}
             <span
-              className={`text-[11px] text-center leading-tight font-medium max-w-[100px] break-words px-1.5 py-[2px] rounded-sm ${
-                isSelected
-                  ? 'text-white bg-blue-500/40'
+              className={`text-[11px] text-center leading-tight font-medium max-w-[100px] break-words px-1.5 py-[2px] rounded-[4px] transition-colors duration-150 ${
+                isSelected && !isDragging
+                  ? 'text-white bg-blue-500/30'
                   : 'text-white/90'
               }`}
               style={{
                 textShadow: isSelected
-                  ? '0 0 4px rgba(59,130,246,0.5), 0 1px 3px rgba(0,0,0,0.9)'
-                  : '0 1px 3px rgba(0,0,0,0.9), 0 0px 2px rgba(0,0,0,0.6)',
+                  ? '0 0 4px rgba(59,130,246,0.5), 0 1px 3px rgba(0,0,0,0.9), 0 0px 8px rgba(59,130,246,0.3)'
+                  : '0 1px 3px rgba(0,0,0,0.9), 0 0px 2px rgba(0,0,0,0.6), 0 0px 6px rgba(0,0,0,0.4)',
               }}
             >
               {icon.name}
