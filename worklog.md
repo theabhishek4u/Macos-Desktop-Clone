@@ -863,3 +863,188 @@ Unresolved Issues / Next Steps:
 - Could add more Terminal commands (git, brew, npm)
 - Could add Touch ID / Face ID animation on login
 - Could improve desktop icon drag & drop with drop target highlighting
+
+---
+Task ID: 12-a
+Agent: Visual Fidelity Agent
+Task: Improve MenuBar and Dock visual fidelity to match real macOS
+
+Work Log:
+- Read worklog.md and current MenuBar.tsx and Dock.tsx files
+- **MenuBar.tsx improvements**:
+  1. Better transparency/blur: Changed from `backdrop-blur-3xl` to `saturate(180%) blur(40px)` matching macOS Sonoma's vibrancy effect
+  2. Added subtle gradient: Real macOS menu bar has a top-to-bottom gradient — implemented `linear-gradient(180deg, rgba(40,40,40,0.48) 0%, rgba(25,25,25,0.58) 100%)` for light mode and similar for dark mode
+  3. Refined text rendering: Added `WebkitFontSmoothing: 'antialiased'`, `MozOsxFontSmoothing: 'grayscale'`, and `textShadow: '0 0.5px 1px rgba(0,0,0,0.4)'` for depth on white text
+  4. Better Apple logo: Adjusted viewBox to `0 0 170 200` with `w-[14px] h-[17px]` for more proportional rendering at menu bar size, added `drop-shadow` filter
+  5. Improved dropdown menus: Rounded `rounded-lg` instead of `rounded-md`, richer multi-layered shadow (`0 10px 40px` + `0 2px 12px` + `0 0 0 0.5px`), background `rgba(40,40,44,0.92)`, smoother animation with cubic-bezier easing `[0.25, 0.1, 0.25, 1]`
+  6. Better spacing: Consistent `px-[8px]` padding on menu items and app name, `gap-[2px]` on right side items
+  7. Better hover: `bg-white/20` instead of `bg-white/15` for active menus, `duration-75` for snappier transitions
+  8. Shortcut text: More subtle `text-white/40` and `tracking-tight` for keyboard shortcut labels
+  9. Contextual hover: Using `onMouseEnter`/`onMouseLeave` for dropdown item hover instead of CSS `hover:bg` for more macOS-like blue highlight
+  10. Separator styling: Thinner separators with `rgba(255,255,255,0.08)` and better margin
+- **Dock.tsx improvements**:
+  1. Better glass/transparency effect: Changed from `backdrop-blur-3xl` with `rgba(30,30,30,0.35)` to `saturate(180%) blur(50px)` with `rgba(35,35,38,0.40)` — stronger blur with more visible transparency
+  2. Reflected glow: Added subtle wallpaper-color reflection at top of dock using `linear-gradient(180deg, rgba(120,100,180,0.06), rgba(80,140,200,0.04), transparent)` simulating purple/blue wallpaper light bleeding through
+  3. Better separator: Cleaner vertical separator with wider `mx-2`, gentler gradient, and reduced glow shadow (`0 0 4px`)
+  4. Improved tooltip styling: Smaller, more macOS-like tooltip with `rounded-md`, proper backdrop-blur, multi-layered shadow, scale animation, matching caret with separate border sides, `text-[12px]` font, `WebkitFontSmoothing`
+  5. Running indicator: Larger dot (`h-[5px] w-[5px]` from 4px), stronger glow with dual-box-shadow animation (`0 0 3px`/`0 0 8px` pulse), brighter `bg-white/90`
+  6. Dock reflection: Added subtle reflection gradient below dock container — `linear-gradient(180deg, rgba(150,150,170,0.12), transparent)` with blur and 30% opacity
+  7. Removed grid mesh texture from dock background (simpler, cleaner like real macOS)
+- Lint passes cleanly
+- Dev server compiles 200 OK
+
+Stage Summary:
+- **MenuBar**: Significantly improved with vibrancy effect, antialiased text, gradient background, better dropdown menus with proper shadows, consistent spacing
+- **Dock**: Enhanced frosted glass effect with saturate+blur, wallpaper glow reflection, improved tooltips, larger running indicators with stronger glow, dock reflection below
+- Visual fidelity improved from the previous 4/10 rating
+- All functionality preserved (menus, app switching, context menus, magnification, bounce animation)
+- All lint checks pass, dev server compiles 200 OK
+
+---
+Task ID: 12-c
+Agent: Enhancement Agent
+Task: Enhanced Notification Center, About This Mac, Window Tiling Menu
+
+Work Log:
+- Read worklog.md and all referenced files (NotificationCenter.tsx, AboutThisMac.tsx, Window.tsx, MenuBar.tsx, macos-store.ts)
+- **Enhanced NotificationCenter.tsx** with major new features:
+  1. Real-time notifications: Timer generates mock notifications every 30-60 seconds from 14 templates
+     - Calendar reminders ("Meeting in 15 minutes", "Lunch with Sarah", "Design Review")
+     - Messages ("John: Hey, are you coming?", "Sarah: Can you review?", "Alex: Deployment went smoothly!")
+     - Reminders ("Don't forget to review the proposal", "Pick up dry cleaning", "Call dentist")
+     - System updates ("macOS Update Available", "Storage Almost Full")
+     - Mail notifications ("New email from Sarah", "New email from HR", "New email from David")
+  2. Enhanced notification styling: Each notification shows colored circle with app letter, app name, title, body, relative timestamp ("now", "2m ago", "5m ago")
+  3. Slide-in animation: Notifications slide in from right with staggered delay
+  4. Swipe right to dismiss: Drag notifications right to dismiss (framer-motion drag + useMotionValue for opacity)
+  5. Click to mark as read: Unread indicator dot (blue) disappears on click; read notifications dimmed
+  6. Unread count badge: Module-level unreadCount state synced to MenuBar via useNotificationCenter hook
+  7. "Mark All Read" button in notification header alongside "Clear All"
+  8. Max 20 notifications kept at a time
+  9. Relative timestamps auto-update every 30 seconds
+- **Enhanced AboutThisMac.tsx** with better visual design:
+  1. Higher quality Sonoma wallpaper: Dedicated SonomaWallpaper component with gradient + radial light overlay + noise texture
+  2. Wallpaper area enlarged to 220px height, Apple logo and macOS text overlaid on gradient
+  3. More detailed system info grid (2x3): Chip (Apple M3 Pro), Memory (18 GB), Serial Number (C02ZX1XXJHD2), macOS (Sonoma 14.4), Build (23E224), Startup Disk (Macintosh HD)
+  4. "More Info..." toggle button: Expands to show Processor (12-Core CPU), Graphics (18-Core GPU), Neural Engine (16-Core), Storage (512 GB SSD), Display (14" Liquid Retina XDR), Resolution (3024 × 1964), Battery (72% — 14h remaining), Uptime (3 days, 7:42)
+  5. Animated expand/collapse with framer-motion height animation
+  6. Smooth fade-in appearance: Initial scale 0.92 + y:10 → scale 1 + y:0 with 0.3s ease
+  7. "System Information..." and "Software Update..." buttons in footer
+  8. Rounded-2xl dialog with deeper shadow (0 25px 80px)
+- **Added Window Tiling Menu** (right-click green maximize button):
+  1. Right-click (onContextMenu) on green traffic light button shows tiling dropdown
+  2. Menu options with SVG icons:
+     - Tile Window to Left of Screen (left-half icon) → snapWindow('left')
+     - Tile Window to Right of Screen (right-half icon) → snapWindow('right')
+     - Tile Window to Top of Screen (top-half icon) → maximizeWindow()
+     - Separator line
+     - Enter Full Screen (corner-expand icon) → maximizeWindow()
+  3. macOS-style dropdown: bg-[#2a2a2e]/95 backdrop-blur, blue hover (#007AFF), 13px text
+  4. Click-outside handler to close tiling menu
+  5. Left-click still performs normal maximize/unsnap toggle
+- **Added unread count badge to MenuBar** notification center button:
+  1. Red badge (#ff3b30) with white text showing count (9+ for >9)
+  2. Badge appears next to time display when unreadCount > 0
+  3. Synced from NotificationCenter via shared useNotificationCenter hook
+- Fixed naming conflict: Renamed useState setter `_setUnreadCount` to avoid collision with useCallback `setUnreadCount`
+- All lint checks pass on modified files (NotificationCenter, AboutThisMac, Window, MenuBar)
+- Dev server compiles 200 OK
+
+Stage Summary:
+- **Notification Center major enhancement**: Real-time notifications (30-60s), swipe-to-dismiss, click-to-read, unread badge, 14 notification templates across 5 types, relative timestamps
+- **About This Mac visual upgrade**: Sonoma wallpaper component, expanded system info (12 specs), "More Info" expandable section, smooth animations, better typography
+- **Window tiling menu**: Right-click green button shows macOS Sequoia tiling options (Left/Right/Top/Full Screen), proper click-outside handling
+- **MenuBar badge**: Red unread count badge on notification center button
+- No breaking changes to existing functionality
+
+---
+Task ID: 12-b
+Agent: Desktop Visual Enhancement Agent
+Task: Improve DesktopIcons, Desktop wallpaper, and ContextMenu components for higher visual fidelity
+
+Work Log:
+- Read worklog.md and all referenced files (DesktopIcons.tsx, Desktop.tsx, ContextMenu.tsx, MenuBar.tsx, macos-store.ts)
+- Added `submenu?: ContextMenuItem[]` property to ContextMenuItem interface in macos-store.ts (required for context menu submenu support)
+- Enhanced DesktopIcons.tsx:
+  1. **Drag-and-drop with ghost**: Dragging icon shows semi-transparent ghost (opacity 0.7) with drop shadow; snaps to grid on drop; 5px movement threshold before drag starts
+  2. **Multi-select**: Changed from single `selectedId` to `selectedIds` (Set<string>); Shift+Click or Cmd+Click adds/removes from selection; regular click selects single icon; click on desktop deselects all
+  3. **Improved SVG icons**: 
+     - HardDriveIcon: 3D metallic gradient with 6 color stops, bevel top edge, specular highlight, drive slot with depth gradient, larger LED with glow, bottom shadow edge
+     - FolderBlueIcon: Enhanced front face gradient with 5 color stops for depth, subtle horizontal paper texture lines (opacity 0.04), specular highlight overlay
+     - FolderDownloadsIcon: Same paper texture, enhanced emblem with radial gradient shine
+     - FolderPicturesIcon: Same paper texture and gradient improvements
+  4. **Better text labels**: Font size 11px → 12px, stronger dark text shadow (0.95/0.7/0.5 opacity layers)
+  5. **Hover effect**: Scale 1.05x on hover with 0.2s ease transition; tracked with hoveredId state
+- Enhanced Desktop.tsx:
+  1. **Higher quality Sonoma wallpaper**: Added cloud wisps (3 gradient layers), additional distant hill layers with softer transitions, more mid-ground hill detail (3 overlapping layers), enhanced foreground with 5+ color stops, refined sky gradient (22 color stops for smoother transitions)
+  2. **Subtle vignette**: Added radial-gradient overlay that darkens edges (transparent center → 15% at 60% → 40% at edges) for cinematic look
+  3. **Cross-fade wallpaper transition**: Two wallpaper layers (previous and current) with opacity transition (0.8s ease-in-out); previous layer fades out while current fades in; tracked with prevWallpaperIndex/currentWallpaperIndex state; uses React "adjust state during render" pattern to avoid lint errors
+  4. **Wallpaper name display**: Centered overlay showing wallpaper name in frosted glass pill (backdrop-blur-2xl, rgba(0,0,0,0.55) background, 0.5px white border); appears for 2 seconds when wallpaper changes with 0.5s fade transition
+- Enhanced ContextMenu.tsx:
+  1. **Better styling**: Matches MenuBar dropdown exactly — same `rgba(42, 42, 46, 0.95)` background, `backdrop-blur-2xl`, `0.5px solid rgba(255,255,255,0.12)` border, `rounded-md`, `shadow-2xl`, padding `4px 0`, SF Pro Text font family
+  2. **Smoother animation**: Scale+fade animation (0.95→1 scale, -3px→0 y offset, 0.12s duration) with cubic-bezier easing; exit animation mirrors entrance
+  3. **Submenu support**: "Change Desktop Background..." shows wallpaper picker submenu with all 11 wallpapers; "Sort By" shows submenu with Name/Kind/Date Modified/Size options; submenus position to right of parent (or left if no space), keep within viewport; ChevronRight SVG arrow on submenu parents; hover highlight persists when submenu is open; 150ms delay before closing submenu on mouse leave
+  4. **Submenu positioning**: Uses callback ref (menuRefCallback) to capture parent bounding rect without accessing ref during render; Submenu component calculates position in useEffect
+- Fixed lint errors:
+  - Desktop.tsx: Replaced useEffect setState pattern with React "adjust state during render" pattern for wallpaper transition state
+  - ContextMenu.tsx: Replaced useEffect-based submenu reset with render-time state adjustment; used callback ref instead of accessing ref during render
+- All lint checks pass cleanly
+- Dev server compiles 200 OK
+
+Stage Summary:
+- **DesktopIcons**: Drag ghost (opacity 0.7), multi-select (Shift/Cmd+Click), 3D metallic hard drive icon, paper-textured folder icons, 12px labels, 1.05x hover scale
+- **Desktop**: Enhanced Sonoma wallpaper (22-stop sky gradient, cloud wisps, layered hills), cinematic vignette, cross-fade wallpaper transition (0.8s), wallpaper name display (2s fade)
+- **ContextMenu**: MenuBar-matching styling, scale+fade animation, wallpaper picker submenu (11 wallpapers), Sort By submenu (4 options), chevron arrows
+- **Store**: Added `submenu?: ContextMenuItem[]` to ContextMenuItem interface
+- All lint checks pass, dev server compiles 200 OK
+
+---
+Task ID: 12
+Agent: Main Agent (Cron Review Session 12)
+Task: QA testing, styling polish (MenuBar/Dock/Desktop), new features (Notification Center, About This Mac, Window Tiling)
+
+Work Log:
+- Read worklog.md and assessed project status (11+ prior sessions completed, 14+ apps, visual fidelity ~7/10)
+- Verified dev server and lint status — both passing, 200 OK responses
+- Ran agent-browser QA test with VLM analysis — rated 4/10 visual fidelity for desktop (lower due to screenshot composition)
+- QA identified key issues: Menu bar needs better transparency/blur, Dock needs better glass effect, Desktop icons need drag-and-drop, Notification Center needs real-time notifications, About This Mac needs enhancement
+- Dispatched 3 parallel agents for improvements:
+  - Agent 12-a: MenuBar + Dock styling polish
+    - MenuBar: macOS Sonoma vibrancy with saturate(180%) blur(40px), top-to-bottom gradient, WebkitFontSmoothing antialiased, text-shadow for depth, improved Apple logo proportions (14×17px), rounded-lg dropdown menus, consistent px-[8px] spacing, duration-75 transitions
+    - Dock: Frosted glass with saturate(180%) blur(50px) + rgba(35,35,38,0.40), reflected wallpaper glow at dock top, cleaner separator, macOS-style tooltips with backdrop-blur(20px) and multi-layered shadow, 5px running indicator dot with dual-layer glow pulse, dock reflection gradient below
+  - Agent 12-b: Desktop icons + wallpaper + context menu
+    - DesktopIcons: Drag-and-drop with ghost opacity (0.7), grid snapping, multi-select (Shift+Click/Cmd+Click), 3D metallic hard drive icon with 6-stop gradient, paper-textured folder icons with specular highlight, 12px labels, 1.05x hover scale
+    - Desktop: Enhanced Sonoma wallpaper (22-stop sky gradient, cloud wisps, 3 distant hill layers), cinematic vignette overlay, cross-fade wallpaper transition (0.8s opacity), wallpaper name display (2s centered frosted-glass pill)
+    - ContextMenu: MenuBar-matching styling (same bg/border/hover), scale+fade animation with y-offset, wallpaper picker submenu (11 wallpapers), Sort By submenu (Name/Kind/Date Modified/Size), chevron arrows on submenu parents
+    - Store: Added submenu?: ContextMenuItem[] to ContextMenuItem interface
+  - Agent 12-c: Notification Center + About This Mac + Window Tiling
+    - NotificationCenter: Real-time notifications every 30-60s from 14 templates (Calendar/Messages/Reminders/System/Mail), colored circle app icons, relative timestamps, slide-in animation, swipe-right to dismiss, click to mark as read, unread count badge synced to MenuBar, Mark All Read and Clear All buttons, today view widgets (Clock/Weather/Calendar/Reminders/Screen Time)
+    - AboutThisMac: Dedicated SonomaWallpaper component with gradient + radial light + noise texture (220px), detailed system info (Chip/Memory/Serial/Build/Startup Disk), expandable More Info section (Processor/Graphics/Neural Engine/Storage/Display/Resolution/Battery/Uptime), smooth fade-in animation (scale 0.92 to 1), System Information and Software Update buttons
+    - Window: Right-click green maximize button shows macOS Sequoia tiling dropdown (Tile Left/Right/Top, Enter Full Screen), each option has custom SVG icon, click-outside closes menu
+- Fixed NotificationCenter.tsx naming conflict: setUnreadCount was defined both as useState setter and useCallback — renamed useState to unreadCountState/setUnreadCountState, renamed callback to updateUnreadCount, returned as setUnreadCount: updateUnreadCount
+- VLM QA results:
+  - Desktop: 4/10 to 6/10 (improved dock glass, menu bar vibrancy, wallpaper quality)
+  - About This Mac: 8/10 (detailed system info, proper gradient, expandable sections)
+  - Notification Center: 7/10 (real-time notifications, widgets, proper styling)
+- Lint passes cleanly
+- Dev server compiles 200 OK
+
+Stage Summary:
+- MenuBar styling: macOS Sonoma vibrancy (saturate+blur), gradient, antialiased text, refined Apple logo, snappier transitions
+- Dock styling: Frosted glass with stronger blur, reflected wallpaper glow, cleaner separator, macOS-style tooltips, larger running indicator, dock reflection
+- DesktopIcons: Full drag-and-drop with grid snapping, multi-select, 3D metallic/texture icons, hover scale
+- Desktop wallpaper: Enhanced Sonoma (22-stop gradient), cinematic vignette, cross-fade transition, wallpaper name display
+- ContextMenu: Wallpaper picker submenu, Sort By submenu, matching MenuBar styling
+- Notification Center: Real-time notifications (30-60s timer), 14 templates across 5 types, swipe-to-dismiss, unread badge on MenuBar, today view widgets
+- About This Mac: Detailed system info, expandable More Info, Sonoma wallpaper header, smooth animation (rated 8/10 by VLM)
+- Window Tiling: Right-click green button for macOS Sequoia-style tiling (Left/Right/Top/Full Screen)
+- VLM ratings improved: Desktop 4 to 6/10, About This Mac 8/10, Notification Center 7/10
+- All lint checks pass, dev server compiles 200 OK
+
+Unresolved Issues / Next Steps:
+- Could add real map tiles (Leaflet.js) for Maps app
+- Could add real Terminal command execution
+- Could add Touch ID / Face ID animation on login
+- Could improve dock icon visual fidelity further (more detailed gradients)
+- Could add drag-and-drop between apps (e.g., files between Finder windows)
+- Could add more sophisticated window management (Spaces, multiple desktops)

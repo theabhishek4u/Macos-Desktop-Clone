@@ -652,15 +652,30 @@ function DockIcon({
       <AnimatePresence>
         {showTooltip && (
           <motion.div
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 4 }}
-            transition={{ duration: 0.15 }}
-            className="absolute -top-11 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-lg border border-white/10 bg-gray-800/90 px-4 py-1.5 text-xs font-medium text-white shadow-lg backdrop-blur-md"
+            initial={{ opacity: 0, y: 4, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 4, scale: 0.96 }}
+            transition={{ duration: 0.12, ease: [0.25, 0.1, 0.25, 1] }}
+            className="absolute -top-9 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md px-3 py-[3px] text-[12px] font-medium text-white"
+            style={{
+              background: 'rgba(50, 50, 52, 0.88)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+              border: '0.5px solid rgba(255,255,255,0.15)',
+              boxShadow: '0 4px 16px rgba(0,0,0,0.35), 0 1px 4px rgba(0,0,0,0.2)',
+              WebkitFontSmoothing: 'antialiased',
+            }}
           >
             {name}
             {/* Caret/arrow pointing down to the icon */}
-            <div className="absolute -bottom-[5px] left-1/2 h-[10px] w-[10px] -translate-x-1/2 rotate-45 border-b border-r border-white/10 bg-gray-800/90" />
+            <div
+              className="absolute -bottom-[4px] left-1/2 h-[8px] w-[8px] -translate-x-1/2 rotate-45"
+              style={{
+                background: 'rgba(50, 50, 52, 0.88)',
+                borderRight: '0.5px solid rgba(255,255,255,0.15)',
+                borderBottom: '0.5px solid rgba(255,255,255,0.15)',
+              }}
+            />
           </motion.div>
         )}
       </AnimatePresence>
@@ -705,23 +720,23 @@ function DockIcon({
         <DockAppIcon appId={appId} size={currentSize * 0.85} />
       </motion.button>
 
-      {/* Running indicator dot with gentle glow pulse */}
+      {/* Running indicator dot with stronger glow */}
       {isRunning && !isTrash && (
         <motion.div
           initial={{ scale: 0 }}
           animate={{ 
             scale: 1,
             boxShadow: [
-              '0 0 2px rgba(255,255,255,0.4)',
-              '0 0 6px rgba(255,255,255,0.6)',
-              '0 0 2px rgba(255,255,255,0.4)',
+              '0 0 3px rgba(255,255,255,0.5), 0 0 8px rgba(255,255,255,0.25)',
+              '0 0 5px rgba(255,255,255,0.7), 0 0 12px rgba(255,255,255,0.35)',
+              '0 0 3px rgba(255,255,255,0.5), 0 0 8px rgba(255,255,255,0.25)',
             ]
           }}
           transition={{
             scale: { type: 'spring', stiffness: 400, damping: 25 },
             boxShadow: { duration: 2.5, repeat: Infinity, ease: 'easeInOut' },
           }}
-          className="mt-0.5 h-[4px] w-[4px] rounded-full bg-white/80"
+          className="mt-1 h-[5px] w-[5px] rounded-full bg-white/90"
         />
       )}
     </div>
@@ -908,42 +923,46 @@ export default function Dock() {
         ref={dockRef}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
-        className="relative flex items-end gap-1.5 overflow-visible rounded-[18px] px-4 pb-2.5 pt-2 shadow-2xl shadow-black/20 backdrop-blur-3xl"
+        className="relative flex items-end gap-1.5 overflow-visible rounded-[18px] px-4 pb-2.5 pt-2"
         style={{
-          background: 'rgba(30, 30, 30, 0.35)',
-          border: '0.5px solid rgba(255,255,255,0.15)',
+          background: 'rgba(35, 35, 38, 0.40)',
+          border: '0.5px solid rgba(255,255,255,0.18)',
+          backdropFilter: 'saturate(180%) blur(50px)',
+          WebkitBackdropFilter: 'saturate(180%) blur(50px)',
           boxShadow:
-            'inset 0 1px 0 rgba(255,255,255,0.25), 0 8px 32px rgba(0,0,0,0.35), 0 2px 8px rgba(0,0,0,0.2)',
-          backgroundImage: `
-            linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px)
-          `,
-          backgroundSize: '12px 12px',
+            'inset 0 1px 0 rgba(255,255,255,0.2), 0 10px 40px rgba(0,0,0,0.4), 0 2px 10px rgba(0,0,0,0.25)',
         }}
         initial={{ y: 80, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ type: 'spring', stiffness: 200, damping: 22, delay: 0.3 }}
       >
-        {/* Subtle top highlight/reflection shine */}
+        {/* Top highlight/reflection shine */}
         <div
           className="pointer-events-none absolute inset-x-0 top-0 h-[1px]"
           style={{
             background:
-              'linear-gradient(90deg, transparent, rgba(255,255,255,0.35) 15%, rgba(255,255,255,0.55) 50%, rgba(255,255,255,0.35) 85%, transparent)',
+              'linear-gradient(90deg, transparent, rgba(255,255,255,0.4) 15%, rgba(255,255,255,0.6) 50%, rgba(255,255,255,0.4) 85%, transparent)',
           }}
         />
-        {/* Subtle gradient reflection below the highlight line */}
+        {/* Reflected wallpaper glow at the top of dock */}
+        <div
+          className="pointer-events-none absolute inset-x-0 top-0 h-8 rounded-t-[18px]"
+          style={{
+            background: 'linear-gradient(180deg, rgba(120,100,180,0.06) 0%, rgba(80,140,200,0.04) 40%, transparent 100%)',
+          }}
+        />
+        {/* Gradient reflection below the highlight line */}
         <div
           className="pointer-events-none absolute inset-x-0 top-[1px] h-6"
           style={{
-            background: 'linear-gradient(180deg, rgba(255,255,255,0.08), transparent)',
+            background: 'linear-gradient(180deg, rgba(255,255,255,0.06), transparent)',
           }}
         />
-        {/* Bottom reflection/shine gradient */}
+        {/* Bottom subtle glow */}
         <div
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-5 rounded-b-[18px]"
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-4 rounded-b-[18px]"
           style={{
-            background: 'linear-gradient(180deg, transparent, rgba(255,255,255,0.06))',
+            background: 'linear-gradient(180deg, transparent, rgba(255,255,255,0.04))',
           }}
         />
 
@@ -959,10 +978,10 @@ export default function Dock() {
               {/* Separator before Trash */}
               {isTrash && (
                 <div
-                  className="mx-1.5 h-10 w-[1px] self-center"
+                  className="mx-2 h-10 w-[1px] self-center"
                   style={{
-                    background: 'linear-gradient(180deg, transparent, rgba(255,255,255,0.25) 20%, rgba(255,255,255,0.25) 80%, transparent)',
-                    boxShadow: '0 0 6px rgba(255,255,255,0.08), 0 0 2px rgba(255,255,255,0.15)',
+                    background: 'linear-gradient(180deg, transparent, rgba(255,255,255,0.2) 15%, rgba(255,255,255,0.22) 50%, rgba(255,255,255,0.2) 85%, transparent)',
+                    boxShadow: '0 0 4px rgba(255,255,255,0.06)',
                   }}
                 />
               )}
@@ -986,6 +1005,16 @@ export default function Dock() {
           )
         })}
       </motion.div>
+
+      {/* Dock reflection — subtle mirror effect below dock */}
+      <div
+        className="pointer-events-none mx-auto mt-0 h-8 rounded-b-[18px] opacity-30"
+        style={{
+          width: '80%',
+          background: 'linear-gradient(180deg, rgba(150,150,170,0.12) 0%, rgba(120,120,150,0.06) 40%, transparent 100%)',
+          filter: 'blur(2px)',
+        }}
+      />
 
       {/* Right-click context menu */}
       <AnimatePresence>

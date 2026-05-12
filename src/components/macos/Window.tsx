@@ -62,6 +62,8 @@ export default function Window({ windowId, children }: WindowProps) {
   const [isResizing, setIsResizing] = useState(false)
   const [snapPreview, setSnapPreview] = useState<SnapPreview>(null)
   const [showResizeIndicator, setShowResizeIndicator] = useState(false)
+  const [showTilingMenu, setShowTilingMenu] = useState(false)
+  const tilingMenuRef = useRef<HTMLDivElement>(null)
   const resizeIndicatorTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Use refs for drag/resize state to avoid re-renders during interaction
@@ -309,6 +311,23 @@ export default function Window({ windowId, children }: WindowProps) {
     }
   }, [])
 
+  // Close tiling menu on click outside
+  useEffect(() => {
+    if (!showTilingMenu) return
+    const handleClick = (e: MouseEvent) => {
+      if (tilingMenuRef.current && !tilingMenuRef.current.contains(e.target as Node)) {
+        setShowTilingMenu(false)
+      }
+    }
+    const timer = setTimeout(() => {
+      document.addEventListener('mousedown', handleClick)
+    }, 50)
+    return () => {
+      clearTimeout(timer)
+      document.removeEventListener('mousedown', handleClick)
+    }
+  }, [showTilingMenu])
+
   if (!windowState) return null
 
   const { id, title, x, y, width, height, isMinimized, isMaximized } = windowState
@@ -544,32 +563,114 @@ export default function Window({ windowId, children }: WindowProps) {
                     </svg>
                   </button>
 
-                  {/* Maximize (fullscreen icon) */}
-                  <button
-                    data-traffic-light
-                    className={`w-[13px] h-[13px] rounded-full flex items-center justify-center transition-all duration-150 ${
-                      isActive ? 'bg-[#28c840]' : ''
-                    } ${trafficHover && isActive ? 'hover:brightness-90' : ''}`}
-                    style={!isActive ? { background: inactiveMaxColor, boxShadow: isLightWindow ? 'inset 0 0 0 0.5px rgba(0,0,0,0.12), inset 0 1px 2px rgba(0,0,0,0.06)' : 'inset 0 0 0 0.5px rgba(255,255,255,0.06), inset 0 1px 2px rgba(0,0,0,0.15)' } : undefined}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      if (windowState.snapPosition) {
-                        unsnapWindow(windowId)
-                      } else {
-                        maximizeWindow(windowId)
-                      }
-                    }}
-                  >
-                    <svg
-                      className="w-[8px] h-[8px] text-black/80 transition-opacity duration-150"
-                      style={{ opacity: trafficHover && isActive ? 1 : 0 }}
-                      viewBox="0 0 8 8"
-                      fill="none"
+                  {/* Maximize (fullscreen icon) — right-click shows tiling menu */}
+                  <div className="relative">
+                    <button
+                      data-traffic-light
+                      className={`w-[13px] h-[13px] rounded-full flex items-center justify-center transition-all duration-150 ${
+                        isActive ? 'bg-[#28c840]' : ''
+                      } ${trafficHover && isActive ? 'hover:brightness-90' : ''}`}
+                      style={!isActive ? { background: inactiveMaxColor, boxShadow: isLightWindow ? 'inset 0 0 0 0.5px rgba(0,0,0,0.12), inset 0 1px 2px rgba(0,0,0,0.06)' : 'inset 0 0 0 0.5px rgba(255,255,255,0.06), inset 0 1px 2px rgba(0,0,0,0.15)' } : undefined}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setShowTilingMenu(false)
+                        if (windowState.snapPosition) {
+                          unsnapWindow(windowId)
+                        } else {
+                          maximizeWindow(windowId)
+                        }
+                      }}
+                      onContextMenu={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        if (isActive) {
+                          setShowTilingMenu(prev => !prev)
+                        }
+                      }}
                     >
-                      <path d="M1 5.5L1 7L2.5 7M7 2.5L7 1L5.5 1" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round" />
-                      <path d="M7 7L4.5 4.5M1 1L3.5 3.5" stroke="currentColor" strokeWidth="0.7" strokeLinecap="round" />
-                    </svg>
-                  </button>
+                      <svg
+                        className="w-[8px] h-[8px] text-black/80 transition-opacity duration-150"
+                        style={{ opacity: trafficHover && isActive ? 1 : 0 }}
+                        viewBox="0 0 8 8"
+                        fill="none"
+                      >
+                        <path d="M1 5.5L1 7L2.5 7M7 2.5L7 1L5.5 1" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M7 7L4.5 4.5M1 1L3.5 3.5" stroke="currentColor" strokeWidth="0.7" strokeLinecap="round" />
+                      </svg>
+                    </button>
+
+                    {/* Tiling Menu (right-click on green button) */}
+                    <AnimatePresence>
+                      {showTilingMenu && (
+                        <motion.div
+                          ref={tilingMenuRef}
+                          className="absolute top-[20px] left-[-8px] w-[220px] bg-[#2a2a2e]/95 backdrop-blur-2xl rounded-md shadow-2xl border border-white/[0.12] py-1 z-50 overflow-hidden"
+                          initial={{ opacity: 0, y: -4, scale: 0.98 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: -4, scale: 0.98 }}
+                          transition={{ duration: 0.15, ease: 'easeOut' }}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <button
+                            className="w-full text-left px-3 py-[4px] text-[13px] text-white/90 hover:bg-[#007AFF] hover:text-white rounded-[4px] mx-1 flex items-center gap-2 transition-colors duration-75"
+                            style={{ width: 'calc(100% - 8px)' }}
+                            onClick={() => {
+                              snapWindow(windowId, 'left')
+                              setShowTilingMenu(false)
+                            }}
+                          >
+                            <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round">
+                              <rect x="1" y="1" width="6" height="14" rx="1" />
+                              <rect x="9" y="1" width="6" height="14" rx="1" strokeOpacity="0.3" />
+                            </svg>
+                            Tile Window to Left of Screen
+                          </button>
+                          <button
+                            className="w-full text-left px-3 py-[4px] text-[13px] text-white/90 hover:bg-[#007AFF] hover:text-white rounded-[4px] mx-1 flex items-center gap-2 transition-colors duration-75"
+                            style={{ width: 'calc(100% - 8px)' }}
+                            onClick={() => {
+                              snapWindow(windowId, 'right')
+                              setShowTilingMenu(false)
+                            }}
+                          >
+                            <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round">
+                              <rect x="1" y="1" width="6" height="14" rx="1" strokeOpacity="0.3" />
+                              <rect x="9" y="1" width="6" height="14" rx="1" />
+                            </svg>
+                            Tile Window to Right of Screen
+                          </button>
+                          <button
+                            className="w-full text-left px-3 py-[4px] text-[13px] text-white/90 hover:bg-[#007AFF] hover:text-white rounded-[4px] mx-1 flex items-center gap-2 transition-colors duration-75"
+                            style={{ width: 'calc(100% - 8px)' }}
+                            onClick={() => {
+                              maximizeWindow(windowId)
+                              setShowTilingMenu(false)
+                            }}
+                          >
+                            <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round">
+                              <rect x="1" y="1" width="14" height="6" rx="1" />
+                              <rect x="1" y="9" width="14" height="6" rx="1" strokeOpacity="0.3" />
+                            </svg>
+                            Tile Window to Top of Screen
+                          </button>
+                          <div className="h-px bg-white/10 mx-2 my-1" />
+                          <button
+                            className="w-full text-left px-3 py-[4px] text-[13px] text-white/90 hover:bg-[#007AFF] hover:text-white rounded-[4px] mx-1 flex items-center gap-2 transition-colors duration-75"
+                            style={{ width: 'calc(100% - 8px)' }}
+                            onClick={() => {
+                              maximizeWindow(windowId)
+                              setShowTilingMenu(false)
+                            }}
+                          >
+                            <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M3 1L1 1L1 3M13 1L15 1L15 3M3 15L1 15L1 13M13 15L15 15L15 13" />
+                            </svg>
+                            Enter Full Screen
+                          </button>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
                 </div>
 
                 {/* Window Title */}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, type CSSProperties } from 'react'
+import { useState, useCallback, useEffect, useRef, type CSSProperties } from 'react'
 import useMacOSStore, { ContextMenuItem } from '@/store/macos-store'
 import useDarkModeStore from '@/store/dark-mode-store'
 
@@ -11,35 +11,40 @@ export interface Wallpaper {
 }
 
 const WALLPAPERS: Wallpaper[] = [
-  // 1. Sonoma — Rolling hills in warm orange/golden tones (MAJOR IMPROVEMENT)
+  // 1. Sonoma — Rolling hills in warm orange/golden tones (ENHANCED)
   {
     name: 'Sonoma',
     style: {
       background: [
-        // Sun/light source glow in upper area
-        'radial-gradient(ellipse 60% 35% at 50% 18%, rgba(255,200,100,0.35) 0%, rgba(255,160,60,0.15) 40%, transparent 70%)',
-        // Upper atmospheric haze
-        'radial-gradient(ellipse 120% 25% at 50% 30%, rgba(200,140,80,0.15) 0%, transparent 70%)',
-        // Distant hills (lighter, haze-covered)
-        'radial-gradient(ellipse 130% 15% at 40% 52%, rgba(180,130,80,0.5) 0%, rgba(160,110,60,0.3) 60%, transparent 100%)',
-        'radial-gradient(ellipse 120% 12% at 65% 54%, rgba(170,120,70,0.4) 0%, rgba(150,100,55,0.2) 60%, transparent 100%)',
-        // Mid-ground hills (richer color)
-        'radial-gradient(ellipse 120% 18% at 30% 62%, #d4a24e 0%, #c49040 40%, #a87832 70%, transparent 100%)',
-        'radial-gradient(ellipse 100% 20% at 75% 65%, #cc9540 0%, #b88230 40%, #9a6a28 70%, transparent 100%)',
+        // Sun/light source glow in upper area — multiple layers for soft falloff
+        'radial-gradient(ellipse 50% 28% at 50% 18%, rgba(255,210,120,0.45) 0%, rgba(255,180,80,0.2) 35%, rgba(255,140,40,0.08) 60%, transparent 80%)',
+        // Upper atmospheric haze — warm light scattering
+        'radial-gradient(ellipse 100% 22% at 50% 28%, rgba(220,160,90,0.18) 0%, rgba(200,140,70,0.08) 50%, transparent 80%)',
+        // Cloud wisps catching light
+        'radial-gradient(ellipse 35% 3% at 30% 20%, rgba(255,200,140,0.15) 0%, transparent 80%)',
+        'radial-gradient(ellipse 25% 2.5% at 65% 24%, rgba(255,190,120,0.12) 0%, transparent 80%)',
+        // Distant hills (lighter, haze-covered) — multiple overlapping for natural shapes
+        'radial-gradient(ellipse 130% 14% at 35% 51%, rgba(195,145,85,0.55) 0%, rgba(175,125,70,0.35) 50%, rgba(160,110,60,0.15) 80%, transparent 100%)',
+        'radial-gradient(ellipse 110% 11% at 60% 53%, rgba(185,135,78,0.45) 0%, rgba(165,115,65,0.25) 55%, transparent 85%)',
+        'radial-gradient(ellipse 90% 10% at 80% 55%, rgba(175,125,72,0.35) 0%, rgba(155,105,58,0.18) 50%, transparent 80%)',
+        // Mid-ground hills (richer, more saturated color)
+        'radial-gradient(ellipse 115% 17% at 28% 62%, #d8a850 0%, #c89842 25%, #b08535 50%, #9a7228 75%, transparent 100%)',
+        'radial-gradient(ellipse 95% 18% at 72% 64%, #d09848 0%, #c08a3a 25%, #a87830 50%, #906525 75%, transparent 100%)',
+        'radial-gradient(ellipse 70% 12% at 50% 66%, rgba(200,150,70,0.3) 0%, transparent 70%)',
         // Foreground rolling hills (darkest, most saturated)
-        'radial-gradient(ellipse 140% 25% at 45% 85%, #b8822a 0%, #9a6a20 30%, #7a5518 60%, transparent 100%)',
-        'radial-gradient(ellipse 100% 20% at 25% 90%, #a87428 0%, #8a5e1c 40%, transparent 80%)',
-        'radial-gradient(ellipse 110% 18% at 80% 92%, #b07828 0%, #8e6218 40%, transparent 80%)',
-        // Very foreground grass/land strip
-        'radial-gradient(ellipse 150% 15% at 50% 100%, #5a3a10 0%, #4a2e0a 50%, transparent 100%)',
-        // Sky gradient — deep purple at top transitioning through warm sunset tones
-        'linear-gradient(180deg, #0d0520 0%, #1a0a30 6%, #2d1048 12%, #4a1a5a 18%, #7a2a50 24%, #a83838 32%, #cc5a28 40%, #d47828 48%, #d4a24e 55%, #e8c86e 62%, #e0b050 70%, #c49040 80%, #9a6a28 90%, #6a4518 100%)',
+        'radial-gradient(ellipse 140% 24% at 42% 84%, #be8530 0%, #a47022 20%, #8a5e1a 45%, #6a4812 70%, transparent 100%)',
+        'radial-gradient(ellipse 100% 18% at 22% 89%, #aa7828 0%, #8e6218 30%, #725010 55%, transparent 80%)',
+        'radial-gradient(ellipse 105% 16% at 78% 91%, #b47a28 0%, #966418 30%, #785010 55%, transparent 80%)',
+        // Very foreground — deepest green-brown
+        'radial-gradient(ellipse 150% 14% at 50% 100%, #5a3a10 0%, #48300a 40%, #3a2506 70%, transparent 100%)',
+        // Sky gradient — deeper, more nuanced color transitions
+        'linear-gradient(180deg, #0a0418 0%, #120828 4%, #1c0c38 8%, #2a1250 13%, #3c1a60 18%, #582458 23%, #7a3050 28%, #983842 33%, #b84830 38%, #d46020 43%, #e07828 47%, #e89438 51%, #e8ac50 55%, #e0b858 59%, #d0a048 64%, #b88838 70%, #9a7028 76%, #7a5818 82%, #5a4010 89%, #3a2a08 95%, #201808 100%)',
       ].join(', '),
     },
     overlayStyle: {
       // Atmospheric haze effect near the horizon
       background: [
-        'linear-gradient(180deg, transparent 0%, transparent 45%, rgba(210,170,100,0.06) 50%, rgba(210,170,100,0.03) 55%, transparent 60%)',
+        'linear-gradient(180deg, transparent 0%, transparent 44%, rgba(220,180,110,0.06) 48%, rgba(210,170,100,0.04) 52%, rgba(220,180,110,0.02) 56%, transparent 60%)',
       ].join(', '),
     },
   },
@@ -228,34 +233,122 @@ export default function Desktop({ children }: { children: React.ReactNode }) {
   // When dark mode is on, use the Dark Mode wallpaper (index 5) regardless of user selection
   const effectiveWallpaperIndex = isDarkMode ? 5 : wallpaperIndex
 
+  // Cross-fade state: track previous and current wallpaper layers
+  const [prevWallpaperIndex, setPrevWallpaperIndex] = useState(effectiveWallpaperIndex)
+  const [currentWallpaperIndex, setCurrentWallpaperIndex] = useState(effectiveWallpaperIndex)
+  const [isTransitioning, setIsTransitioning] = useState(false)
+  const transitionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Wallpaper name display
+  const [showWallpaperName, setShowWallpaperName] = useState(false)
+  const nameTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Adjust state during rendering (React recommended pattern for derived state)
+  // This avoids the lint error from calling setState inside useEffect
+  if (effectiveWallpaperIndex !== currentWallpaperIndex) {
+    setPrevWallpaperIndex(currentWallpaperIndex)
+    setCurrentWallpaperIndex(effectiveWallpaperIndex)
+    setIsTransitioning(true)
+    setShowWallpaperName(true)
+  }
+
+  // Handle transition timers in effect (side effects only)
+  useEffect(() => {
+    if (!isTransitioning) return
+
+    if (transitionTimerRef.current) clearTimeout(transitionTimerRef.current)
+    if (nameTimerRef.current) clearTimeout(nameTimerRef.current)
+
+    transitionTimerRef.current = setTimeout(() => {
+      setIsTransitioning(false)
+    }, 800)
+
+    nameTimerRef.current = setTimeout(() => {
+      setShowWallpaperName(false)
+    }, 2000)
+
+    return () => {
+      if (transitionTimerRef.current) clearTimeout(transitionTimerRef.current)
+      if (nameTimerRef.current) clearTimeout(nameTimerRef.current)
+    }
+  }, [isTransitioning])
+
   const handleContextMenu = useCallback((e: React.MouseEvent) => {
     e.preventDefault()
+
+    // Build wallpaper submenu items
+    const wallpaperItems: ContextMenuItem[] = WALLPAPERS.map((wp, idx) => ({
+      label: wp.name,
+      action: () => setWallpaperIndex(idx),
+    }))
+
+    // Build sort submenu items
+    const sortItems: ContextMenuItem[] = [
+      { label: 'Name' },
+      { label: 'Kind' },
+      { label: 'Date Modified' },
+      { label: 'Size' },
+    ]
+
     const items: ContextMenuItem[] = [
       { label: 'New Folder', shortcut: '⇧⌘N' },
       { label: 'Get Info', shortcut: '⌘I' },
       { separator: true, label: '' },
       {
-        label: 'Change Wallpaper',
-        action: () => setWallpaperIndex((wallpaperIndex + 1) % WALLPAPERS.length),
+        label: 'Change Desktop Background...',
+        submenu: wallpaperItems,
       },
       { separator: true, label: '' },
       { label: 'Use Stacks', disabled: true },
-      { label: 'Sort By', disabled: true },
+      {
+        label: 'Sort By',
+        submenu: sortItems,
+      },
       { label: 'Clean Up', disabled: true },
       { separator: true, label: '' },
       { label: 'Show View Options', shortcut: '⌘J' },
     ]
     setContextMenu({ x: e.clientX, y: e.clientY, items })
-  }, [setContextMenu, wallpaperIndex, setWallpaperIndex])
+  }, [setContextMenu, setWallpaperIndex])
 
-  const wallpaper = WALLPAPERS[effectiveWallpaperIndex]
+  const prevWallpaper = WALLPAPERS[prevWallpaperIndex]
+  const currentWallpaper = WALLPAPERS[currentWallpaperIndex]
 
   return (
     <div
       className={`fixed inset-0 overflow-hidden select-none ${isDarkMode ? 'dark-mode-active' : ''}`}
-      style={{ ...wallpaper.style, transition: 'background 0.8s ease-in-out' }}
       onContextMenu={handleContextMenu}
     >
+      {/* Previous wallpaper layer (fades out during transition) */}
+      <div
+        className="absolute inset-0"
+        style={{
+          ...prevWallpaper.style,
+          opacity: isTransitioning ? 0 : 1,
+          transition: 'opacity 0.8s ease-in-out',
+        }}
+      />
+
+      {/* Current wallpaper layer (fades in during transition) */}
+      <div
+        className="absolute inset-0"
+        style={{
+          ...currentWallpaper.style,
+          opacity: isTransitioning ? 1 : 1,
+          transition: 'opacity 0.8s ease-in-out',
+        }}
+      />
+
+      {/* Vignette overlay — darken edges for cinematic look */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: [
+            'radial-gradient(ellipse 75% 70% at 50% 50%, transparent 0%, rgba(0,0,0,0.15) 60%, rgba(0,0,0,0.4) 100%)',
+          ].join(', '),
+        }}
+      />
+
       {/* Noise texture overlay for realism */}
       <div
         className="absolute inset-0 pointer-events-none animate-wallpaper-breathe"
@@ -276,10 +369,10 @@ export default function Desktop({ children }: { children: React.ReactNode }) {
         }}
       />
       {/* Wallpaper-specific overlay (haze, atmospheric effects) */}
-      {wallpaper.overlayStyle && (
+      {currentWallpaper.overlayStyle && (
         <div
           className="absolute inset-0 pointer-events-none"
-          style={wallpaper.overlayStyle}
+          style={currentWallpaper.overlayStyle}
         />
       )}
       {/* Slow breathing gradient overlay */}
@@ -289,6 +382,33 @@ export default function Desktop({ children }: { children: React.ReactNode }) {
           background: 'radial-gradient(ellipse 70% 50% at 50% 50%, rgba(255,255,255,0.02) 0%, transparent 70%)',
         }}
       />
+
+      {/* Wallpaper name display — fades in/out */}
+      <div
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-50"
+        style={{
+          opacity: showWallpaperName ? 1 : 0,
+          transition: 'opacity 0.5s ease-in-out',
+        }}
+      >
+        <div
+          className="px-6 py-3 rounded-xl backdrop-blur-2xl"
+          style={{
+            background: 'rgba(0,0,0,0.55)',
+            border: '0.5px solid rgba(255,255,255,0.12)',
+          }}
+        >
+          <span
+            className="text-white/90 text-lg font-medium tracking-wide"
+            style={{
+              font: "500 17px -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif",
+            }}
+          >
+            {currentWallpaper.name}
+          </span>
+        </div>
+      </div>
+
       {children}
     </div>
   )

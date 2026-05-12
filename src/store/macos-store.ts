@@ -193,6 +193,7 @@ export interface ContextMenuItem {
   separator?: boolean
   disabled?: boolean
   shortcut?: string
+  submenu?: ContextMenuItem[]
 }
 
 let windowCounter = 0

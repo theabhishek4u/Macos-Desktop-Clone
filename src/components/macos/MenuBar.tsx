@@ -531,33 +531,54 @@ function MacOSWifiIcon() {
 function MenuDropdown({ items, onAction }: { items: MenuItem[]; onAction: (item: MenuItem) => void }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: -4, scale: 0.98 }}
+      initial={{ opacity: 0, y: -2, scale: 0.99 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: -4, scale: 0.98 }}
-      transition={{ duration: 0.15, ease: 'easeOut' }}
-      className="absolute top-[25px] left-0 w-[240px] bg-[#2a2a2e]/95 backdrop-blur-2xl rounded-md shadow-2xl border border-white/[0.12] py-1 overflow-hidden"
+      exit={{ opacity: 0, y: -2, scale: 0.99 }}
+      transition={{ duration: 0.12, ease: [0.25, 0.1, 0.25, 1] }}
+      className="absolute top-[25px] left-0 w-[240px] backdrop-blur-2xl rounded-lg shadow-2xl py-[5px] overflow-hidden"
+      style={{
+        background: 'rgba(40, 40, 44, 0.92)',
+        border: '0.5px solid rgba(255,255,255,0.15)',
+        boxShadow: [
+          '0 10px 40px rgba(0,0,0,0.45)',
+          '0 2px 12px rgba(0,0,0,0.3)',
+          '0 0 0 0.5px rgba(255,255,255,0.1)',
+        ].join(', '),
+      }}
     >
       {items.map((item, idx) => {
         if (item.separator) {
           return (
             <div
               key={`sep-${idx}`}
-              className="h-px bg-white/10 mx-2 my-1"
+              className="h-px mx-3 my-[5px]"
+              style={{ background: 'rgba(255,255,255,0.08)' }}
             />
           )
         }
         return (
           <button
             key={item.label}
-            className={`w-full text-left px-3 py-[3px] text-[13px] text-white/90 hover:bg-[#0060df] hover:text-white rounded-[4px] mx-1 flex items-center justify-between transition-colors duration-75 ${
-              item.disabled ? 'opacity-40 pointer-events-none' : ''
+            className={`w-full text-left px-[10px] py-[3px] text-[13px] text-white/90 hover:text-white rounded-[4px] mx-[4px] flex items-center justify-between transition-colors duration-75 ${
+              item.disabled ? 'opacity-35 pointer-events-none' : ''
             }`}
-            style={{ width: 'calc(100% - 8px)' }}
+            style={{
+              width: 'calc(100% - 8px)',
+              WebkitFontSmoothing: 'antialiased',
+            }}
             onClick={() => onAction(item)}
+            onMouseEnter={(e) => {
+              if (!item.disabled) {
+                e.currentTarget.style.background = 'rgba(0, 100, 230, 0.85)'
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'transparent'
+            }}
           >
             <span>{item.label}</span>
             {item.shortcut && (
-              <span className="text-white/50 text-[12px] ml-4">
+              <span className="text-white/40 text-[12px] ml-4 tracking-tight" style={{ font: "12px -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif" }}>
                 {item.shortcut}
               </span>
             )}
@@ -575,6 +596,7 @@ export default function MenuBar() {
   const aboutThisMac = useAboutThisMac()
   const controlCenter = useControlCenter()
   const notificationCenter = useNotificationCenter()
+  const { unreadCount } = notificationCenter
   const [currentTime, setCurrentTime] = useState<Date>(new Date())
   const [appleMenuOpen, setAppleMenuOpen] = useState(false)
   const [openMenu, setOpenMenu] = useState<string | null>(null)
@@ -647,23 +669,29 @@ export default function MenuBar() {
 
   return (
     <div
-      className={`fixed top-0 left-0 right-0 h-[25px] backdrop-blur-3xl text-white/90 z-[9999] flex items-center justify-between px-2 select-none ${
-        isDarkMode ? 'bg-black/70' : 'bg-black/40'
-      }`}
+      className={`fixed top-0 left-0 right-0 h-[25px] text-white/90 z-[9999] flex items-center justify-between px-2 select-none`}
       style={{
         font: "13px -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif",
         fontWeight: 500,
-        borderBottom: '0.5px solid rgba(255,255,255,0.1)',
+        WebkitFontSmoothing: 'antialiased',
+        MozOsxFontSmoothing: 'grayscale',
+        backdropFilter: 'saturate(180%) blur(40px)',
+        WebkitBackdropFilter: 'saturate(180%) blur(40px)',
+        background: isDarkMode
+          ? 'linear-gradient(180deg, rgba(30,30,30,0.78) 0%, rgba(20,20,20,0.85) 100%)'
+          : 'linear-gradient(180deg, rgba(40,40,40,0.48) 0%, rgba(25,25,25,0.58) 100%)',
+        borderBottom: '0.5px solid rgba(255,255,255,0.12)',
+        textShadow: '0 0.5px 1px rgba(0,0,0,0.4)',
       }}
       ref={menuBarRef}
     >
       {/* Left side */}
-      <div className="flex items-center gap-0">
+      <div className="flex items-center" style={{ gap: '0px' }}>
         {/* Apple logo + dropdown */}
         <div className="relative">
           <button
-            className={`px-2 h-[25px] flex items-center rounded transition-colors text-[16px] leading-none ${
-              appleMenuOpen ? 'bg-white/15' : 'hover:bg-white/10'
+            className={`px-2 h-[25px] flex items-center rounded transition-colors duration-75 text-[16px] leading-none ${
+              appleMenuOpen ? 'bg-white/20' : 'hover:bg-white/10'
             }`}
             onClick={() => {
               setOpenMenu(null)
@@ -672,9 +700,10 @@ export default function MenuBar() {
             aria-label="Apple Menu"
           >
             <svg
-              className="w-[18px] h-[18px]"
-              viewBox="0 0 170 170"
+              className="w-[14px] h-[17px]"
+              viewBox="0 0 170 200"
               fill="currentColor"
+              style={{ filter: 'drop-shadow(0 0.5px 0.5px rgba(0,0,0,0.3))' }}
             >
               <path d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.2-2.12-9.97-3.17-14.34-3.17-4.58 0-9.49 1.05-14.75 3.17-5.28 2.13-9.54 3.24-12.8 3.35-4.93.21-9.84-1.96-14.75-6.52-3.13-2.73-7.05-7.41-11.75-14.04-5.03-7.08-9.17-15.29-12.41-24.65-3.47-10.11-5.21-19.9-5.21-29.38 0-10.86 2.35-20.22 7.04-28.04 3.69-6.27 8.6-11.23 14.76-14.88 6.15-3.65 12.8-5.51 19.97-5.63 3.92 0 9.06 1.21 15.43 3.6 6.36 2.4 10.44 3.62 12.24 3.62 1.34 0 5.87-1.43 13.56-4.28 7.27-2.64 13.41-3.74 18.44-3.32 13.63 1.1 23.87 6.47 30.68 16.15-12.2 7.39-18.22 17.73-18.1 31 0.12 10.33 3.86 18.93 11.19 25.77 3.33 3.17 7.05 5.62 11.18 7.37-.9 2.6-1.84 5.09-2.85 7.47zM119.1 7.01c0 8.1-2.96 15.67-8.86 22.67-7.12 8.32-15.73 13.13-25.07 12.37a25.2 25.2 0 0 1-.19-3.07c0-7.78 3.39-16.1 9.4-22.9 3-3.44 6.82-6.31 11.45-8.6 4.62-2.26 8.99-3.51 13.1-3.75.13 1.11.17 2.22.17 3.28z" />
             </svg>
@@ -688,7 +717,7 @@ export default function MenuBar() {
         </div>
 
         {/* Active app name */}
-        <span className="font-bold px-2 h-[25px] flex items-center" style={{ font: "bold 13px -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif" }}>
+        <span className="font-bold px-[8px] h-[25px] flex items-center" style={{ font: "bold 13px -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif" }}>
           {activeAppName}
         </span>
 
@@ -696,8 +725,8 @@ export default function MenuBar() {
         {currentMenus.map(section => (
           <div key={section.name} className="relative">
             <button
-              className={`px-2 h-[25px] flex items-center rounded transition-colors ${
-                openMenu === section.name ? 'bg-white/15' : 'hover:bg-white/10'
+              className={`px-[8px] h-[25px] flex items-center rounded transition-colors duration-75 ${
+                openMenu === section.name ? 'bg-white/20' : 'hover:bg-white/10'
               }`}
               onClick={() => handleMenuToggle(section.name)}
               onMouseEnter={() => {
@@ -721,45 +750,51 @@ export default function MenuBar() {
       </div>
 
       {/* Right side */}
-      <div className="flex items-center gap-0">
-        <div className="flex items-center gap-1 hover:bg-white/10 rounded px-1.5 py-0.5 transition-colors cursor-default">
+      <div className="flex items-center gap-[2px]">
+        <div className="flex items-center gap-1 hover:bg-white/10 rounded px-1.5 py-0.5 transition-colors duration-75 cursor-default">
           <BatteryIconWithLevel />
         </div>
-        <div className="w-px h-3 bg-white/15 mx-1" />
-        <div className="flex items-center gap-1.5 hover:bg-white/10 rounded px-1.5 py-0.5 transition-colors cursor-default">
+        <div className="w-px h-3 bg-white/10 mx-0.5" />
+        <div className="flex items-center gap-1.5 hover:bg-white/10 rounded px-1.5 py-0.5 transition-colors duration-75 cursor-default">
           <MacOSWifiIcon />
-          <Bluetooth className="h-[12px] w-[12px] opacity-80" />
+          <Bluetooth className="h-[12px] w-[12px] opacity-70" />
         </div>
-        <div className="w-px h-3 bg-white/15 mx-1" />
-        <div className="flex items-center hover:bg-white/10 rounded px-1.5 py-0.5 transition-colors">
-          <Search className="h-[13px] w-[13px] opacity-70 cursor-pointer hover:opacity-100 transition-opacity" onClick={toggleSpotlight} />
+        <div className="w-px h-3 bg-white/10 mx-0.5" />
+        <div className="flex items-center hover:bg-white/10 rounded px-1.5 py-0.5 transition-colors duration-75">
+          <Search className="h-[13px] w-[13px] opacity-60 cursor-pointer hover:opacity-100 transition-opacity duration-75" onClick={toggleSpotlight} />
         </div>
         {/* Control Center - pill-shaped icon matching macOS */}
         <button
-          className="flex items-center gap-[3px] rounded-md px-1.5 py-[2px] hover:bg-white/15 transition-colors cursor-pointer"
+          className="flex items-center gap-[3px] rounded-md px-1.5 py-[2px] hover:bg-white/15 transition-colors duration-75 cursor-pointer"
           onClick={controlCenter.toggle}
           aria-label="Control Center"
         >
           <div className="flex gap-[2px] items-end">
-            <div className="w-[2.5px] h-[3px] bg-white/60 rounded-[0.5px]" />
-            <div className="w-[2.5px] h-[5px] bg-white/60 rounded-[0.5px]" />
-            <div className="w-[2.5px] h-[7px] bg-white/60 rounded-[0.5px]" />
-            <div className="w-[2.5px] h-[9px] bg-white/60 rounded-[0.5px]" />
+            <div className="w-[2.5px] h-[3px] bg-white/55 rounded-[0.5px]" />
+            <div className="w-[2.5px] h-[5px] bg-white/55 rounded-[0.5px]" />
+            <div className="w-[2.5px] h-[7px] bg-white/55 rounded-[0.5px]" />
+            <div className="w-[2.5px] h-[9px] bg-white/55 rounded-[0.5px]" />
           </div>
           <div className="flex gap-[2px] items-start">
-            <div className="w-[2.5px] h-[3px] bg-white/60 rounded-[0.5px]" />
-            <div className="w-[2.5px] h-[5px] bg-white/60 rounded-[0.5px]" />
+            <div className="w-[2.5px] h-[3px] bg-white/55 rounded-[0.5px]" />
+            <div className="w-[2.5px] h-[5px] bg-white/55 rounded-[0.5px]" />
           </div>
         </button>
         {/* Date and Time */}
         <button
-          className="tracking-tight whitespace-nowrap hover:bg-white/10 px-1.5 py-0.5 rounded transition-colors cursor-pointer flex items-center gap-1.5"
+          className="tracking-tight whitespace-nowrap hover:bg-white/10 px-1.5 py-0.5 rounded transition-colors duration-75 cursor-pointer flex items-center gap-1.5 relative"
           onClick={notificationCenter.toggle}
           aria-label="Notification Center"
-          style={{ font: "13px -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif", fontWeight: 500 }}
+          style={{ font: "13px -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif", fontWeight: 500, WebkitFontSmoothing: 'antialiased' }}
         >
-          <span className="text-white/60">{formatDateShort(currentTime)}</span>
+          <span className="text-white/55">{formatDateShort(currentTime)}</span>
           <span>{formatTimeOnly(currentTime)}</span>
+          {/* Unread notification badge */}
+          {unreadCount > 0 && (
+            <span className="ml-0.5 min-w-[14px] h-[14px] rounded-full bg-[#ff3b30] text-white text-[9px] font-bold flex items-center justify-center leading-none px-[3px]">
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          )}
         </button>
       </div>
     </div>
