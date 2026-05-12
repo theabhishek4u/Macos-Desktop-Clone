@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useCallback, useRef, useMemo } from 'react'
+import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react'
 import {
   ChevronLeft,
   ChevronRight,
@@ -328,8 +328,24 @@ export default function Finder() {
   const [renameValue, setRenameValue] = useState('')
   const [showInfoPanel, setShowInfoPanel] = useState(false)
   const [columnPreviewPath, setColumnPreviewPath] = useState<string[] | null>(null)
+  const [showQuickLook, setShowQuickLook] = useState(false)
 
   const { setContextMenu } = useMacOSStore()
+
+  // Space key for Quick Look
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === ' ' && selectedItem && !renamingItem) {
+        e.preventDefault()
+        setShowQuickLook(true)
+      }
+      if (e.key === 'Escape') {
+        setShowQuickLook(false)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [selectedItem, renamingItem])
 
   const isResizing = useRef(false)
   const startX = useRef(0)
@@ -549,6 +565,14 @@ export default function Finder() {
             }
           },
           shortcut: '⌘O',
+        },
+        {
+          label: 'Quick Look',
+          action: () => {
+            setSelectedItem(item.name)
+            setShowQuickLook(true)
+          },
+          shortcut: '␣',
         },
         { separator: true },
         {
@@ -971,9 +995,80 @@ export default function Finder() {
         </div>
       </div>
 
+      {/* ─── Quick Look Preview ──────────────────────────────────────── */}
+      {showQuickLook && selectedNode && (
+        <div
+          className="fixed inset-0 z-[10000] flex items-center justify-center"
+          onClick={() => setShowQuickLook(false)}
+        >
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+          <div
+            className="relative bg-white/95 backdrop-blur-xl rounded-xl shadow-2xl border border-gray-200/80 min-w-[320px] max-w-[400px] p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close button */}
+            <button
+              className="absolute top-3 right-3 w-6 h-6 rounded-full bg-gray-200/80 hover:bg-gray-300 flex items-center justify-center text-gray-500 hover:text-gray-700 transition-colors"
+              onClick={() => setShowQuickLook(false)}
+            >
+              <span className="text-xs">✕</span>
+            </button>
+
+            {/* Icon */}
+            <div className="flex justify-center mb-4">
+              <div className="transform scale-150">
+                {getFileIcon(selectedNode)}
+              </div>
+            </div>
+
+            {/* Name */}
+            <div className="text-center mb-4">
+              <h3 className="text-sm font-semibold text-gray-900">{selectedNode.name}</h3>
+            </div>
+
+            {/* Details */}
+            <div className="space-y-2 text-[11px] border-t border-gray-200 pt-3">
+              <div className="flex justify-between">
+                <span className="text-gray-400">Kind:</span>
+                <span className="text-gray-700">{getKindLabel(selectedNode)}</span>
+              </div>
+              {selectedNode.size && (
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Size:</span>
+                  <span className="text-gray-700">{selectedNode.size}</span>
+                </div>
+              )}
+              <div className="flex justify-between">
+                <span className="text-gray-400">Modified:</span>
+                <span className="text-gray-700">{selectedNode.dateModified || 'Today'}</span>
+              </div>
+              {selectedNode.type === 'folder' && selectedNode.children && (
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Contains:</span>
+                  <span className="text-gray-700">{selectedNode.children.length} item{selectedNode.children.length !== 1 ? 's' : ''}</span>
+                </div>
+              )}
+              <div className="flex justify-between">
+                <span className="text-gray-400">Location:</span>
+                <span className="text-gray-700">{currentPath.length > 0 ? currentPath.join(' > ') : 'Macintosh HD'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Created:</span>
+                <span className="text-gray-700">{selectedNode.dateModified || 'Today'}</span>
+              </div>
+            </div>
+
+            {/* Press Space to close hint */}
+            <div className="mt-4 text-center">
+              <span className="text-[10px] text-gray-400">Press Space or Escape to close</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ─── Info Panel ──────────────────────────────────────────────────── */}
       {showInfoPanel && selectedNode && (
-        <div className="w-[240px] shrink-0 border-l border-gray-200 bg-gray-50/80 overflow-y-auto">
+        <div className="w-[260px] shrink-0 border-l border-gray-200 bg-gray-50/80 overflow-y-auto">
           <div className="flex items-center justify-between p-3 border-b border-gray-200">
             <span className="text-xs font-semibold text-gray-600">Info</span>
             <button
@@ -1022,6 +1117,14 @@ export default function Finder() {
                 </div>
               )}
               <div className="flex justify-between">
+                <span className="text-gray-400">Location:</span>
+                <span className="text-gray-700 truncate ml-2">{currentPath.length > 0 ? currentPath.join(' > ') : 'Macintosh HD'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Created:</span>
+                <span className="text-gray-700">{selectedNode.dateModified || 'Today'}</span>
+              </div>
+              <div className="flex justify-between">
                 <span className="text-gray-400">Modified:</span>
                 <span className="text-gray-700">{selectedNode.dateModified || 'Today'}</span>
               </div>
@@ -1033,16 +1136,33 @@ export default function Finder() {
               )}
             </div>
           </div>
+          {/* Tags Section */}
           <div className="px-4 py-2 border-t border-gray-200">
-            <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Permissions</span>
+            <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Tags</span>
+            <div className="flex items-center gap-1.5 mt-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-red-500" />
+              <span className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+              <span className="w-2.5 h-2.5 rounded-full bg-green-500" />
+              <span className="w-2.5 h-2.5 rounded-full bg-yellow-500 opacity-30" />
+              <span className="w-2.5 h-2.5 rounded-full bg-purple-500 opacity-30" />
+              <button className="w-2.5 h-2.5 rounded-full border border-dashed border-gray-300 hover:border-gray-400 transition-colors" />
+            </div>
+          </div>
+          {/* Sharing & Permissions */}
+          <div className="px-4 py-2 border-t border-gray-200">
+            <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Sharing & Permissions</span>
             <div className="flex flex-col gap-1.5 mt-2 text-[11px]">
-              <div className="flex justify-between">
-                <span className="text-gray-400">Read:</span>
-                <span className="text-gray-700">Yes</span>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-500">user</span>
+                <span className="text-gray-700">Read & Write</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">Write:</span>
-                <span className="text-gray-700">Yes</span>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-500">staff</span>
+                <span className="text-gray-700">Read only</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-500">everyone</span>
+                <span className="text-gray-700">Read only</span>
               </div>
             </div>
           </div>

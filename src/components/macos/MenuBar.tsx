@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Wifi, Battery, Search, BatteryFull, BatteryMedium, BatteryLow, Bluetooth } from 'lucide-react'
+import { Search, Bluetooth } from 'lucide-react'
 import useMacOSStore, { APP_CONFIGS } from '@/store/macos-store'
 import useDarkModeStore from '@/store/dark-mode-store'
 import { useSpotlight } from '@/components/macos/Spotlight'
@@ -480,19 +480,50 @@ function formatDateShort(date: Date): string {
   return `${day} ${month} ${dayNum}`
 }
 
+// ─── Custom macOS-style Battery Icon ─────────────────────────────────────────
+
+function MacOSBatteryIcon({ level }: { level: number }) {
+  const isLow = level < 20
+  const fillColor = isLow ? '#ff3b30' : '#34c759'
+  const fillWidth = Math.max(1, Math.round((level / 100) * 17))
+
+  return (
+    <svg width="25" height="12" viewBox="0 0 25 12" fill="none">
+      {/* Battery body */}
+      <rect x="0.5" y="0.5" width="21" height="11" rx="2.5" stroke="white" strokeOpacity="0.55" />
+      {/* Fill level */}
+      <rect x="2" y="2" width={fillWidth} height="8" rx="1" fill={fillColor} fillOpacity="0.9" />
+      {/* Battery bump */}
+      <rect x="22" y="3.5" width="2.5" height="5" rx="1" fill="white" fillOpacity="0.35" />
+    </svg>
+  )
+}
+
 function BatteryIconWithLevel() {
   const [level] = useState(() => Math.floor(Math.random() * 40) + 60)
 
-  let IconComponent: React.ComponentType<{ className?: string }>
-  if (level >= 90) IconComponent = BatteryFull
-  else if (level >= 50) IconComponent = BatteryMedium
-  else IconComponent = BatteryLow
-
   return (
     <div className="flex items-center gap-1">
-      <IconComponent className="h-4 w-4" />
+      <MacOSBatteryIcon level={level} />
       <span className="text-[12px] leading-none">{level}%</span>
     </div>
+  )
+}
+
+// ─── Custom macOS-style Wi-Fi Icon ─────────────────────────────────────────────
+
+function MacOSWifiIcon() {
+  return (
+    <svg width="16" height="12" viewBox="0 0 16 12" fill="none">
+      {/* Arc 4 (outermost - dimmest) */}
+      <path d="M0.5 4.5C3.5 1 12.5 1 15.5 4.5" stroke="white" strokeOpacity="0.3" strokeWidth="1.3" strokeLinecap="round" />
+      {/* Arc 3 */}
+      <path d="M2.5 6.5C4.8 4 11.2 4 13.5 6.5" stroke="white" strokeOpacity="0.55" strokeWidth="1.3" strokeLinecap="round" />
+      {/* Arc 2 */}
+      <path d="M4.5 8.5C6 7 10 7 11.5 8.5" stroke="white" strokeOpacity="0.8" strokeWidth="1.3" strokeLinecap="round" />
+      {/* Arc 1 (innermost - brightest) */}
+      <path d="M6.5 10.5C7.2 9.8 8.8 9.8 9.5 10.5" stroke="white" strokeOpacity="1" strokeWidth="1.3" strokeLinecap="round" />
+    </svg>
   )
 }
 
@@ -641,7 +672,7 @@ export default function MenuBar() {
             aria-label="Apple Menu"
           >
             <svg
-              className="w-[16px] h-[16px]"
+              className="w-[18px] h-[18px]"
               viewBox="0 0 170 170"
               fill="currentColor"
             >
@@ -696,7 +727,7 @@ export default function MenuBar() {
         </div>
         <div className="w-px h-3 bg-white/15 mx-1" />
         <div className="flex items-center gap-1.5 hover:bg-white/10 rounded px-1.5 py-0.5 transition-colors cursor-default">
-          <Wifi className="h-[14px] w-[14px]" />
+          <MacOSWifiIcon />
           <Bluetooth className="h-[12px] w-[12px] opacity-80" />
         </div>
         <div className="w-px h-3 bg-white/15 mx-1" />

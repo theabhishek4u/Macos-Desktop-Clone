@@ -90,7 +90,7 @@ function createDefaultFileSystem(): Record<string, FileSystemNode> {
 // ─── NEOFETCH ASCII ART ──────────────────────────────────────────────────────
 
 const NEOFETCH_ART = [
-  '                    \'c.          <span style="color:#28c840">user</span>@<span style="color:#28c840">MacBook-Pro</span>',
+  '                    \'c.          <span style="color:#28c840">user</span>@<span style="color:#28c840">MacBook</span>',
   '                 ,xNMM.          ──────────────',
   '               .OMMMMo           <span style="color:#28c840">OS:</span> macOS 14.0 Sonoma',
   '               OMMM0,            <span style="color:#28c840">Host:</span> MacBook Pro',
@@ -191,6 +191,7 @@ function generateMatrixLines(): string[] {
 const ALL_COMMANDS: [string, string][] = [
   ['help', 'Show this help message'],
   ['ls', 'List directory contents'],
+  ['ls -la', 'List with details (permissions, size, date)'],
   ['pwd', 'Print working directory'],
   ['cd <dir>', 'Change directory'],
   ['whoami', 'Display current user'],
@@ -204,6 +205,8 @@ const ALL_COMMANDS: [string, string][] = [
   ['touch <name>', 'Create a new file'],
   ['rm <name>', 'Remove a file or directory'],
   ['uptime', 'Show system uptime'],
+  ['ps aux', 'Show process list'],
+  ['top', 'Show system usage summary'],
   ['neofetch', 'Display system info with ASCII art'],
   ['cowsay <msg>', 'ASCII cow saying a message'],
   ['fortune', 'Display a random fortune/quote'],
@@ -326,27 +329,53 @@ export default function Terminal() {
       case 'ls': {
         const currentDir = getCurrentDir()
         const entries = Object.values(currentDir)
-        if (entries.length === 0) {
+        const showLong = args.includes('-la') || args.includes('-l') || args.includes('-al')
+        const showHidden = args.includes('-a') || args.includes('-la') || args.includes('-al')
+
+        if (entries.length === 0 && !showHidden) {
           // Empty directory, no output (like real ls)
         } else {
           const dirs = entries.filter(e => e.type === 'directory').sort((a, b) => a.name.localeCompare(b.name))
           const files = entries.filter(e => e.type === 'file').sort((a, b) => a.name.localeCompare(b.name))
-
-          const showHidden = args.includes('-a') || args.includes('-la') || args.includes('-al')
 
           let allEntries = [...dirs, ...files]
           if (!showHidden) {
             allEntries = allEntries.filter(e => !e.name.startsWith('.'))
           }
 
-          if (allEntries.length > 0) {
-            const line = allEntries.map(e => {
+          if (showLong) {
+            // Detailed listing like ls -la
+            newOutput.push({ text: `total ${allEntries.length * 8}`, color: 'text-white/50' })
+            // Add . and .. entries
+            if (showHidden) {
+              const now = new Date()
+              const dateStr = now.toLocaleDateString('en-US', { month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' }).replace(',', '')
+              newOutput.push({ text: `drwxr-xr-x  ${currentPath.length + 2}   user  staff   64  ${dateStr} .`, color: 'text-white/80' })
+              newOutput.push({ text: `drwxr-xr-x  ${currentPath.length + 1}   user  staff   64  ${dateStr} ..`, color: 'text-white/80' })
+            }
+            allEntries.forEach(e => {
+              const now = new Date()
+              const dateStr = now.toLocaleDateString('en-US', { month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' }).replace(',', '')
               if (e.type === 'directory') {
-                return `📁 ${e.name}/`
+                const childCount = (e.children ? Object.keys(e.children).length : 0) + 2
+                newOutput.push({ text: `drwxr-xr-x  ${childCount}   user  staff   64  ${dateStr} ${e.name}`, color: 'text-[#5ac8fa]' })
+              } else {
+                const size = e.content ? e.content.length : Math.floor(Math.random() * 10000) + 100
+                const perms = e.name.startsWith('.') ? '-rw-r--r--' : '-rw-r--r--'
+                newOutput.push({ text: `${perms}  1   user  staff  ${size.toString().padStart(5)}  ${dateStr} ${e.name}`, color: 'text-white/80' })
               }
-              return `   ${e.name}`
-            }).join('  ')
-            newOutput.push({ text: line, color: 'text-white/80' })
+            })
+          } else {
+            // Simple listing
+            if (allEntries.length > 0) {
+              const line = allEntries.map(e => {
+                if (e.type === 'directory') {
+                  return `📁 ${e.name}/`
+                }
+                return `   ${e.name}`
+              }).join('  ')
+              newOutput.push({ text: line, color: 'text-white/80' })
+            }
           }
         }
         break
@@ -404,13 +433,13 @@ export default function Terminal() {
       }
 
       case 'hostname': {
-        newOutput.push({ text: 'MacBook-Pro.local', color: 'text-white/80' })
+        newOutput.push({ text: 'MacBook.local', color: 'text-white/80' })
         break
       }
 
       case 'uname': {
         if (args.includes('-a')) {
-          newOutput.push({ text: 'Darwin MacBook-Pro.local 23.0.0 Darwin Kernel Version 23.0.0: Mon Sep 25 20:57:52 PDT 2023; root:xnu-10002.1.13~1/RELEASE_ARM_T6030 arm64', color: 'text-white/80' })
+          newOutput.push({ text: 'Darwin MacBook 23.5.0 Darwin Kernel Version 23.5.0: Tue May  7 21:53:37 PDT 2024; root:xnu-10063.141.2~2/RELEASE_ARM_T6031 arm64', color: 'text-white/80' })
         } else {
           newOutput.push({ text: 'Darwin', color: 'text-white/80' })
         }
@@ -551,6 +580,32 @@ export default function Terminal() {
           text: ` ${new Date().toLocaleTimeString()}  up ${days} day${days > 1 ? 's' : ''}, ${hours}:${mins.toString().padStart(2, '0')}, 2 users, load averages: ${load1} ${load5} ${load15}`,
           color: 'text-white/80',
         })
+        break
+      }
+
+      case 'ps': {
+        if (args.includes('aux') || args.includes('-aux')) {
+          newOutput.push({ text: 'USER               PID  %CPU  %MEM      VSZ    RSS   TT  STAT STARTED     TIME COMMAND', color: 'text-white/50' })
+          newOutput.push({ text: 'user             84201   2.3   1.8  4587232  147456  ??  S     9:30AM   0:12.34 /Applications/Safari.app/Contents/MacOS/Safari', color: 'text-white/80' })
+          newOutput.push({ text: 'user             65539   1.7   0.9  4101896   73728  ??  S     9:28AM   0:08.21 /Applications/Notes.app/Contents/MacOS/Notes', color: 'text-white/80' })
+          newOutput.push({ text: 'user             37291   0.4   0.5  3276848   40960  ??  S     9:25AM   0:02.10 /System/Library/CoreServices/Finder.app', color: 'text-white/80' })
+          newOutput.push({ text: 'user               412   0.1   0.3  2949120   24576  ??  Ss    9:00AM   0:01.45 /usr/sbin/syslogd', color: 'text-white/80' })
+          newOutput.push({ text: 'user               198   0.0   0.1  2588672   12288  ??  Ss    9:00AM   0:00.32 /usr/libexec/launchd', color: 'text-white/80' })
+        } else {
+          newOutput.push({ text: '  PID TTY          TIME CMD', color: 'text-white/50' })
+          newOutput.push({ text: ' 84201 ttys000    0:00.12 -zsh', color: 'text-white/80' })
+        }
+        break
+      }
+
+      case 'top': {
+        newOutput.push({ text: 'Processes: 287 total, 3 running, 284 stuck, 1423 threads', color: 'text-white/80' })
+        newOutput.push({ text: 'Load Avg: 1.82, 1.65, 1.43', color: 'text-white/80' })
+        newOutput.push({ text: 'CPU usage: 12.3% user, 5.7% sys, 82.0% idle', color: 'text-white/80' })
+        newOutput.push({ text: 'PhysMem: 8192M used, 10240M free', color: 'text-white/80' })
+        newOutput.push({ text: 'Networks: packets in 284721, packets out 192837', color: 'text-white/80' })
+        newOutput.push({ text: '', color: 'text-white/80' })
+        newOutput.push({ text: 'top - press q to exit (simulated)', color: 'text-yellow-400' })
         break
       }
 

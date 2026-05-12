@@ -61,6 +61,8 @@ export default function Window({ windowId, children }: WindowProps) {
   const [isDragging, setIsDragging] = useState(false)
   const [isResizing, setIsResizing] = useState(false)
   const [snapPreview, setSnapPreview] = useState<SnapPreview>(null)
+  const [showResizeIndicator, setShowResizeIndicator] = useState(false)
+  const resizeIndicatorTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Use refs for drag/resize state to avoid re-renders during interaction
   const dragRef = useRef<{
@@ -80,6 +82,9 @@ export default function Window({ windowId, children }: WindowProps) {
     startWidth: number
     startHeight: number
   } | null>(null)
+
+  // Track current dimensions for resize indicator
+  const [currentDim, setCurrentDim] = useState<{ w: number; h: number } | null>(null)
 
   const isActive = activeWindowId === windowId
 
@@ -261,6 +266,10 @@ export default function Window({ windowId, children }: WindowProps) {
 
         updateWindowPosition(windowId, newX, newY)
         updateWindowSize(windowId, newWidth, newHeight)
+        // Update resize indicator
+        setCurrentDim({ w: Math.round(newWidth), h: Math.round(newHeight) })
+        setShowResizeIndicator(true)
+        if (resizeIndicatorTimer.current) clearTimeout(resizeIndicatorTimer.current)
       }
 
       const handleMouseUp = () => {
@@ -270,6 +279,12 @@ export default function Window({ windowId, children }: WindowProps) {
         document.removeEventListener('mouseup', handleMouseUp)
         document.body.style.cursor = ''
         document.body.style.userSelect = ''
+        // Show resize indicator for 1 more second after resize ends
+        if (resizeIndicatorTimer.current) clearTimeout(resizeIndicatorTimer.current)
+        resizeIndicatorTimer.current = setTimeout(() => {
+          setShowResizeIndicator(false)
+          setCurrentDim(null)
+        }, 1000)
       }
 
       document.body.style.cursor = CURSOR_MAP[direction]
@@ -286,6 +301,13 @@ export default function Window({ windowId, children }: WindowProps) {
       closeWindow(windowId)
     }, 200)
   }, [closeWindow, windowId])
+
+  // Cleanup resize indicator timer on unmount
+  useEffect(() => {
+    return () => {
+      if (resizeIndicatorTimer.current) clearTimeout(resizeIndicatorTimer.current)
+    }
+  }, [])
 
   if (!windowState) return null
 
@@ -445,18 +467,19 @@ export default function Window({ windowId, children }: WindowProps) {
 
               {/* Title Bar */}
               <div
-                className={`flex items-center h-[36px] shrink-0 select-none px-3 transition-colors duration-150 relative ${
-                  isLightWindow
-                    ? isActive
-                      ? 'bg-[#e8e8e8]/95 backdrop-blur-md border-b border-black/10'
-                      : 'bg-[#e0e0e0]/95 backdrop-blur-md border-b border-black/[0.08]'
-                    : isActive
-                      ? 'bg-[#3a3a3a]/95 backdrop-blur-md border-b border-white/10'
-                      : 'bg-[#2d2d2d]/95 backdrop-blur-md border-b border-white/5'
-                }`}
+                className={`flex items-center h-[36px] shrink-0 select-none px-3 transition-colors duration-150 relative`}
                 style={{
-                  // Subtle bottom border for light inactive windows
-                  ...(isLightWindow && !isActive ? { borderBottomColor: 'rgba(0,0,0,0.08)' } : {}),
+                  background: isLightWindow
+                    ? isActive
+                      ? 'linear-gradient(180deg, rgba(255,255,255,0.8) 0%, rgba(245,245,245,0.8) 100%)'
+                      : 'linear-gradient(180deg, rgba(240,240,240,0.8) 0%, rgba(232,232,232,0.8) 100%)'
+                    : isActive
+                      ? 'rgba(45,45,48,0.95)'
+                      : 'rgba(38,38,40,0.95)',
+                  backdropFilter: 'blur(16px)',
+                  borderBottom: isLightWindow
+                    ? '0.5px solid rgba(0,0,0,0.12)'
+                    : '0.5px solid rgba(255,255,255,0.08)',
                 }}
                 onMouseDown={handleDragMouseDown}
                 onDoubleClick={() => {
@@ -469,7 +492,9 @@ export default function Window({ windowId, children }: WindowProps) {
               >
                 {/* Traffic Light Buttons */}
                 <div
-                  className="flex items-center gap-[8px] mr-3"
+                  className={`flex items-center gap-[8px] mr-3 -ml-0.5 -my-1 px-1.5 py-1 rounded-md transition-colors duration-150 ${
+                    trafficHover && isActive ? (isLightWindow ? 'bg-black/5' : 'bg-white/5') : ''
+                  }`}
                   data-traffic-light
                   onMouseEnter={() => setTrafficHover(true)}
                   onMouseLeave={() => setTrafficHover(false)}
@@ -550,11 +575,12 @@ export default function Window({ windowId, children }: WindowProps) {
                 {/* Window Title */}
                 <div className="flex-1 text-center pr-14">
                   <span
-                    className={`text-[13px] font-medium transition-colors duration-150 ${
+                    className={`transition-colors duration-150 ${
                       isLightWindow
-                        ? isActive ? 'text-black/85' : 'text-black/40'
+                        ? isActive ? 'text-[#333]' : 'text-black/40'
                         : isActive ? 'text-white/85' : 'text-white/40'
                     }`}
+                    style={{ fontSize: '13px', fontWeight: 600 }}
                   >
                     {title}
                   </span>
@@ -576,6 +602,21 @@ export default function Window({ windowId, children }: WindowProps) {
                 onMouseDown={handleResizeMouseDown(direction)}
               />
             ))}
+
+            {/* Resize Size Indicator */}
+            <AnimatePresence>
+              {showResizeIndicator && currentDim && (
+                <motion.div
+                  className="absolute bottom-2 right-2 z-20 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded font-mono pointer-events-none"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.15 }}
+                >
+                  {currentDim.w} × {currentDim.h}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
         )}
       </AnimatePresence>

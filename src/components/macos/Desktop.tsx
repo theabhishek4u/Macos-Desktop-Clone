@@ -7,21 +7,39 @@ import useDarkModeStore from '@/store/dark-mode-store'
 export interface Wallpaper {
   name: string
   style: CSSProperties
+  overlayStyle?: CSSProperties
 }
 
 const WALLPAPERS: Wallpaper[] = [
-  // 1. Sonoma — Rolling hills in warm orange/golden tones
+  // 1. Sonoma — Rolling hills in warm orange/golden tones (MAJOR IMPROVEMENT)
   {
     name: 'Sonoma',
     style: {
       background: [
-        'radial-gradient(ellipse 120% 60% at 50% 100%, #d4a24e 0%, #c4883a 20%, #a06a2a 40%, transparent 70%)',
-        'radial-gradient(ellipse 80% 40% at 30% 95%, #e8b84d 0%, #cc8c2e 50%, transparent 80%)',
-        'radial-gradient(ellipse 80% 40% at 75% 98%, #d9a040 0%, #b87d2a 50%, transparent 80%)',
-        'radial-gradient(ellipse 100% 50% at 50% 60%, #6b3a1f 0%, #4a2512 40%, transparent 80%)',
-        'radial-gradient(ellipse 60% 30% at 20% 80%, #e6c86e 0%, transparent 60%)',
-        'radial-gradient(ellipse 60% 30% at 80% 85%, #d4a24e 0%, transparent 60%)',
-        'linear-gradient(180deg, #1a0a2e 0%, #2d1548 15%, #6b2f4a 30%, #a84832 50%, #cc7a2e 65%, #d4a24e 80%, #e8c86e 100%)',
+        // Sun/light source glow in upper area
+        'radial-gradient(ellipse 60% 35% at 50% 18%, rgba(255,200,100,0.35) 0%, rgba(255,160,60,0.15) 40%, transparent 70%)',
+        // Upper atmospheric haze
+        'radial-gradient(ellipse 120% 25% at 50% 30%, rgba(200,140,80,0.15) 0%, transparent 70%)',
+        // Distant hills (lighter, haze-covered)
+        'radial-gradient(ellipse 130% 15% at 40% 52%, rgba(180,130,80,0.5) 0%, rgba(160,110,60,0.3) 60%, transparent 100%)',
+        'radial-gradient(ellipse 120% 12% at 65% 54%, rgba(170,120,70,0.4) 0%, rgba(150,100,55,0.2) 60%, transparent 100%)',
+        // Mid-ground hills (richer color)
+        'radial-gradient(ellipse 120% 18% at 30% 62%, #d4a24e 0%, #c49040 40%, #a87832 70%, transparent 100%)',
+        'radial-gradient(ellipse 100% 20% at 75% 65%, #cc9540 0%, #b88230 40%, #9a6a28 70%, transparent 100%)',
+        // Foreground rolling hills (darkest, most saturated)
+        'radial-gradient(ellipse 140% 25% at 45% 85%, #b8822a 0%, #9a6a20 30%, #7a5518 60%, transparent 100%)',
+        'radial-gradient(ellipse 100% 20% at 25% 90%, #a87428 0%, #8a5e1c 40%, transparent 80%)',
+        'radial-gradient(ellipse 110% 18% at 80% 92%, #b07828 0%, #8e6218 40%, transparent 80%)',
+        // Very foreground grass/land strip
+        'radial-gradient(ellipse 150% 15% at 50% 100%, #5a3a10 0%, #4a2e0a 50%, transparent 100%)',
+        // Sky gradient — deep purple at top transitioning through warm sunset tones
+        'linear-gradient(180deg, #0d0520 0%, #1a0a30 6%, #2d1048 12%, #4a1a5a 18%, #7a2a50 24%, #a83838 32%, #cc5a28 40%, #d47828 48%, #d4a24e 55%, #e8c86e 62%, #e0b050 70%, #c49040 80%, #9a6a28 90%, #6a4518 100%)',
+      ].join(', '),
+    },
+    overlayStyle: {
+      // Atmospheric haze effect near the horizon
+      background: [
+        'linear-gradient(180deg, transparent 0%, transparent 45%, rgba(210,170,100,0.06) 50%, rgba(210,170,100,0.03) 55%, transparent 60%)',
       ].join(', '),
     },
   },
@@ -164,6 +182,43 @@ const WALLPAPERS: Wallpaper[] = [
       ].join(', '),
     },
   },
+
+  // 11. Sonoma Photo — A more photo-realistic Sonoma landscape wallpaper
+  {
+    name: 'Sonoma Photo',
+    style: {
+      background: [
+        // Bright sun near horizon
+        'radial-gradient(ellipse 15% 12% at 50% 48%, rgba(255,240,180,0.8) 0%, rgba(255,200,100,0.4) 30%, transparent 70%)',
+        // Sun glow spread
+        'radial-gradient(ellipse 40% 20% at 50% 48%, rgba(255,180,80,0.3) 0%, rgba(255,140,40,0.1) 50%, transparent 80%)',
+        // Cloud wisps in upper sky
+        'radial-gradient(ellipse 30% 3% at 25% 18%, rgba(100,60,120,0.3) 0%, transparent 80%)',
+        'radial-gradient(ellipse 25% 2% at 70% 15%, rgba(80,50,110,0.25) 0%, transparent 80%)',
+        'radial-gradient(ellipse 20% 2.5% at 40% 22%, rgba(120,70,100,0.2) 0%, transparent 80%)',
+        // Distant mountain silhouettes
+        'radial-gradient(ellipse 100% 10% at 30% 55%, rgba(40,20,50,0.6) 0%, rgba(30,15,40,0.4) 60%, transparent 100%)',
+        'radial-gradient(ellipse 80% 8% at 65% 56%, rgba(35,18,45,0.5) 0%, rgba(25,12,35,0.3) 60%, transparent 100%)',
+        // Mid-ground hills — warm golden-green
+        'radial-gradient(ellipse 130% 15% at 35% 68%, #8a7a30 0%, #6a6020 40%, #4a4015 70%, transparent 100%)',
+        'radial-gradient(ellipse 110% 12% at 70% 70%, #7a6a28 0%, #5a5018 40%, #3a3510 70%, transparent 100%)',
+        // Foreground green rolling hills
+        'radial-gradient(ellipse 150% 20% at 45% 88%, #2a4a20 0%, #1a3015 40%, #0f200a 70%, transparent 100%)',
+        'radial-gradient(ellipse 120% 18% at 20% 92%, #254818 0%, #1a3510 40%, transparent 80%)',
+        'radial-gradient(ellipse 130% 16% at 78% 90%, #2a4a20 0%, #1a3510 40%, transparent 80%)',
+        // Very foreground — darkest green
+        'radial-gradient(ellipse 160% 12% at 50% 100%, #0f1a08 0%, #0a1205 50%, transparent 100%)',
+        // Sky gradient — dark purple top through sunset colors to green bottom
+        'linear-gradient(180deg, #0a0520 0%, #1a0a30 8%, #2d1048 14%, #4a1860 20%, #6a2050 26%, #8a2838 32%, #b03a20 38%, #d4500a 43%, #e87830 48%, #f0a050 52%, #e0a040 56%, #c08830 62%, #8a7a28 70%, #5a6020 78%, #3a4a18 85%, #2a3a10 92%, #1a2a08 100%)',
+      ].join(', '),
+    },
+    overlayStyle: {
+      // Atmospheric haze near horizon
+      background: [
+        'linear-gradient(180deg, transparent 0%, transparent 42%, rgba(240,180,100,0.04) 47%, rgba(240,160,80,0.03) 50%, rgba(240,180,100,0.02) 53%, transparent 58%)',
+      ].join(', '),
+    },
+  },
 ]
 
 export default function Desktop({ children }: { children: React.ReactNode }) {
@@ -193,20 +248,45 @@ export default function Desktop({ children }: { children: React.ReactNode }) {
     setContextMenu({ x: e.clientX, y: e.clientY, items })
   }, [setContextMenu, wallpaperIndex, setWallpaperIndex])
 
+  const wallpaper = WALLPAPERS[effectiveWallpaperIndex]
+
   return (
     <div
       className={`fixed inset-0 overflow-hidden select-none ${isDarkMode ? 'dark-mode-active' : ''}`}
-      style={{ ...WALLPAPERS[effectiveWallpaperIndex].style, transition: 'background 0.8s ease-in-out' }}
+      style={{ ...wallpaper.style, transition: 'background 0.8s ease-in-out' }}
       onContextMenu={handleContextMenu}
     >
+      {/* Noise texture overlay for realism */}
+      <div
+        className="absolute inset-0 pointer-events-none animate-wallpaper-breathe"
+        style={{
+          opacity: 0.03,
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E")`,
+          backgroundSize: '256px 256px',
+        }}
+      />
       {/* Animated gradient overlay for subtle shimmer effect */}
       <div
-        className="absolute inset-0 pointer-events-none opacity-30 animate-wallpaper-shimmer"
+        className="absolute inset-0 pointer-events-none animate-wallpaper-shimmer"
         style={{
           background: [
-            'radial-gradient(ellipse 40% 30% at 30% 40%, rgba(255, 255, 255, 0.08) 0%, transparent 70%)',
-            'radial-gradient(ellipse 40% 30% at 70% 60%, rgba(255, 255, 255, 0.05) 0%, transparent 70%)',
+            'radial-gradient(ellipse 40% 30% at 30% 40%, rgba(255, 255, 255, 0.06) 0%, transparent 70%)',
+            'radial-gradient(ellipse 40% 30% at 70% 60%, rgba(255, 255, 255, 0.04) 0%, transparent 70%)',
           ].join(', '),
+        }}
+      />
+      {/* Wallpaper-specific overlay (haze, atmospheric effects) */}
+      {wallpaper.overlayStyle && (
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={wallpaper.overlayStyle}
+        />
+      )}
+      {/* Slow breathing gradient overlay */}
+      <div
+        className="absolute inset-0 pointer-events-none animate-wallpaper-breathe"
+        style={{
+          background: 'radial-gradient(ellipse 70% 50% at 50% 50%, rgba(255,255,255,0.02) 0%, transparent 70%)',
         }}
       />
       {children}
