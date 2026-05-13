@@ -38,6 +38,7 @@ import { Separator } from '@/components/ui/separator'
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 type PaneId =
+  | 'about'
   | 'general'
   | 'appearance'
   | 'desktop'
@@ -71,8 +72,10 @@ interface PreferencePane {
 // ─── Pane definitions ────────────────────────────────────────────────────────
 
 const PREFERENCE_PANES: PreferencePane[] = [
+  { id: 'about', name: 'About This Mac', emoji: '💻', color: 'bg-gray-700', icon: Monitor },
   { id: 'general', name: 'General', emoji: '⚙️', color: 'bg-gray-500', icon: Palette },
   { id: 'appearance', name: 'Appearance', emoji: '🎨', color: 'bg-blue-500', icon: Sun },
+  { id: 'wallpaper', name: 'Wallpaper', emoji: '🌄', color: 'bg-teal-500', icon: Image },
   { id: 'desktop', name: 'Desktop & Screen Saver', emoji: '🖥️', color: 'bg-purple-500', icon: Monitor },
   { id: 'dock', name: 'Dock & Menu Bar', emoji: '📋', color: 'bg-slate-500', icon: Layout },
   { id: 'display', name: 'Display', emoji: '🖥', color: 'bg-sky-500', icon: Monitor },
@@ -83,7 +86,6 @@ const PREFERENCE_PANES: PreferencePane[] = [
   { id: 'bluetooth', name: 'Bluetooth', emoji: '🔷', color: 'bg-blue-400', icon: Bluetooth },
   { id: 'privacy', name: 'Privacy & Security', emoji: '🔒', color: 'bg-blue-700', icon: Shield },
   { id: 'users', name: 'Users & Groups', emoji: '👥', color: 'bg-cyan-600', icon: Users },
-  { id: 'wallpaper', name: 'Wallpaper', emoji: '🌄', color: 'bg-teal-500', icon: Image },
   { id: 'storage', name: 'Storage', emoji: '💾', color: 'bg-indigo-500', icon: HardDrive },
   { id: 'keyboard', name: 'Keyboard', emoji: '⌨️', color: 'bg-gray-600', icon: Keyboard },
   { id: 'mouse', name: 'Mouse', emoji: '🖱️', color: 'bg-violet-500', icon: Mouse },
@@ -474,18 +476,67 @@ function DisplayPane() {
 function SoundPane() {
   const [volume, setVolume] = useState([65])
   const [alertVolume, setAlertVolume] = useState([80])
+  const [inputVolume, setInputVolume] = useState([50])
   const [outputMuted, setOutputMuted] = useState(false)
   const [playSoundOnStartup, setPlaySoundOnStartup] = useState(true)
   const [playUserInterfaceSoundEffects, setPlayUserInterfaceSoundEffects] = useState(true)
   const [selectedAlertSound, setSelectedAlertSound] = useState('Basso')
+  const [selectedOutputDevice, setSelectedOutputDevice] = useState('MacBook Pro Speakers')
+  const [selectedInputDevice, setSelectedInputDevice] = useState('MacBook Pro Microphone')
+  const [playingSound, setPlayingSound] = useState<string | null>(null)
 
   const alertSounds = [
     'Basso', 'Blow', 'Bottle', 'Frog', 'Funk', 'Glass', 'Hero',
     'Morse', 'Ping', 'Pop', 'Purr', 'Sosumi', 'Submarine', 'Tink',
   ]
 
+  const outputDevices = [
+    { name: 'MacBook Pro Speakers', type: 'Built-in', icon: '🔊' },
+    { name: 'AirPods Pro', type: 'Bluetooth', icon: '🎧' },
+    { name: 'External Display Speakers', type: 'HDMI', icon: '📺' },
+  ]
+
+  const inputDevices = [
+    { name: 'MacBook Pro Microphone', type: 'Built-in', icon: '🎙️' },
+    { name: 'AirPods Pro Microphone', type: 'Bluetooth', icon: '🎧' },
+    { name: 'External Microphone', type: 'USB', icon: '🎤' },
+  ]
+
+  const handlePlaySound = (sound: string) => {
+    setPlayingSound(sound)
+    setTimeout(() => setPlayingSound(null), 800)
+  }
+
   return (
     <div>
+      <SettingSection title="Output">
+        <div className="py-3">
+          <div className="text-[12px] text-gray-500 mb-2">Output Device</div>
+          <div className="space-y-1">
+            {outputDevices.map((device) => (
+              <button
+                key={device.name}
+                onClick={() => setSelectedOutputDevice(device.name)}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] transition-colors ${
+                  selectedOutputDevice === device.name
+                    ? 'bg-blue-500/10 border border-blue-200'
+                    : 'hover:bg-gray-50 border border-transparent'
+                }`}
+              >
+                <span className="text-base">{device.icon}</span>
+                <div className="flex-1 text-left min-w-0">
+                  <div className={`font-medium ${selectedOutputDevice === device.name ? 'text-blue-600' : 'text-gray-800'}`}>{device.name}</div>
+                  <div className="text-[11px] text-gray-500">{device.type}</div>
+                </div>
+                {selectedOutputDevice === device.name && (
+                  <div className="w-2 h-2 rounded-full bg-blue-500" />
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+      </SettingSection>
+
       <SettingSection title="Output Volume">
         <div className="py-3">
           <div className="flex items-center gap-3 mb-3">
@@ -508,6 +559,45 @@ function SoundPane() {
             />
             Mute
           </label>
+        </div>
+      </SettingSection>
+
+      <SettingSection title="Input">
+        <div className="py-3">
+          <div className="text-[12px] text-gray-500 mb-2">Input Device</div>
+          <div className="space-y-1">
+            {inputDevices.map((device) => (
+              <button
+                key={device.name}
+                onClick={() => setSelectedInputDevice(device.name)}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] transition-colors ${
+                  selectedInputDevice === device.name
+                    ? 'bg-blue-500/10 border border-blue-200'
+                    : 'hover:bg-gray-50 border border-transparent'
+                }`}
+              >
+                <span className="text-base">{device.icon}</span>
+                <div className="flex-1 text-left min-w-0">
+                  <div className={`font-medium ${selectedInputDevice === device.name ? 'text-blue-600' : 'text-gray-800'}`}>{device.name}</div>
+                  <div className="text-[11px] text-gray-500">{device.type}</div>
+                </div>
+                {selectedInputDevice === device.name && (
+                  <div className="w-2 h-2 rounded-full bg-blue-500" />
+                )}
+              </button>
+            ))}
+          </div>
+          <div className="mt-3 flex items-center gap-3">
+            <Volume2 className="w-4 h-4 text-gray-400 shrink-0" />
+            <Slider
+              value={inputVolume}
+              onValueChange={setInputVolume}
+              max={100}
+              step={1}
+              className="flex-1"
+            />
+            <span className="text-[12px] text-gray-500 w-8 text-right">{inputVolume[0]}%</span>
+          </div>
         </div>
       </SettingSection>
 
@@ -536,22 +626,46 @@ function SoundPane() {
         </SettingRow>
       </SettingSection>
 
-      <SettingSection title="Alert Sound">
+      <SettingSection title="Sound Effects">
         <div className="py-2">
-          <div className="max-h-40 overflow-y-auto">
+          <div className="max-h-48 overflow-y-auto">
             {alertSounds.map((sound) => (
-              <button
+              <div
                 key={sound}
-                onClick={() => setSelectedAlertSound(sound)}
-                className={`w-full flex items-center gap-3 px-2 py-1.5 rounded-md text-[13px] transition-colors ${
+                className={`flex items-center gap-3 px-2 py-1.5 rounded-md text-[13px] transition-colors cursor-pointer ${
                   selectedAlertSound === sound
                     ? 'bg-blue-500 text-white'
                     : 'text-gray-700 hover:bg-gray-100'
                 }`}
+                onClick={() => {
+                  setSelectedAlertSound(sound)
+                  handlePlaySound(sound)
+                }}
               >
-                <Volume2 className="w-3.5 h-3.5" />
-                {sound}
-              </button>
+                <button
+                  className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 transition-colors ${
+                    selectedAlertSound === sound
+                      ? 'bg-white/20 hover:bg-white/30'
+                      : 'bg-gray-200 hover:bg-gray-300'
+                  }`}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handlePlaySound(sound)
+                  }}
+                >
+                  {playingSound === sound ? (
+                    <div className="w-2 h-2 rounded-full bg-current animate-pulse" />
+                  ) : (
+                    <svg className="w-2.5 h-2.5 ml-0.5" viewBox="0 0 8 8" fill="currentColor">
+                      <polygon points="0,0 8,4 0,8" />
+                    </svg>
+                  )}
+                </button>
+                <span className="flex-1">{sound}</span>
+                {selectedAlertSound === sound && (
+                  <span className="text-[10px] opacity-70">Selected</span>
+                )}
+              </div>
             ))}
           </div>
         </div>
@@ -1096,6 +1210,173 @@ function DesktopPane() {
   )
 }
 
+// ─── Wallpaper Pane (functional - actually changes desktop wallpaper) ─────────
+
+function WallpaperPane() {
+  const { wallpaperIndex, setWallpaperIndex } = useMacOSStore()
+  const [changeInterval, setChangeInterval] = useState('never')
+  const [randomOrder, setRandomOrder] = useState(false)
+
+  return (
+    <div>
+      <SettingSection title="Current Wallpaper">
+        <div className="py-3">
+          <div className="flex items-center gap-4 mb-4">
+            <div
+              className="w-[200px] h-[125px] rounded-lg border-2 border-blue-500 shadow-md shadow-blue-500/20 overflow-hidden shrink-0"
+              style={WALLPAPERS[wallpaperIndex].style}
+            />
+            <div>
+              <div className="text-[14px] font-semibold text-gray-800">{WALLPAPERS[wallpaperIndex].name}</div>
+              <div className="text-[12px] text-gray-500 mt-1">Currently active</div>
+              <button
+                onClick={() => {
+                  const next = (wallpaperIndex + 1) % WALLPAPERS.length
+                  setWallpaperIndex(next)
+                }}
+                className="mt-2 px-3 py-1.5 text-[12px] bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+              >
+                Next Wallpaper
+              </button>
+            </div>
+          </div>
+        </div>
+      </SettingSection>
+
+      <SettingSection title="Choose Wallpaper">
+        <div className="py-3">
+          <div className="grid grid-cols-3 gap-2">
+            {WALLPAPERS.map((wp, i) => (
+              <button
+                key={i}
+                className="aspect-video rounded-lg cursor-pointer border-2 transition-all relative overflow-hidden group hover:scale-[1.02] active:scale-[0.98]"
+                style={wp.style}
+                onClick={() => setWallpaperIndex(i)}
+              >
+                <div className={`absolute inset-0 rounded-lg transition-all duration-200 ${
+                  wallpaperIndex === i
+                    ? 'border-2 border-blue-500 shadow-md shadow-blue-500/20'
+                    : 'border-transparent hover:border-blue-400/60'
+                }`} />
+                {/* Check mark for selected */}
+                {wallpaperIndex === i && (
+                  <div className="absolute top-1 right-1 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
+                    <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                )}
+                <div className={`absolute bottom-1 left-1 right-1 text-[9px] font-medium text-white/80 bg-black/30 rounded px-1 py-0.5 text-center truncate transition-colors ${
+                  wallpaperIndex === i ? 'bg-blue-500/50' : ''
+                }`}>
+                  {wp.name}
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </SettingSection>
+
+      <SettingSection>
+        <SettingRow label="Change picture">
+          <select
+            value={changeInterval}
+            onChange={(e) => setChangeInterval(e.target.value)}
+            className="text-[13px] bg-gray-100 border border-gray-200 rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          >
+            <option value="never">Never</option>
+            <option value="5sec">Every 5 seconds</option>
+            <option value="1min">Every minute</option>
+            <option value="5min">Every 5 minutes</option>
+            <option value="30min">Every 30 minutes</option>
+            <option value="1hr">Every hour</option>
+            <option value="login">When logging in</option>
+            <option value="wake">When waking from sleep</option>
+          </select>
+        </SettingRow>
+        <SettingRow label="Random order">
+          <MacToggle checked={randomOrder} onCheckedChange={setRandomOrder} />
+        </SettingRow>
+      </SettingSection>
+    </div>
+  )
+}
+
+// ─── About This Mac Pane ─────────────────────────────────────────────────────
+
+function AboutThisMacPane() {
+  return (
+    <div>
+      <SettingSection>
+        <div className="py-4">
+          <div className="flex flex-col items-center text-center mb-6">
+            {/* Mac icon */}
+            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-gray-600 to-gray-800 flex items-center justify-center mb-4 shadow-lg">
+              <Monitor className="w-10 h-10 text-white" strokeWidth={1.5} />
+            </div>
+            <h2 className="text-[22px] font-bold text-gray-900">macOS Sequoia</h2>
+            <p className="text-[13px] text-gray-500 mt-0.5">Version 15.2</p>
+          </div>
+
+          <div className="space-y-3 bg-gray-50 rounded-xl p-4 border border-gray-100">
+            <div className="flex justify-between items-center">
+              <span className="text-[12px] text-gray-500">Chip</span>
+              <span className="text-[13px] font-medium text-gray-800">Apple M3 Pro</span>
+            </div>
+            <Separator />
+            <div className="flex justify-between items-center">
+              <span className="text-[12px] text-gray-500">Memory</span>
+              <span className="text-[13px] font-medium text-gray-800">18 GB</span>
+            </div>
+            <Separator />
+            <div className="flex justify-between items-center">
+              <span className="text-[12px] text-gray-500">Startup Disk</span>
+              <span className="text-[13px] font-medium text-gray-800">Macintosh HD</span>
+            </div>
+            <Separator />
+            <div className="flex justify-between items-center">
+              <span className="text-[12px] text-gray-500">Serial Number</span>
+              <span className="text-[13px] font-medium text-gray-800">C02XJ0JAMD6N</span>
+            </div>
+            <Separator />
+            <div className="flex justify-between items-center">
+              <span className="text-[12px] text-gray-500">macOS</span>
+              <span className="text-[13px] font-medium text-gray-800">Sequoia 15.2 (24C101)</span>
+            </div>
+          </div>
+        </div>
+      </SettingSection>
+
+      <SettingSection title="System Report">
+        <div className="py-3">
+          <div className="grid grid-cols-2 gap-3 text-[12px]">
+            <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
+              <div className="text-gray-500 mb-1">Processor</div>
+              <div className="font-medium text-gray-800">14-Core CPU</div>
+              <div className="text-gray-400 text-[11px]">18-Core GPU</div>
+            </div>
+            <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
+              <div className="text-gray-500 mb-1">Storage</div>
+              <div className="font-medium text-gray-800">500 GB SSD</div>
+              <div className="text-gray-400 text-[11px]">186.4 GB used</div>
+            </div>
+            <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
+              <div className="text-gray-500 mb-1">Display</div>
+              <div className="font-medium text-gray-800">Built-in Retina</div>
+              <div className="text-gray-400 text-[11px]">3024 × 1964</div>
+            </div>
+            <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
+              <div className="text-gray-500 mb-1">Graphics</div>
+              <div className="font-medium text-gray-800">Apple M3 Pro</div>
+              <div className="text-gray-400 text-[11px]">Hardware acceleration</div>
+            </div>
+          </div>
+        </div>
+      </SettingSection>
+    </div>
+  )
+}
+
 // ─── Placeholder for panes without a full detail view ────────────────────────
 
 function PlaceholderPane({ name, emoji, color, icon }: { name: string; emoji: string; color: string; icon: React.ElementType }) {
@@ -1119,10 +1400,14 @@ function DetailView({ paneId }: { paneId: PaneId }) {
   const pane = PREFERENCE_PANES.find((p) => p.id === paneId)
 
   switch (paneId) {
+    case 'about':
+      return <AboutThisMacPane />
     case 'general':
       return <GeneralPane />
     case 'appearance':
       return <AppearancePane />
+    case 'wallpaper':
+      return <WallpaperPane />
     case 'desktop':
       return <DesktopPane />
     case 'dock':
@@ -1151,114 +1436,109 @@ function DetailView({ paneId }: { paneId: PaneId }) {
 // ─── Main Component ──────────────────────────────────────────────────────────
 
 export default function SystemPreferences() {
-  const [selectedPane, setSelectedPane] = useState<PaneId | null>(null)
+  const [selectedPane, setSelectedPane] = useState<PaneId>('about')
   const [searchQuery, setSearchQuery] = useState('')
 
   const filteredPanes = PREFERENCE_PANES.filter((pane) =>
     pane.name.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
-  // Group panes into rows of 3 for consistent layout
-  const rows: PreferencePane[][] = []
-  for (let i = 0; i < filteredPanes.length; i += 3) {
-    rows.push(filteredPanes.slice(i, i + 3))
-  }
-
-  const currentPane = selectedPane
-    ? PREFERENCE_PANES.find((p) => p.id === selectedPane)
-    : null
+  const currentPane = PREFERENCE_PANES.find((p) => p.id === selectedPane)
 
   return (
-    <div className="flex flex-col h-full w-full bg-[#f5f5f7] overflow-hidden select-none">
-      {/* Toolbar / Title Bar Area */}
-      <div className="shrink-0 bg-[#f5f5f7]/90 backdrop-blur-md border-b border-gray-200/60 px-4 py-2.5 flex items-center gap-3">
-        {selectedPane ? (
-          <>
-            <button
-              onClick={() => setSelectedPane(null)}
-              className="flex items-center gap-1 text-[13px] text-blue-600 hover:text-blue-700 transition-colors"
+    <div className="flex h-full w-full bg-[#f5f5f7] overflow-hidden select-none">
+      {/* ─── Sidebar ─────────────────────────────────────────────────────── */}
+      <div className="w-[220px] shrink-0 bg-[#f5f5f7]/90 backdrop-blur-md border-r border-gray-200/60 flex flex-col">
+        {/* Search bar */}
+        <div className="px-3 pt-3 pb-2">
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full h-[28px] pl-7 pr-2 text-[12px] bg-white/80 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-400 transition-all"
+            />
+            <svg
+              className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-              <ChevronLeft className="w-4 h-4" />
-              <span>Show All</span>
-            </button>
-            <Separator orientation="vertical" className="h-4 bg-gray-300" />
-            <div className="flex items-center gap-2">
-              <div
-                className={`w-6 h-6 rounded-md ${currentPane?.color ?? 'bg-gray-500'} flex items-center justify-center shadow-sm`}
-              >
-                {currentPane && <currentPane.icon className="w-3.5 h-3.5 text-white" strokeWidth={1.5} />}
-              </div>
-              <span className="text-[13px] font-semibold text-gray-800">
-                {currentPane?.name}
-              </span>
-            </div>
-          </>
-        ) : (
-          <>
-            <span className="text-[13px] font-semibold text-gray-800">
-              System Preferences
-            </span>
-            <div className="flex-1" />
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Search"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-[160px] h-[26px] pl-7 pr-2 text-[12px] bg-white/80 border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-400"
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
               />
-              <svg
-                className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
-            </div>
-          </>
-        )}
-      </div>
-
-      {/* Content */}
-      <ScrollArea className="flex-1">
-        {selectedPane ? (
-          <div className="p-5 max-w-[560px] mx-auto">
-            <DetailView paneId={selectedPane} />
+            </svg>
           </div>
-        ) : (
-          <div className="p-5">
-            <div className="grid grid-cols-3 gap-4 max-w-[600px] mx-auto">
-              {filteredPanes.map((pane) => (
+        </div>
+
+        {/* Sidebar items */}
+        <ScrollArea className="flex-1">
+          <div className="px-2 pb-2">
+            {filteredPanes.map((pane) => {
+              const IconComponent = pane.icon
+              const isActive = selectedPane === pane.id
+              return (
                 <button
                   key={pane.id}
                   onClick={() => setSelectedPane(pane.id)}
-                  className="bg-white rounded-xl p-4 flex flex-col items-center gap-2 hover:bg-gray-50 cursor-pointer shadow-sm border border-gray-100 transition-all duration-150 active:scale-[0.97]"
+                  className={`w-full flex items-center gap-2.5 px-2.5 py-[7px] rounded-lg text-[13px] transition-all duration-150 mb-0.5 ${
+                    isActive
+                      ? 'bg-blue-500 text-white font-medium shadow-sm'
+                      : 'text-gray-700 hover:bg-gray-200/60'
+                  }`}
                 >
                   <div
-                    className={`w-12 h-12 rounded-xl ${pane.color} flex items-center justify-center shadow-md`}
+                    className={`w-[22px] h-[22px] rounded-md flex items-center justify-center shrink-0 ${
+                      isActive ? 'bg-white/20' : pane.color
+                    }`}
                   >
-                    <pane.icon className="w-[28px] h-[28px] text-white" strokeWidth={1.5} />
+                    <IconComponent
+                      className={`w-[13px] h-[13px] ${isActive ? 'text-white' : 'text-white'}`}
+                      strokeWidth={1.5}
+                    />
                   </div>
-                  <span className="text-[11px] text-gray-700 font-medium text-center leading-tight line-clamp-2">
-                    {pane.name}
-                  </span>
+                  <span className="truncate">{pane.name}</span>
                 </button>
-              ))}
-            </div>
+              )
+            })}
             {filteredPanes.length === 0 && (
-              <div className="text-center py-12 text-gray-400 text-[13px]">
-                No preferences found matching &quot;{searchQuery}&quot;
+              <div className="text-center py-8 text-gray-400 text-[12px]">
+                No results
               </div>
             )}
           </div>
-        )}
-      </ScrollArea>
+        </ScrollArea>
+      </div>
+
+      {/* ─── Main Content Area ──────────────────────────────────────────── */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        {/* Title bar */}
+        <div className="shrink-0 bg-[#f5f5f7] border-b border-gray-200/60 px-5 py-2.5 flex items-center gap-2">
+          {currentPane && (
+            <>
+              <div
+                className={`w-6 h-6 rounded-md ${currentPane.color} flex items-center justify-center shadow-sm`}
+              >
+                <currentPane.icon className="w-3.5 h-3.5 text-white" strokeWidth={1.5} />
+              </div>
+              <span className="text-[13px] font-semibold text-gray-800">
+                {currentPane.name}
+              </span>
+            </>
+          )}
+        </div>
+
+        {/* Detail content */}
+        <ScrollArea className="flex-1">
+          <div className="p-5 max-w-[600px] mx-auto transition-opacity duration-150">
+            <DetailView paneId={selectedPane} />
+          </div>
+        </ScrollArea>
+      </div>
     </div>
   )
 }

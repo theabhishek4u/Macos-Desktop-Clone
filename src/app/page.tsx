@@ -33,6 +33,11 @@ const TextEdit = dynamic(() => import('@/components/macos/apps/TextEdit'), { ssr
 const Weather = dynamic(() => import('@/components/macos/apps/Weather'), { ssr: false })
 const Maps = dynamic(() => import('@/components/macos/apps/Maps'), { ssr: false })
 const Reminders = dynamic(() => import('@/components/macos/apps/Reminders'), { ssr: false })
+const Chrome = dynamic(() => import('@/components/macos/apps/Chrome'), { ssr: false })
+const AppleTV = dynamic(() => import('@/components/macos/apps/AppleTV'), { ssr: false })
+const FaceTime = dynamic(() => import('@/components/macos/apps/FaceTime'), { ssr: false })
+const Messages = dynamic(() => import('@/components/macos/apps/Messages'), { ssr: false })
+const AppStore = dynamic(() => import('@/components/macos/apps/AppStore'), { ssr: false })
 
 const APP_COMPONENTS: Record<string, React.ComponentType> = {
   finder: Finder,
@@ -49,6 +54,11 @@ const APP_COMPONENTS: Record<string, React.ComponentType> = {
   weather: Weather,
   maps: Maps,
   reminders: Reminders,
+  chrome: Chrome,
+  appletv: AppleTV,
+  facetime: FaceTime,
+  messages: Messages,
+  appstore: AppStore,
 }
 
 export default function MacOSDesktop() {

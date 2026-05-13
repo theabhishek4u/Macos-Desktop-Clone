@@ -551,6 +551,138 @@ function LaunchpadIcon({ size }: { size: number }) {
   )
 }
 
+function ChromeIcon({ size }: { size: number }) {
+  const centerSize = Math.round(size * 0.42)
+  return (
+    <div
+      className="relative overflow-hidden flex items-center justify-center"
+      style={{
+        width: size,
+        height: size,
+        borderRadius: SQUIRCLE_RADIUS,
+        background: 'linear-gradient(135deg, #4285F4 0%, #34A853 50%, #FBBC05 100%)',
+        ...ICON_DEPTH_SHADOW,
+      }}
+    >
+      {/* Shine */}
+      <div className="absolute inset-0 pointer-events-none" style={{ background: SHINE_OVERLAY, borderRadius: 'inherit' }} />
+      {/* Circle divided into 4 colored sections */}
+      <svg className="relative z-10" width={centerSize} height={centerSize} viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="48" fill="#4285F4" />
+        <path d="M50 2 A48 48 0 0 1 98 50 L50 50 Z" fill="#EA4335" />
+        <path d="M50 2 A48 48 0 0 0 2 50 L50 50 Z" fill="#FBBC05" />
+        <path d="M2 50 A48 48 0 0 0 50 98 L50 50 Z" fill="#34A853" />
+        <path d="M98 50 A48 48 0 0 1 50 98 L50 50 Z" fill="#4285F4" />
+        <circle cx="50" cy="50" r="18" fill="white" />
+      </svg>
+    </div>
+  )
+}
+
+function AppleTVIcon({ size }: { size: number }) {
+  return (
+    <div
+      className="relative overflow-hidden flex items-center justify-center"
+      style={{
+        width: size,
+        height: size,
+        borderRadius: SQUIRCLE_RADIUS,
+        background: 'linear-gradient(180deg, #1a1a1a 0%, #000000 100%)',
+        ...ICON_DEPTH_SHADOW,
+      }}
+    >
+      {/* Subtle top edge light */}
+      <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.08) 0%, transparent 25%)', borderRadius: 'inherit' }} />
+      {/* TV text */}
+      <div className="relative z-10 flex flex-col items-center">
+        <span style={{ fontFamily: "'SF Pro', 'Helvetica Neue', sans-serif", fontSize: Math.round(size * 0.16), fontWeight: 700, color: 'white', letterSpacing: `${Math.round(size * 0.01)}px`, lineHeight: 1 }}>TV</span>
+        <div className="mt-0.5" style={{ width: Math.round(size * 0.28), height: Math.round(size * 0.02), background: '#636366', borderRadius: '1px' }} />
+      </div>
+    </div>
+  )
+}
+
+function FaceTimeIcon({ size }: { size: number }) {
+  return (
+    <div
+      className="relative overflow-hidden flex items-center justify-center"
+      style={{
+        width: size,
+        height: size,
+        borderRadius: SQUIRCLE_RADIUS,
+        background: 'linear-gradient(135deg, #34C759 0%, #30D158 40%, #28B74A 100%)',
+        ...ICON_DEPTH_SHADOW,
+      }}
+    >
+      {/* Shine */}
+      <div className="absolute inset-0 pointer-events-none" style={{ background: SHINE_OVERLAY, borderRadius: 'inherit' }} />
+      {/* Video camera icon */}
+      <div className="relative z-10" style={{ width: size * 0.5, height: size * 0.36 }}>
+        <div className="w-full h-full bg-white rounded-lg" style={{ opacity: 0.95 }} />
+        <div className="absolute" style={{ right: -size * 0.08, top: '50%', transform: 'translateY(-50%)', width: 0, height: 0, borderTop: `${Math.round(size * 0.13)}px solid transparent`, borderBottom: `${Math.round(size * 0.13)}px solid transparent`, borderLeft: `${Math.round(size * 0.13)}px solid rgba(255,255,255,0.95)` }} />
+      </div>
+    </div>
+  )
+}
+
+function MessagesIcon({ size }: { size: number }) {
+  return (
+    <div
+      className="relative overflow-hidden flex items-center justify-center"
+      style={{
+        width: size,
+        height: size,
+        borderRadius: SQUIRCLE_RADIUS,
+        background: 'linear-gradient(135deg, #34C759 0%, #30D158 50%, #28B74A 100%)',
+        ...ICON_DEPTH_SHADOW,
+      }}
+    >
+      {/* Shine */}
+      <div className="absolute inset-0 pointer-events-none" style={{ background: SHINE_OVERLAY, borderRadius: 'inherit' }} />
+      {/* Speech bubble */}
+      <div className="relative z-10" style={{ width: size * 0.52, height: size * 0.42, background: 'white', borderRadius: `${Math.round(size * 0.1)}px`, boxShadow: '0 1px 3px rgba(0,0,0,0.15)' }}>
+        {/* Tail */}
+        <div className="absolute" style={{ bottom: -size * 0.08, left: size * 0.08, width: 0, height: 0, borderLeft: `${Math.round(size * 0.06)}px solid transparent`, borderRight: `${Math.round(size * 0.06)}px solid transparent`, borderTop: `${Math.round(size * 0.08)}px solid white` }} />
+        {/* Three dots */}
+        <div className="flex items-center justify-center h-full gap-1">
+          {[0, 1, 2].map((i) => (
+            <div key={i} style={{ width: Math.round(size * 0.05), height: Math.round(size * 0.05), borderRadius: '50%', background: '#34C759' }} />
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function AppStoreIcon({ size }: { size: number }) {
+  return (
+    <div
+      className="relative overflow-hidden flex items-center justify-center"
+      style={{
+        width: size,
+        height: size,
+        borderRadius: SQUIRCLE_RADIUS,
+        background: 'linear-gradient(135deg, #007AFF 0%, #005EC4 50%, #0040A0 100%)',
+        ...ICON_DEPTH_SHADOW,
+      }}
+    >
+      {/* Shine */}
+      <div className="absolute inset-0 pointer-events-none" style={{ background: SHINE_OVERLAY, borderRadius: 'inherit' }} />
+      {/* "A" with pencil/circle design */}
+      <svg className="relative z-10" width={size * 0.6} height={size * 0.6} viewBox="0 0 100 100" fill="none">
+        {/* Circle */}
+        <circle cx="50" cy="50" r="42" stroke="white" strokeWidth="6" fill="none" />
+        {/* "A" letter */}
+        <path d="M38 75 L50 30 L62 75" stroke="white" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+        <line x1="42" y1="60" x2="58" y2="60" stroke="white" strokeWidth="6" strokeLinecap="round" />
+        {/* Pencil crossing */}
+        <line x1="72" y1="18" x2="80" y2="26" stroke="white" strokeWidth="5" strokeLinecap="round" />
+        <line x1="69" y1="21" x2="77" y2="29" stroke="white" strokeWidth="3" strokeLinecap="round" opacity="0.7" />
+      </svg>
+    </div>
+  )
+}
+
 // Icon rendering function — dispatches to app-specific components
 function DockAppIcon({ appId, size }: { appId: string; size: number }) {
   switch (appId) {
@@ -582,6 +714,16 @@ function DockAppIcon({ appId, size }: { appId: string; size: number }) {
       return <RemindersIcon size={size} />
     case 'textedit':
       return <TextEditIcon size={size} />
+    case 'chrome':
+      return <ChromeIcon size={size} />
+    case 'appletv':
+      return <AppleTVIcon size={size} />
+    case 'facetime':
+      return <FaceTimeIcon size={size} />
+    case 'messages':
+      return <MessagesIcon size={size} />
+    case 'appstore':
+      return <AppStoreIcon size={size} />
     case 'trash':
       return <TrashIcon size={size} />
     case 'launchpad':

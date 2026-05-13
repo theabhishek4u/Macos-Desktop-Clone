@@ -23,6 +23,11 @@ import {
   Copy,
   Archive,
   Pencil,
+  Play,
+  Pause,
+  Volume2,
+  Maximize2,
+  X,
 } from 'lucide-react'
 import useMacOSStore from '@/store/macos-store'
 
@@ -38,6 +43,33 @@ interface FSNode {
   dateModified?: string
 }
 
+// ─── Helper: check file type ──────────────────────────────────────────────────
+
+function isImageFile(name: string): boolean {
+  const ext = name.split('.').pop()?.toLowerCase() || ''
+  return ['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp'].includes(ext)
+}
+
+function isVideoFile(name: string): boolean {
+  const ext = name.split('.').pop()?.toLowerCase() || ''
+  return ['mp4', 'mov', 'avi', 'mkv'].includes(ext)
+}
+
+function isTextFile(name: string): boolean {
+  const ext = name.split('.').pop()?.toLowerCase() || ''
+  return ['txt', 'md', 'js', 'ts', 'tsx', 'jsx', 'html', 'css', 'py', 'rs', 'go'].includes(ext)
+}
+
+function isPdfFile(name: string): boolean {
+  const ext = name.split('.').pop()?.toLowerCase() || ''
+  return ext === 'pdf'
+}
+
+function getPicsumUrl(filename: string, width: number, height: number): string {
+  const seed = filename.replace(/\.[^.]+$/, '')
+  return `https://picsum.photos/seed/${seed}/${width}/${height}`
+}
+
 // ─── Helper: get file icon based on extension ────────────────────────────────
 
 function getFileIcon(item: FSNode): React.ReactNode {
@@ -46,25 +78,47 @@ function getFileIcon(item: FSNode): React.ReactNode {
   }
   const ext = item.name.split('.').pop()?.toLowerCase() || ''
   const iconSize = 32
+
+  // Image files: show thumbnail
+  if (isImageFile(item.name)) {
+    return (
+      <div className="relative shrink-0" style={{ width: iconSize, height: iconSize }}>
+        <img
+          src={getPicsumUrl(item.name, 64, 64)}
+          alt={item.name}
+          className="w-full h-full object-cover rounded"
+          onError={(e) => {
+            (e.target as HTMLImageElement).style.display = 'none'
+            const parent = (e.target as HTMLImageElement).parentElement
+            if (parent) {
+              const fallback = document.createElement('div')
+              fallback.innerHTML = '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-green-500"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>'
+              parent.appendChild(fallback.firstElementChild!)
+            }
+          }}
+        />
+      </div>
+    )
+  }
+
+  // Video files: show film strip with gradient
+  if (isVideoFile(item.name)) {
+    return (
+      <div className="relative shrink-0" style={{ width: iconSize, height: iconSize }}>
+        <div className="w-full h-full rounded bg-gradient-to-br from-purple-600 via-purple-500 to-pink-500 flex items-center justify-center">
+          <Film size={18} className="text-white/90" />
+        </div>
+      </div>
+    )
+  }
+
   switch (ext) {
-    case 'png':
-    case 'jpg':
-    case 'jpeg':
-    case 'gif':
-    case 'svg':
-    case 'webp':
-      return <ImageIcon size={iconSize} className="text-green-500 shrink-0" />
     case 'mp3':
     case 'wav':
     case 'flac':
     case 'aac':
     case 'm3u':
       return <Music size={iconSize} className="text-pink-500 shrink-0" />
-    case 'mp4':
-    case 'mov':
-    case 'avi':
-    case 'mkv':
-      return <Film size={iconSize} className="text-purple-500 shrink-0" />
     case 'js':
     case 'ts':
     case 'tsx':
@@ -414,11 +468,15 @@ export default function Finder() {
     )
   }, [currentNode, searchQuery])
 
-  // Handle double-click on a folder
+  // Handle double-click on a folder or file
   const handleItemDoubleClick = useCallback(
     (item: FSNode) => {
       if (item.type === 'folder') {
         navigateTo([...currentPath, item.name])
+      } else {
+        // Open Quick Look for files
+        setSelectedItem(item.name)
+        setShowQuickLook(true)
       }
     },
     [currentPath, navigateTo]
@@ -997,73 +1055,11 @@ export default function Finder() {
 
       {/* ─── Quick Look Preview ──────────────────────────────────────── */}
       {showQuickLook && selectedNode && (
-        <div
-          className="fixed inset-0 z-[10000] flex items-center justify-center"
-          onClick={() => setShowQuickLook(false)}
-        >
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
-          <div
-            className="relative bg-white/95 backdrop-blur-xl rounded-xl shadow-2xl border border-gray-200/80 min-w-[320px] max-w-[400px] p-6"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Close button */}
-            <button
-              className="absolute top-3 right-3 w-6 h-6 rounded-full bg-gray-200/80 hover:bg-gray-300 flex items-center justify-center text-gray-500 hover:text-gray-700 transition-colors"
-              onClick={() => setShowQuickLook(false)}
-            >
-              <span className="text-xs">✕</span>
-            </button>
-
-            {/* Icon */}
-            <div className="flex justify-center mb-4">
-              <div className="transform scale-150">
-                {getFileIcon(selectedNode)}
-              </div>
-            </div>
-
-            {/* Name */}
-            <div className="text-center mb-4">
-              <h3 className="text-sm font-semibold text-gray-900">{selectedNode.name}</h3>
-            </div>
-
-            {/* Details */}
-            <div className="space-y-2 text-[11px] border-t border-gray-200 pt-3">
-              <div className="flex justify-between">
-                <span className="text-gray-400">Kind:</span>
-                <span className="text-gray-700">{getKindLabel(selectedNode)}</span>
-              </div>
-              {selectedNode.size && (
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Size:</span>
-                  <span className="text-gray-700">{selectedNode.size}</span>
-                </div>
-              )}
-              <div className="flex justify-between">
-                <span className="text-gray-400">Modified:</span>
-                <span className="text-gray-700">{selectedNode.dateModified || 'Today'}</span>
-              </div>
-              {selectedNode.type === 'folder' && selectedNode.children && (
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Contains:</span>
-                  <span className="text-gray-700">{selectedNode.children.length} item{selectedNode.children.length !== 1 ? 's' : ''}</span>
-                </div>
-              )}
-              <div className="flex justify-between">
-                <span className="text-gray-400">Location:</span>
-                <span className="text-gray-700">{currentPath.length > 0 ? currentPath.join(' > ') : 'Macintosh HD'}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">Created:</span>
-                <span className="text-gray-700">{selectedNode.dateModified || 'Today'}</span>
-              </div>
-            </div>
-
-            {/* Press Space to close hint */}
-            <div className="mt-4 text-center">
-              <span className="text-[10px] text-gray-400">Press Space or Escape to close</span>
-            </div>
-          </div>
-        </div>
+        <QuickLookOverlay
+          node={selectedNode}
+          currentPath={currentPath}
+          onClose={() => setShowQuickLook(false)}
+        />
       )}
 
       {/* ─── Info Panel ──────────────────────────────────────────────────── */}
@@ -1170,6 +1166,421 @@ export default function Finder() {
       )}
     </div>
   )
+}
+
+// ─── Video Player Component ──────────────────────────────────────────────────
+
+function VideoPlayer({ filename }: { filename: string }) {
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [progress, setProgress] = useState(0)
+  const [currentTime, setCurrentTime] = useState('0:00')
+  const totalTime = '3:24'
+
+  useEffect(() => {
+    if (!isPlaying) return
+    const interval = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 100) {
+          setIsPlaying(false)
+          return 0
+        }
+        const next = prev + 0.05
+        // Calculate time: 3:24 = 204 seconds
+        const totalSeconds = 204
+        const currentSeconds = Math.floor((next / 100) * totalSeconds)
+        const mins = Math.floor(currentSeconds / 60)
+        const secs = currentSeconds % 60
+        setCurrentTime(`${mins}:${secs.toString().padStart(2, '0')}`)
+        return next
+      })
+    }, 50)
+    return () => clearInterval(interval)
+  }, [isPlaying])
+
+  return (
+    <div className="relative w-full h-full bg-black rounded-lg overflow-hidden group">
+      {/* Video frame placeholder - gradient image */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background: [
+            'radial-gradient(ellipse 80% 40% at 50% 60%, rgba(100, 80, 200, 0.6) 0%, transparent 60%)',
+            'radial-gradient(ellipse 60% 30% at 30% 40%, rgba(200, 100, 50, 0.4) 0%, transparent 50%)',
+            'radial-gradient(ellipse 50% 25% at 70% 35%, rgba(50, 100, 200, 0.4) 0%, transparent 50%)',
+            'linear-gradient(135deg, #1a0a3a 0%, #2d1568 20%, #4a1a8a 40%, #7a2aae 55%, #cc5a3a 70%, #e8783a 85%, #4a6ae8 100%)',
+          ].join(', '),
+          opacity: 0.6,
+        }}
+      />
+
+      {/* Play button overlay (when paused) */}
+      {!isPlaying && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <button
+            onClick={() => setIsPlaying(true)}
+            className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-white/30 transition-colors"
+          >
+            <Play size={32} className="text-white ml-1" fill="white" />
+          </button>
+        </div>
+      )}
+
+      {/* Pause overlay (when playing, shows on hover) */}
+      {isPlaying && (
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+          <button
+            onClick={() => setIsPlaying(false)}
+            className="w-12 h-12 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center hover:bg-black/50 transition-colors"
+          >
+            <Pause size={24} className="text-white" fill="white" />
+          </button>
+        </div>
+      )}
+
+      {/* Video title */}
+      <div className="absolute top-0 left-0 right-0 p-3 bg-gradient-to-b from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+        <p className="text-white text-sm font-medium truncate">{filename}</p>
+      </div>
+
+      {/* Controls bar */}
+      <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+        {/* Progress bar */}
+        <div
+          className="w-full h-1 bg-white/20 rounded-full mb-3 cursor-pointer"
+          onClick={(e) => {
+            const rect = e.currentTarget.getBoundingClientRect()
+            const x = e.clientX - rect.left
+            const newProgress = (x / rect.width) * 100
+            setProgress(newProgress)
+          }}
+        >
+          <div
+            className="h-full bg-white rounded-full relative transition-all duration-100"
+            style={{ width: `${progress}%` }}
+          >
+            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-md" />
+          </div>
+        </div>
+
+        {/* Controls */}
+        <div className="flex items-center gap-3">
+          <button onClick={() => setIsPlaying(!isPlaying)} className="text-white hover:text-white/80 transition-colors">
+            {isPlaying ? <Pause size={16} fill="white" /> : <Play size={16} fill="white" />}
+          </button>
+          <span className="text-white/70 text-[11px] font-mono">
+            {currentTime} / {totalTime}
+          </span>
+          <div className="flex-1" />
+          <button className="text-white/70 hover:text-white transition-colors">
+            <Volume2 size={14} />
+          </button>
+          <button className="text-white/70 hover:text-white transition-colors">
+            <Maximize2 size={14} />
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Quick Look Overlay ──────────────────────────────────────────────────────
+
+function QuickLookOverlay({
+  node,
+  currentPath,
+  onClose,
+}: {
+  node: FSNode
+  currentPath: string[]
+  onClose: () => void
+}) {
+  // Image preview
+  if (node.type === 'file' && isImageFile(node.name)) {
+    return (
+      <div
+        className="fixed inset-0 z-[10000] flex items-center justify-center"
+        onClick={onClose}
+      >
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+        <div
+          className="relative bg-[#1c1c1e] rounded-xl shadow-2xl border border-white/10 overflow-hidden"
+          style={{ maxWidth: '85vw', maxHeight: '85vh' }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Close button */}
+          <button
+            className="absolute top-3 right-3 z-10 w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/70 hover:text-white transition-colors"
+            onClick={onClose}
+          >
+            <X size={14} />
+          </button>
+
+          {/* Image preview */}
+          <div className="flex items-center justify-center p-2" style={{ minWidth: 400, minHeight: 300, maxWidth: '80vw', maxHeight: '78vh' }}>
+            <img
+              src={getPicsumUrl(node.name, 800, 600)}
+              alt={node.name}
+              className="max-w-full max-h-[78vh] object-contain rounded"
+              style={{ imageRendering: 'auto' }}
+            />
+          </div>
+
+          {/* File info bar */}
+          <div className="flex items-center justify-between px-4 py-2.5 bg-[#1c1c1e] border-t border-white/10">
+            <div className="flex items-center gap-3">
+              <span className="text-white/90 text-[13px] font-medium">{node.name}</span>
+              <span className="text-white/40 text-[11px]">{getKindLabel(node)}</span>
+              {node.size && <span className="text-white/40 text-[11px]">{node.size}</span>}
+            </div>
+            <span className="text-white/30 text-[10px]">Press Space or Escape to close</span>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Video preview
+  if (node.type === 'file' && isVideoFile(node.name)) {
+    return (
+      <div
+        className="fixed inset-0 z-[10000] flex items-center justify-center"
+        onClick={onClose}
+      >
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+        <div
+          className="relative bg-[#1c1c1e] rounded-xl shadow-2xl border border-white/10 overflow-hidden"
+          style={{ width: 640, maxWidth: '85vw' }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Close button */}
+          <button
+            className="absolute top-3 right-3 z-10 w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/70 hover:text-white transition-colors"
+            onClick={onClose}
+          >
+            <X size={14} />
+          </button>
+
+          {/* Video player */}
+          <div className="aspect-video">
+            <VideoPlayer filename={node.name} />
+          </div>
+
+          {/* File info bar */}
+          <div className="flex items-center justify-between px-4 py-2.5 bg-[#1c1c1e] border-t border-white/10">
+            <div className="flex items-center gap-3">
+              <span className="text-white/90 text-[13px] font-medium">{node.name}</span>
+              <span className="text-white/40 text-[11px]">{getKindLabel(node)}</span>
+              {node.size && <span className="text-white/40 text-[11px]">{node.size}</span>}
+            </div>
+            <span className="text-white/30 text-[10px]">Press Space or Escape to close</span>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Text file preview
+  if (node.type === 'file' && isTextFile(node.name)) {
+    const ext = node.name.split('.').pop()?.toLowerCase() || ''
+    const textContent = getFileTextContent(node.name)
+    return (
+      <div
+        className="fixed inset-0 z-[10000] flex items-center justify-center"
+        onClick={onClose}
+      >
+        <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+        <div
+          className="relative bg-white rounded-xl shadow-2xl border border-gray-200/80 overflow-hidden"
+          style={{ width: 500, maxWidth: '85vw', maxHeight: '80vh' }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Close button */}
+          <button
+            className="absolute top-3 right-3 z-10 w-7 h-7 rounded-full bg-gray-200/80 hover:bg-gray-300 flex items-center justify-center text-gray-500 hover:text-gray-700 transition-colors"
+            onClick={onClose}
+          >
+            <X size={14} />
+          </button>
+
+          {/* Header */}
+          <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-200">
+            <Code size={16} className="text-orange-500" />
+            <span className="text-[13px] font-medium text-gray-800">{node.name}</span>
+            <span className="text-[11px] text-gray-400">{ext.toUpperCase()}</span>
+          </div>
+
+          {/* Text content */}
+          <div className="p-4 overflow-auto" style={{ maxHeight: '60vh' }}>
+            <pre className="text-[12px] text-gray-700 font-mono whitespace-pre-wrap leading-relaxed">
+              {textContent}
+            </pre>
+          </div>
+
+          {/* Footer */}
+          <div className="flex items-center justify-between px-4 py-2 border-t border-gray-200 bg-gray-50/50">
+            <span className="text-[11px] text-gray-400">{getKindLabel(node)}{node.size ? ` — ${node.size}` : ''}</span>
+            <span className="text-[10px] text-gray-400">Press Space or Escape to close</span>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // PDF preview
+  if (node.type === 'file' && isPdfFile(node.name)) {
+    return (
+      <div
+        className="fixed inset-0 z-[10000] flex items-center justify-center"
+        onClick={onClose}
+      >
+        <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+        <div
+          className="relative bg-white rounded-xl shadow-2xl border border-gray-200/80 overflow-hidden"
+          style={{ width: 420, maxWidth: '85vw' }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Close button */}
+          <button
+            className="absolute top-3 right-3 z-10 w-7 h-7 rounded-full bg-gray-200/80 hover:bg-gray-300 flex items-center justify-center text-gray-500 hover:text-gray-700 transition-colors"
+            onClick={onClose}
+          >
+            <X size={14} />
+          </button>
+
+          {/* PDF icon */}
+          <div className="flex flex-col items-center py-10">
+            <div className="w-24 h-32 bg-red-100 rounded-lg flex flex-col items-center justify-center border-2 border-red-200 mb-4">
+              <FileText size={36} className="text-red-500 mb-1" />
+              <span className="text-[10px] font-bold text-red-600">PDF</span>
+            </div>
+            <h3 className="text-sm font-semibold text-gray-900">{node.name}</h3>
+            <p className="text-[11px] text-gray-500 mt-1">PDF Document</p>
+          </div>
+
+          {/* File info */}
+          <div className="px-4 py-3 border-t border-gray-200 bg-gray-50/50">
+            <div className="flex justify-between text-[11px]">
+              <span className="text-gray-400">Kind:</span>
+              <span className="text-gray-700">PDF Document</span>
+            </div>
+            {node.size && (
+              <div className="flex justify-between text-[11px] mt-1">
+                <span className="text-gray-400">Size:</span>
+                <span className="text-gray-700">{node.size}</span>
+              </div>
+            )}
+            <div className="flex justify-between text-[11px] mt-1">
+              <span className="text-gray-400">Modified:</span>
+              <span className="text-gray-700">{node.dateModified || 'Today'}</span>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="text-center py-2 border-t border-gray-200">
+            <span className="text-[10px] text-gray-400">Press Space or Escape to close</span>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Default: folder or unknown file type - show info view
+  return (
+    <div
+      className="fixed inset-0 z-[10000] flex items-center justify-center"
+      onClick={onClose}
+    >
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+      <div
+        className="relative bg-white/95 backdrop-blur-xl rounded-xl shadow-2xl border border-gray-200/80 min-w-[320px] max-w-[400px] p-6"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Close button */}
+        <button
+          className="absolute top-3 right-3 w-6 h-6 rounded-full bg-gray-200/80 hover:bg-gray-300 flex items-center justify-center text-gray-500 hover:text-gray-700 transition-colors"
+          onClick={onClose}
+        >
+          <X size={14} />
+        </button>
+
+        {/* Icon */}
+        <div className="flex justify-center mb-4">
+          <div className="transform scale-150">
+            {getFileIcon(node)}
+          </div>
+        </div>
+
+        {/* Name */}
+        <div className="text-center mb-4">
+          <h3 className="text-sm font-semibold text-gray-900">{node.name}</h3>
+        </div>
+
+        {/* Details */}
+        <div className="space-y-2 text-[11px] border-t border-gray-200 pt-3">
+          <div className="flex justify-between">
+            <span className="text-gray-400">Kind:</span>
+            <span className="text-gray-700">{getKindLabel(node)}</span>
+          </div>
+          {node.size && (
+            <div className="flex justify-between">
+              <span className="text-gray-400">Size:</span>
+              <span className="text-gray-700">{node.size}</span>
+            </div>
+          )}
+          <div className="flex justify-between">
+            <span className="text-gray-400">Modified:</span>
+            <span className="text-gray-700">{node.dateModified || 'Today'}</span>
+          </div>
+          {node.type === 'folder' && node.children && (
+            <div className="flex justify-between">
+              <span className="text-gray-400">Contains:</span>
+              <span className="text-gray-700">{node.children.length} item{node.children.length !== 1 ? 's' : ''}</span>
+            </div>
+          )}
+          <div className="flex justify-between">
+            <span className="text-gray-400">Location:</span>
+            <span className="text-gray-700">{currentPath.length > 0 ? currentPath.join(' > ') : 'Macintosh HD'}</span>
+          </div>
+        </div>
+
+        {/* Press Space to close hint */}
+        <div className="mt-4 text-center">
+          <span className="text-[10px] text-gray-400">Press Space or Escape to close</span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Mock text content for text files ────────────────────────────────────────
+
+function getFileTextContent(filename: string): string {
+  const ext = filename.split('.').pop()?.toLowerCase() || ''
+  const name = filename.replace(/\.[^.]+$/, '')
+
+  switch (ext) {
+    case 'js':
+    case 'jsx':
+      return `// ${filename}\nimport React from 'react'\n\nexport default function ${name.charAt(0).toUpperCase() + name.slice(1)}() {\n  return (\n    <div className="app">\n      <h1>Hello World</h1>\n      <p>Welcome to my application.</p>\n    </div>\n  )\n}\n`
+    case 'ts':
+    case 'tsx':
+      return `// ${filename}\nimport React from 'react'\n\ninterface Props {\n  title: string\n  count?: number\n}\n\nexport default function ${name.charAt(0).toUpperCase() + name.slice(1)}({ title, count = 0 }: Props) {\n  return (\n    <div>\n      <h1>{title}</h1>\n      <p>Count: {count}</p>\n    </div>\n  )\n}\n`
+    case 'html':
+      return `<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n  <title>${name}</title>\n  <link rel="stylesheet" href="style.css">\n</head>\n<body>\n  <div id="app">\n    <h1>Welcome</h1>\n    <p>This is a sample HTML file.</p>\n  </div>\n  <script src="app.js"></script>\n</body>\n</html>\n`
+    case 'css':
+      return `/* ${filename} */\n\n* {\n  margin: 0;\n  padding: 0;\n  box-sizing: border-box;\n}\n\nbody {\n  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;\n  line-height: 1.6;\n  color: #333;\n}\n\n.app {\n  max-width: 800px;\n  margin: 0 auto;\n  padding: 2rem;\n}\n`
+    case 'py':
+      return `# ${filename}\n\ndef main():\n    """Main entry point."""\n    print("Hello, World!")\n    data = [1, 2, 3, 4, 5]\n    result = sum(data)\n    print(f"Sum: {result}")\n\n\nclass DataProcessor:\n    def __init__(self, source):\n        self.source = source\n        self.data = []\n\n    def process(self):\n        for item in self.source:\n            self.data.append(item.strip())\n        return self.data\n\n\nif __name__ == "__main__":\n    main()\n`
+    case 'rs':
+      return `// ${filename}\n\nfn main() {\n    println!("Hello, World!");\n    let data = vec![1, 2, 3, 4, 5];\n    let sum: i32 = data.iter().sum();\n    println!("Sum: {}", sum);\n}\n`
+    case 'go':
+      return `// ${filename}\npackage main\n\nimport (\n\t"fmt"\n)\n\nfunc main() {\n\tfmt.Println("Hello, World!")\n\tdata := []int{1, 2, 3, 4, 5}\n\tsum := 0\n\tfor _, v := range data {\n\t\tsum += v\n\t}\n\tfmt.Printf("Sum: %d\\n", sum)\n}\n`
+    case 'md':
+      return `# ${name}\n\nThis is a sample Markdown document.\n\n## Overview\n\nLorem ipsum dolor sit amet, consectetur adipiscing elit.\n\n## Features\n\n- Feature one\n- Feature two\n- Feature three\n\n## Getting Started\n\n1. Install dependencies\n2. Configure settings\n3. Run the application\n\n> This is a blockquote example.\n`
+    case 'txt':
+    default:
+      return `This is the content of ${filename}.\n\nIt is a text file containing sample data for preview purposes.\n\n---\nCreated: Today\nModified: Today\nSize: ${Math.floor(Math.random() * 20 + 1)} KB\n`
+  }
 }
 
 // ─── Grid View ───────────────────────────────────────────────────────────────
