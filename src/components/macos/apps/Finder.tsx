@@ -27,6 +27,7 @@ import {
   Pause,
   Volume2,
   Maximize2,
+  Wifi,
   X,
 } from 'lucide-react'
 import useMacOSStore from '@/store/macos-store'
@@ -52,7 +53,7 @@ function isImageFile(name: string): boolean {
 
 function isVideoFile(name: string): boolean {
   const ext = name.split('.').pop()?.toLowerCase() || ''
-  return ['mp4', 'mov', 'avi', 'mkv'].includes(ext)
+  return ['mp4', 'mov', 'avi', 'mkv', 'webm'].includes(ext)
 }
 
 function isTextFile(name: string): boolean {
@@ -118,24 +119,95 @@ function getFileIcon(item: FSNode): React.ReactNode {
     case 'flac':
     case 'aac':
     case 'm3u':
-      return <Music size={iconSize} className="text-pink-500 shrink-0" />
+      return (
+        <div className="relative shrink-0" style={{ width: iconSize, height: iconSize }}>
+          <div className="w-full h-full rounded bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center">
+            <Music size={16} className="text-white/90" />
+          </div>
+        </div>
+      )
     case 'js':
     case 'ts':
     case 'tsx':
     case 'jsx':
+      return (
+        <div className="relative shrink-0" style={{ width: iconSize, height: iconSize }}>
+          <div className="w-full h-full rounded bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center">
+            <Code size={16} className="text-white/90" />
+          </div>
+        </div>
+      )
     case 'html':
     case 'css':
+      return (
+        <div className="relative shrink-0" style={{ width: iconSize, height: iconSize }}>
+          <div className="w-full h-full rounded bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center">
+            <Code size={16} className="text-white/90" />
+          </div>
+        </div>
+      )
     case 'py':
     case 'rs':
     case 'go':
-      return <Code size={iconSize} className="text-orange-500 shrink-0" />
-    case 'txt':
-    case 'md':
+      return (
+        <div className="relative shrink-0" style={{ width: iconSize, height: iconSize }}>
+          <div className="w-full h-full rounded bg-gradient-to-br from-teal-500 to-cyan-600 flex items-center justify-center">
+            <Code size={16} className="text-white/90" />
+          </div>
+        </div>
+      )
+    case 'pdf':
+      return (
+        <div className="relative shrink-0" style={{ width: iconSize, height: iconSize }}>
+          <div className="w-full h-full rounded bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center">
+            <FileText size={16} className="text-white/90" />
+          </div>
+        </div>
+      )
     case 'doc':
     case 'docx':
-    case 'pdf':
+      return (
+        <div className="relative shrink-0" style={{ width: iconSize, height: iconSize }}>
+          <div className="w-full h-full rounded bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center">
+            <FileText size={16} className="text-white/90" />
+          </div>
+        </div>
+      )
     case 'xlsx':
+      return (
+        <div className="relative shrink-0" style={{ width: iconSize, height: iconSize }}>
+          <div className="w-full h-full rounded bg-gradient-to-br from-green-600 to-green-800 flex items-center justify-center">
+            <FileText size={16} className="text-white/90" />
+          </div>
+        </div>
+      )
+    case 'txt':
+    case 'md':
       return <FileText size={iconSize} className="text-gray-500 shrink-0" />
+    case 'dmg':
+      return (
+        <div className="relative shrink-0" style={{ width: iconSize, height: iconSize }}>
+          <div className="w-full h-full rounded bg-gradient-to-br from-gray-400 to-gray-600 flex items-center justify-center">
+            <HardDrive size={16} className="text-white/90" />
+          </div>
+        </div>
+      )
+    case 'zip':
+      return (
+        <div className="relative shrink-0" style={{ width: iconSize, height: iconSize }}>
+          <div className="w-full h-full rounded bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center">
+            <Archive size={16} className="text-white/90" />
+          </div>
+        </div>
+      )
+    case 'app':
+      return (
+        <div className="relative shrink-0" style={{ width: iconSize, height: iconSize }}>
+          <div className="w-full h-full rounded bg-gradient-to-br from-gray-100 to-gray-300 border border-gray-300 flex items-center justify-center">
+            <Code size={16} className="text-gray-700" />
+          </div>
+        </div>
+      )
     default:
       return <File size={iconSize} className="text-gray-400 shrink-0" />
   }
@@ -266,8 +338,11 @@ function createInitialFS(): FSNode {
         children: [
           { name: 'installer.dmg', type: 'file', size: '128 MB', dateModified: 'Today' },
           { name: 'photo.jpg', type: 'file', size: '3.2 MB', dateModified: 'Today' },
+          { name: 'landscape.webp', type: 'file', size: '1.8 MB', dateModified: 'Today' },
           { name: 'song.mp3', type: 'file', size: '5.8 MB', dateModified: 'Yesterday' },
           { name: 'movie-trailer.mp4', type: 'file', size: '52 MB', dateModified: 'Last Week' },
+          { name: 'presentation.mov', type: 'file', size: '34 MB', dateModified: 'Last Week' },
+          { name: 'tutorial.webm', type: 'file', size: '28 MB', dateModified: 'Yesterday' },
         ],
       },
       {
@@ -291,6 +366,8 @@ function createInitialFS(): FSNode {
             children: [
               { name: 'beach.jpg', type: 'file', size: '4.1 MB', dateModified: 'Last Month' },
               { name: 'sunset.jpg', type: 'file', size: '3.8 MB', dateModified: 'Last Month' },
+              { name: 'ocean.png', type: 'file', size: '5.2 MB', dateModified: 'Last Month' },
+              { name: 'mountains.gif', type: 'file', size: '2.4 MB', dateModified: 'Last Month' },
             ],
           },
           {
@@ -299,9 +376,12 @@ function createInitialFS(): FSNode {
             children: [
               { name: 'screen-1.png', type: 'file', size: '1.2 MB', dateModified: 'This Week' },
               { name: 'screen-2.png', type: 'file', size: '980 KB', dateModified: 'This Week' },
+              { name: 'screen-3.png', type: 'file', size: '1.1 MB', dateModified: 'Today' },
             ],
           },
           { name: 'wallpaper.jpg', type: 'file', size: '5.6 MB', dateModified: 'Last Week' },
+          { name: 'portrait.webp', type: 'file', size: '2.1 MB', dateModified: 'This Week' },
+          { name: 'icon.svg', type: 'file', size: '12 KB', dateModified: 'Yesterday' },
         ],
       },
       {
@@ -332,10 +412,12 @@ interface SidebarItem {
 }
 
 const FAVORITES: SidebarItem[] = [
+  { name: 'AirDrop', icon: <Wifi size={14} className="text-blue-500" />, path: [] },
+  { name: 'Recents', icon: <Search size={14} className="text-gray-500" />, path: [] },
+  { name: 'Applications', icon: <Code size={14} className="text-orange-500" />, path: ['Applications'] },
   { name: 'Desktop', icon: <Folder size={14} className="text-blue-500" />, path: ['Desktop'] },
   { name: 'Documents', icon: <FileText size={14} className="text-gray-500" />, path: ['Documents'] },
   { name: 'Downloads', icon: <HardDrive size={14} className="text-gray-500" />, path: ['Downloads'] },
-  { name: 'Applications', icon: <Code size={14} className="text-orange-500" />, path: ['Applications'] },
   { name: 'Pictures', icon: <ImageIcon size={14} className="text-green-500" />, path: ['Pictures'] },
   { name: 'Music', icon: <Music size={14} className="text-pink-500" />, path: ['Music'] },
 ]
@@ -1058,6 +1140,10 @@ export default function Finder() {
         <QuickLookOverlay
           node={selectedNode}
           currentPath={currentPath}
+          siblingItems={displayItems}
+          onNavigate={(item: FSNode) => {
+            setSelectedItem(item.name)
+          }}
           onClose={() => setShowQuickLook(false)}
         />
       )}
@@ -1170,44 +1256,96 @@ export default function Finder() {
 
 // ─── Video Player Component ──────────────────────────────────────────────────
 
-function VideoPlayer({ filename }: { filename: string }) {
+function VideoPlayer({ filename, fileSize }: { filename: string; fileSize?: string }) {
+  const videoRef = useRef<HTMLVideoElement>(null)
   const [isPlaying, setIsPlaying] = useState(false)
-  const [progress, setProgress] = useState(0)
-  const [currentTime, setCurrentTime] = useState('0:00')
-  const totalTime = '3:24'
+  const [currentTime, setCurrentTime] = useState(0)
+  const [duration, setDuration] = useState(0)
+  const [volume, setVolume] = useState(0.75)
+  const [isMuted, setIsMuted] = useState(false)
+  const [showControls, setShowControls] = useState(true)
+  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const formatTime = (t: number) => {
+    if (!isFinite(t) || t < 0) return '0:00'
+    const mins = Math.floor(t / 60)
+    const secs = Math.floor(t % 60)
+    return `${mins}:${secs.toString().padStart(2, '0')}`
+  }
+
+  const togglePlay = () => {
+    if (!videoRef.current) return
+    if (isPlaying) {
+      videoRef.current.pause()
+    } else {
+      videoRef.current.play().catch(() => {/* autoplay blocked */})
+    }
+    setIsPlaying(!isPlaying)
+  }
+
+  const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!videoRef.current || !duration) return
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = e.clientX - rect.left
+    const newTime = (x / rect.width) * duration
+    videoRef.current.currentTime = newTime
+    setCurrentTime(newTime)
+  }
+
+  const handleVolumeChange = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = e.clientX - rect.left
+    const newVol = Math.max(0, Math.min(1, x / rect.width))
+    setVolume(newVol)
+    setIsMuted(false)
+    if (videoRef.current) {
+      videoRef.current.volume = newVol
+      videoRef.current.muted = false
+    }
+  }
+
+  const handleMouseMove = () => {
+    setShowControls(true)
+    if (hideTimer.current) clearTimeout(hideTimer.current)
+    if (isPlaying) {
+      hideTimer.current = setTimeout(() => setShowControls(false), 3000)
+    }
+  }
 
   useEffect(() => {
-    if (!isPlaying) return
-    const interval = setInterval(() => {
-      setProgress(prev => {
-        if (prev >= 100) {
-          setIsPlaying(false)
-          return 0
-        }
-        const next = prev + 0.05
-        // Calculate time: 3:24 = 204 seconds
-        const totalSeconds = 204
-        const currentSeconds = Math.floor((next / 100) * totalSeconds)
-        const mins = Math.floor(currentSeconds / 60)
-        const secs = currentSeconds % 60
-        setCurrentTime(`${mins}:${secs.toString().padStart(2, '0')}`)
-        return next
-      })
-    }, 50)
-    return () => clearInterval(interval)
-  }, [isPlaying])
+    return () => { if (hideTimer.current) clearTimeout(hideTimer.current) }
+  }, [])
 
   return (
-    <div className="relative w-full h-full bg-black rounded-lg overflow-hidden group">
-      {/* Video frame placeholder - gradient image */}
+    <div
+      className="relative w-full h-full bg-black rounded-lg overflow-hidden group"
+      onMouseMove={handleMouseMove}
+      onMouseLeave={() => { if (isPlaying) setShowControls(false) }}
+    >
+      {/* HTML5 Video element */}
+      <video
+        ref={videoRef}
+        className="w-full h-full object-contain"
+        src="https://www.w3schools.com/html/mov_bbb.mp4"
+        onTimeUpdate={() => { if (videoRef.current) setCurrentTime(videoRef.current.currentTime) }}
+        onLoadedMetadata={() => { if (videoRef.current) setDuration(videoRef.current.duration) }}
+        onEnded={() => setIsPlaying(false)}
+        onPlay={() => setIsPlaying(true)}
+        onPause={() => setIsPlaying(false)}
+        playsInline
+        preload="metadata"
+      >
+        <track kind="captions" />
+      </video>
+
+      {/* Gradient fallback when video doesn't load */}
       <div
-        className="absolute inset-0"
+        className="absolute inset-0 pointer-events-none -z-10"
         style={{
           background: [
             'radial-gradient(ellipse 80% 40% at 50% 60%, rgba(100, 80, 200, 0.6) 0%, transparent 60%)',
             'radial-gradient(ellipse 60% 30% at 30% 40%, rgba(200, 100, 50, 0.4) 0%, transparent 50%)',
-            'radial-gradient(ellipse 50% 25% at 70% 35%, rgba(50, 100, 200, 0.4) 0%, transparent 50%)',
-            'linear-gradient(135deg, #1a0a3a 0%, #2d1568 20%, #4a1a8a 40%, #7a2aae 55%, #cc5a3a 70%, #e8783a 85%, #4a6ae8 100%)',
+            'linear-gradient(135deg, #1a0a3a 0%, #2d1568 30%, #4a1a8a 50%, #cc5a3a 75%, #4a6ae8 100%)',
           ].join(', '),
           opacity: 0.6,
         }}
@@ -1215,9 +1353,9 @@ function VideoPlayer({ filename }: { filename: string }) {
 
       {/* Play button overlay (when paused) */}
       {!isPlaying && (
-        <div className="absolute inset-0 flex items-center justify-center">
+        <div className="absolute inset-0 flex items-center justify-center z-10">
           <button
-            onClick={() => setIsPlaying(true)}
+            onClick={togglePlay}
             className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-white/30 transition-colors"
           >
             <Play size={32} className="text-white ml-1" fill="white" />
@@ -1225,56 +1363,58 @@ function VideoPlayer({ filename }: { filename: string }) {
         </div>
       )}
 
-      {/* Pause overlay (when playing, shows on hover) */}
-      {isPlaying && (
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-          <button
-            onClick={() => setIsPlaying(false)}
-            className="w-12 h-12 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center hover:bg-black/50 transition-colors"
-          >
-            <Pause size={24} className="text-white" fill="white" />
-          </button>
-        </div>
-      )}
-
       {/* Video title */}
-      <div className="absolute top-0 left-0 right-0 p-3 bg-gradient-to-b from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className={`absolute top-0 left-0 right-0 p-3 bg-gradient-to-b from-black/60 to-transparent transition-opacity duration-300 z-10 ${showControls ? 'opacity-100' : 'opacity-0'}`}>
         <p className="text-white text-sm font-medium truncate">{filename}</p>
+        {fileSize && <p className="text-white/50 text-[10px]">{fileSize}</p>}
       </div>
 
       {/* Controls bar */}
-      <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className={`absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 to-transparent transition-opacity duration-300 z-10 ${showControls ? 'opacity-100' : 'opacity-0'}`}>
         {/* Progress bar */}
         <div
-          className="w-full h-1 bg-white/20 rounded-full mb-3 cursor-pointer"
-          onClick={(e) => {
-            const rect = e.currentTarget.getBoundingClientRect()
-            const x = e.clientX - rect.left
-            const newProgress = (x / rect.width) * 100
-            setProgress(newProgress)
-          }}
+          className="w-full h-1.5 bg-white/20 rounded-full mb-3 cursor-pointer group/seek"
+          onClick={handleSeek}
         >
           <div
-            className="h-full bg-white rounded-full relative transition-all duration-100"
-            style={{ width: `${progress}%` }}
+            className="h-full bg-white rounded-full relative"
+            style={{ width: duration ? `${(currentTime / duration) * 100}%` : '0%' }}
           >
-            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-md" />
+            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-md opacity-0 group-hover/seek:opacity-100 transition-opacity" />
           </div>
         </div>
 
         {/* Controls */}
         <div className="flex items-center gap-3">
-          <button onClick={() => setIsPlaying(!isPlaying)} className="text-white hover:text-white/80 transition-colors">
-            {isPlaying ? <Pause size={16} fill="white" /> : <Play size={16} fill="white" />}
+          <button onClick={togglePlay} className="text-white hover:text-white/80 transition-colors">
+            {isPlaying ? <Pause size={16} fill="white" /> : <Play size={16} fill="white" className="ml-0.5" />}
           </button>
           <span className="text-white/70 text-[11px] font-mono">
-            {currentTime} / {totalTime}
+            {formatTime(currentTime)} / {formatTime(duration)}
           </span>
           <div className="flex-1" />
-          <button className="text-white/70 hover:text-white transition-colors">
-            <Volume2 size={14} />
-          </button>
-          <button className="text-white/70 hover:text-white transition-colors">
+          {/* Volume control */}
+          <div className="flex items-center gap-1.5">
+            <button
+              className="text-white/70 hover:text-white transition-colors"
+              onClick={() => {
+                setIsMuted(!isMuted)
+                if (videoRef.current) videoRef.current.muted = !isMuted
+              }}
+            >
+              {isMuted || volume === 0 ? <Volume2 size={14} className="opacity-40" /> : <Volume2 size={14} />}
+            </button>
+            <div
+              className="w-16 h-1 bg-white/20 rounded-full cursor-pointer"
+              onClick={handleVolumeChange}
+            >
+              <div
+                className="h-full bg-white/70 rounded-full"
+                style={{ width: `${isMuted ? 0 : volume * 100}%` }}
+              />
+            </div>
+          </div>
+          <button className="text-white/70 hover:text-white transition-colors" title="Fullscreen">
             <Maximize2 size={14} />
           </button>
         </div>
@@ -1288,14 +1428,39 @@ function VideoPlayer({ filename }: { filename: string }) {
 function QuickLookOverlay({
   node,
   currentPath,
+  siblingItems,
+  onNavigate,
   onClose,
 }: {
   node: FSNode
   currentPath: string[]
+  siblingItems: FSNode[]
+  onNavigate: (item: FSNode) => void
   onClose: () => void
 }) {
-  // Image preview
+  const [zoom, setZoom] = useState(1)
+
+  // Find current index and compute prev/next for navigation
+  const currentIndex = siblingItems.findIndex((item) => item.name === node.name)
+  const prevItem = currentIndex > 0 ? siblingItems[currentIndex - 1] : null
+  const nextItem = currentIndex < siblingItems.length - 1 ? siblingItems[currentIndex + 1] : null
+
+  const handleZoomIn = () => setZoom((z) => Math.min(z + 0.25, 4))
+  const handleZoomOut = () => setZoom((z) => Math.max(z - 0.25, 0.25))
+  const handleZoomReset = () => setZoom(1)
+
+  // Simulated image dimensions based on filename
+  const getSimulatedDimensions = (name: string) => {
+    const hash = name.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0)
+    const w = 800 + (hash % 6) * 200
+    const h = 600 + (hash % 4) * 150
+    return { w, h }
+  }
+
+  // Image preview with zoom and navigation
   if (node.type === 'file' && isImageFile(node.name)) {
+    const dims = getSimulatedDimensions(node.name)
+    const ext = node.name.split('.').pop()?.toUpperCase() || 'IMG'
     return (
       <div
         className="fixed inset-0 z-[10000] flex items-center justify-center"
@@ -1303,34 +1468,89 @@ function QuickLookOverlay({
       >
         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
         <div
-          className="relative bg-[#1c1c1e] rounded-xl shadow-2xl border border-white/10 overflow-hidden"
+          className="relative bg-[#1c1c1e] rounded-xl shadow-2xl border border-white/10 overflow-hidden flex flex-col"
           style={{ maxWidth: '85vw', maxHeight: '85vh' }}
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Close button */}
-          <button
-            className="absolute top-3 right-3 z-10 w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/70 hover:text-white transition-colors"
-            onClick={onClose}
-          >
-            <X size={14} />
-          </button>
+          {/* Top bar with controls */}
+          <div className="flex items-center justify-between px-3 py-2 bg-[#2c2c2e] border-b border-white/10 shrink-0">
+            <div className="flex items-center gap-2">
+              <span className="text-white/90 text-[13px] font-medium truncate max-w-[200px]">{node.name}</span>
+              <span className="text-white/40 text-[11px]">{getKindLabel(node)}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              {/* Zoom controls */}
+              <button
+                className="w-7 h-7 rounded-md bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/70 hover:text-white transition-colors"
+                onClick={handleZoomOut}
+                title="Zoom Out"
+              >
+                <span className="text-[16px] font-bold leading-none">−</span>
+              </button>
+              <button
+                className="px-2 h-7 rounded-md bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/70 hover:text-white transition-colors text-[11px]"
+                onClick={handleZoomReset}
+                title="Reset Zoom"
+              >
+                {Math.round(zoom * 100)}%
+              </button>
+              <button
+                className="w-7 h-7 rounded-md bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/70 hover:text-white transition-colors"
+                onClick={handleZoomIn}
+                title="Zoom In"
+              >
+                <span className="text-[16px] font-bold leading-none">+</span>
+              </button>
+              <div className="w-px h-4 bg-white/20 mx-1" />
+              {/* Close button */}
+              <button
+                className="w-7 h-7 rounded-md bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/70 hover:text-white transition-colors"
+                onClick={onClose}
+              >
+                <X size={14} />
+              </button>
+            </div>
+          </div>
 
-          {/* Image preview */}
-          <div className="flex items-center justify-center p-2" style={{ minWidth: 400, minHeight: 300, maxWidth: '80vw', maxHeight: '78vh' }}>
+          {/* Image preview with navigation */}
+          <div className="flex-1 relative flex items-center justify-center overflow-auto" style={{ minWidth: 400, minHeight: 300, maxWidth: '82vw', maxHeight: '68vh' }}>
+            {/* Previous image arrow */}
+            {prevItem && (
+              <button
+                className="absolute left-2 z-10 w-9 h-9 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-sm flex items-center justify-center text-white/70 hover:text-white transition-colors"
+                onClick={(e) => { e.stopPropagation(); onNavigate(prevItem) }}
+                title={`Previous: ${prevItem.name}`}
+              >
+                <ChevronLeft size={20} />
+              </button>
+            )}
+
             <img
               src={getPicsumUrl(node.name, 800, 600)}
               alt={node.name}
-              className="max-w-full max-h-[78vh] object-contain rounded"
-              style={{ imageRendering: 'auto' }}
+              className="max-w-full max-h-[68vh] object-contain rounded transition-transform duration-200"
+              style={{ transform: `scale(${zoom})`, transformOrigin: 'center center', imageRendering: 'auto' }}
             />
+
+            {/* Next image arrow */}
+            {nextItem && (
+              <button
+                className="absolute right-2 z-10 w-9 h-9 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-sm flex items-center justify-center text-white/70 hover:text-white transition-colors"
+                onClick={(e) => { e.stopPropagation(); onNavigate(nextItem) }}
+                title={`Next: ${nextItem.name}`}
+              >
+                <ChevronRight size={20} />
+              </button>
+            )}
           </div>
 
-          {/* File info bar */}
-          <div className="flex items-center justify-between px-4 py-2.5 bg-[#1c1c1e] border-t border-white/10">
-            <div className="flex items-center gap-3">
-              <span className="text-white/90 text-[13px] font-medium">{node.name}</span>
-              <span className="text-white/40 text-[11px]">{getKindLabel(node)}</span>
-              {node.size && <span className="text-white/40 text-[11px]">{node.size}</span>}
+          {/* Metadata bar */}
+          <div className="flex items-center justify-between px-4 py-2.5 bg-[#1c1c1e] border-t border-white/10 shrink-0">
+            <div className="flex items-center gap-4 text-[11px] text-white/50">
+              <span>{dims.w} × {dims.h}</span>
+              <span>{ext}</span>
+              {node.size && <span>{node.size}</span>}
+              <span>{currentIndex + 1} of {siblingItems.length}</span>
             </div>
             <span className="text-white/30 text-[10px]">Press Space or Escape to close</span>
           </div>
@@ -1339,7 +1559,7 @@ function QuickLookOverlay({
     )
   }
 
-  // Video preview
+  // Video preview with enhanced info
   if (node.type === 'file' && isVideoFile(node.name)) {
     return (
       <div
@@ -1348,29 +1568,35 @@ function QuickLookOverlay({
       >
         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
         <div
-          className="relative bg-[#1c1c1e] rounded-xl shadow-2xl border border-white/10 overflow-hidden"
+          className="relative bg-[#1c1c1e] rounded-xl shadow-2xl border border-white/10 overflow-hidden flex flex-col"
           style={{ width: 640, maxWidth: '85vw' }}
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Close button */}
-          <button
-            className="absolute top-3 right-3 z-10 w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/70 hover:text-white transition-colors"
-            onClick={onClose}
-          >
-            <X size={14} />
-          </button>
+          {/* Top bar */}
+          <div className="flex items-center justify-between px-3 py-2 bg-[#2c2c2e] border-b border-white/10 shrink-0">
+            <div className="flex items-center gap-2">
+              <span className="text-white/90 text-[13px] font-medium">{node.name}</span>
+              <span className="text-white/40 text-[11px]">{getKindLabel(node)}</span>
+            </div>
+            <button
+              className="w-7 h-7 rounded-md bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/70 hover:text-white transition-colors"
+              onClick={onClose}
+            >
+              <X size={14} />
+            </button>
+          </div>
 
           {/* Video player */}
           <div className="aspect-video">
-            <VideoPlayer filename={node.name} />
+            <VideoPlayer filename={node.name} fileSize={node.size} />
           </div>
 
-          {/* File info bar */}
-          <div className="flex items-center justify-between px-4 py-2.5 bg-[#1c1c1e] border-t border-white/10">
-            <div className="flex items-center gap-3">
-              <span className="text-white/90 text-[13px] font-medium">{node.name}</span>
-              <span className="text-white/40 text-[11px]">{getKindLabel(node)}</span>
-              {node.size && <span className="text-white/40 text-[11px]">{node.size}</span>}
+          {/* Video info bar */}
+          <div className="flex items-center justify-between px-4 py-2.5 bg-[#1c1c1e] border-t border-white/10 shrink-0">
+            <div className="flex items-center gap-4 text-[11px] text-white/50">
+              <span>Duration: 3:24</span>
+              {node.size && <span>Size: {node.size}</span>}
+              <span>Format: {node.name.split('.').pop()?.toUpperCase()}</span>
             </div>
             <span className="text-white/30 text-[10px]">Press Space or Escape to close</span>
           </div>

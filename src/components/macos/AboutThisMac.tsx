@@ -42,24 +42,31 @@ export function useAboutThisMac() {
 // --- macOS Sonoma wallpaper gradient (high quality) ---
 function SonomaWallpaper() {
   return (
-    <div className="relative w-full h-[220px] overflow-hidden">
-      {/* Base gradient */}
+    <div className="relative w-full h-[240px] overflow-hidden">
+      {/* Base gradient — more vibrant Sonoma colors */}
       <div
         className="absolute inset-0"
         style={{
-          background: 'linear-gradient(135deg, #1a1a3e 0%, #2d1b69 12%, #5b2c8e 25%, #8b3a8e 38%, #c25477 52%, #e87d5f 66%, #f4a261 80%, #f9c74f 100%)',
+          background: 'linear-gradient(135deg, #1a1a3e 0%, #2d1b69 10%, #5b2c8e 20%, #8b3a8e 30%, #c25477 42%, #e87d5f 55%, #f4a261 68%, #f9c74f 82%, #fce58a 100%)',
+        }}
+      />
+      {/* Sun glow */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background: 'radial-gradient(ellipse 60% 40% at 65% 35%, rgba(255,230,160,0.25) 0%, transparent 60%)',
         }}
       />
       {/* Subtle light overlay for depth */}
       <div
         className="absolute inset-0"
         style={{
-          background: 'radial-gradient(ellipse at 70% 30%, rgba(255,255,255,0.15) 0%, transparent 60%)',
+          background: 'radial-gradient(ellipse at 70% 30%, rgba(255,255,255,0.12) 0%, transparent 55%)',
         }}
       />
-      {/* Subtle noise texture overlay */}
+      {/* Noise texture */}
       <div
-        className="absolute inset-0 opacity-[0.03]"
+        className="absolute inset-0 opacity-[0.02]"
         style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
         }}
@@ -106,9 +113,9 @@ export default function AboutThisMac() {
             transition={{ duration: 0.2 }}
           >
             <motion.div
-              className="pointer-events-auto w-[560px] rounded-2xl overflow-hidden select-none"
+              className="pointer-events-auto w-[540px] rounded-2xl overflow-hidden select-none"
               style={{
-                boxShadow: '0 0 0 0.5px rgba(0,0,0,0.15), 0 25px 80px 4px rgba(0,0,0,0.4), 0 8px 30px rgba(0,0,0,0.2)',
+                boxShadow: '0 0 0 0.5px rgba(0,0,0,0.12), 0 30px 90px 6px rgba(0,0,0,0.45), 0 10px 35px rgba(0,0,0,0.25)',
               }}
               initial={{ opacity: 0, scale: 0.92, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -142,9 +149,9 @@ export default function AboutThisMac() {
 
                 {/* macOS branding area - overlay on wallpaper */}
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  {/* Apple logo */}
+                  {/* Apple logo — refined */}
                   <svg
-                    className="w-[64px] h-[64px] mb-3 text-white drop-shadow-lg"
+                    className="w-[56px] h-[56px] mb-2 text-white drop-shadow-lg"
                     viewBox="0 0 170 170"
                     fill="currentColor"
                   >
@@ -152,24 +159,32 @@ export default function AboutThisMac() {
                   </svg>
 
                   {/* macOS text */}
-                  <h2 className="text-[26px] font-semibold text-white tracking-tight drop-shadow-md">
+                  <h2 className="text-[24px] font-semibold text-white tracking-tight drop-shadow-md">
                     macOS Sonoma
                   </h2>
-                  <p className="text-[13px] text-white/70 mt-0.5 font-medium">Version 14.4</p>
+                  <p className="text-[12px] text-white/60 mt-0.5 font-medium">Version 14.4</p>
                 </div>
               </div>
 
               {/* Info section - light background */}
-              <div className="bg-[#f5f5f7] px-6 pt-5 pb-4">
-                {/* MacBook Pro */}
-                <div className="flex items-center gap-2 mb-4">
-                  <svg className="w-7 h-7 text-[#555]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
-                    <line x1="2" y1="20" x2="22" y2="20" />
-                    <line x1="8" y1="17" x2="8" y2="20" />
-                    <line x1="16" y1="17" x2="16" y2="20" />
+              <div className="bg-[#f5f5f7] px-6 pt-4 pb-3">
+                {/* MacBook Pro — realistic laptop icon */}
+                <div className="flex items-center gap-2.5 mb-3">
+                  <svg className="w-8 h-8 text-[#555]" viewBox="0 0 40 40" fill="none">
+                    {/* Screen */}
+                    <rect x="5" y="4" width="30" height="20" rx="2" fill="#333" />
+                    <rect x="6.5" y="5.5" width="27" height="17" rx="1" fill="#1a1a2e" />
+                    {/* Screen content — tiny desktop */}
+                    <rect x="8" y="7" width="24" height="14" rx="0.5" fill="#2c1458" opacity="0.8" />
+                    {/* Dock on screen */}
+                    <rect x="12" y="18" width="16" height="2.5" rx="1" fill="rgba(255,255,255,0.15)" />
+                    {/* Base/keyboard */}
+                    <path d="M3 25h34c0.5 0 1 0.3 1 0.7v1.3H2v-1.3c0-0.4 0.4-0.7 1-0.7z" fill="#ccc" />
+                    <path d="M1 27h38l-1.5 2H2.5L1 27z" fill="#bbb" />
+                    {/* Notch indicator */}
+                    <rect x="16" y="4" width="8" height="1.5" rx="0.75" fill="#1a1a2e" />
                   </svg>
-                  <span className="text-[15px] font-semibold text-[#1d1d1f]">MacBook Pro</span>
+                  <span className="text-[14px] font-semibold text-[#1d1d1f]">MacBook Pro</span>
                 </div>
 
                 {/* Spec grid - 2 columns */}

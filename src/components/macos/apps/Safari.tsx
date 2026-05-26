@@ -20,6 +20,9 @@ import {
   Cpu,
   RotateCw,
   AlertCircle,
+  Play,
+  Loader2,
+  ExternalLink,
 } from 'lucide-react'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -49,6 +52,18 @@ interface SearchResult {
   favicon: string
 }
 
+interface YouTubeSearchResult {
+  videoId: string
+  url: string
+  title: string
+  snippet: string
+  hostName: string
+  rank: number
+  date: string
+  thumbnail: string
+  channelName: string
+}
+
 interface PageReadResult {
   title: string
   url: string
@@ -56,12 +71,14 @@ interface PageReadResult {
   publishedTime: string
 }
 
-type PageType = 'start' | 'simulated' | 'search-results' | 'youtube-video' | 'page-reader' | 'error' | 'loading'
+type PageType = 'start' | 'simulated' | 'search-results' | 'youtube-browse' | 'youtube-video' | 'page-reader' | 'error' | 'loading'
 
 interface PageState {
   type: PageType
   searchResults?: SearchResult[]
   searchQuery?: string
+  youtubeResults?: YouTubeSearchResult[]
+  youtubeSearchQuery?: string
   youtubeVideoId?: string
   youtubeTitle?: string
   pageContent?: PageReadResult
@@ -96,15 +113,6 @@ const FAVICON_CONFIG: Record<string, FaviconConfig> = {
   'reddit.com': { letter: 'R', bgColor: '#FF4500' },
 }
 
-const FAVICON_MAP: Record<string, string> = {
-  'apple.com': 'apple',
-  'google.com': 'google',
-  'youtube.com': 'youtube',
-  'github.com': 'github',
-  'wikipedia.org': 'wikipedia',
-  'reddit.com': 'reddit',
-}
-
 const SIMULATED_SITES = ['apple.com', 'github.com', 'wikipedia.org', 'reddit.com']
 
 let tabCounter = 0
@@ -131,10 +139,8 @@ function extractYouTubeVideoId(url: string): string | null {
 function isUrl(text: string): boolean {
   const trimmed = text.trim()
   if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return true
-  // Check for domain-like patterns
   const domainPattern = /^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)*\.(com|org|net|edu|gov|io|co|dev|app|me|us|uk|ca|de|fr|jp|cn|ru|br|au|in|it|es|nl|se|no|dk|ch|at|be|pl|kr|mx|ar|tr|za|sg|hk|tw|info|biz|xyz|top|online|site|tech|store|live)(\/|$)/i
   if (domainPattern.test(trimmed)) return true
-  // Also match domains with paths
   if (/^[a-zA-Z0-9][-a-zA-Z0-9]*\.[a-zA-Z]{2,}(\/\S*)?$/.test(trimmed)) return true
   return false
 }
@@ -146,7 +152,7 @@ function normalizeUrl(text: string): string {
 }
 
 function getDisplayUrl(url: string): string {
-  return url.replace(/^https?:\/\//, '').replace(/\/$/, '')
+  return url.replace(/^https?:\/\//, '').replace(/\/$/, '').replace(/^search:/, '')
 }
 
 function isSimulatedSite(url: string): boolean {
@@ -233,7 +239,7 @@ function createTab(url: string = 'localhost:3000', title?: string): Tab {
   }
 }
 
-// ─── Simulated Page Components (kept as-is) ─────────────────────────────────
+// ─── Simulated Page Components ───────────────────────────────────────────────
 
 function ApplePage() {
   const products = [
@@ -248,7 +254,7 @@ function ApplePage() {
   return (
     <div className="flex flex-col w-full min-h-full bg-white">
       <div className="flex items-center justify-between px-8 py-3 bg-[#fbfbfd] border-b border-gray-200/80 shrink-0">
-        <span className="text-xl">🍎</span>
+        <span className="text-xl">&#127822;</span>
         <nav className="flex items-center gap-6 text-[12px] text-gray-500 font-medium">
           <span className="hover:text-gray-900 cursor-pointer transition-colors">Store</span>
           <span className="hover:text-gray-900 cursor-pointer transition-colors">Mac</span>
@@ -256,12 +262,11 @@ function ApplePage() {
           <span className="hover:text-gray-900 cursor-pointer transition-colors">iPhone</span>
           <span className="hover:text-gray-900 cursor-pointer transition-colors">Watch</span>
           <span className="hover:text-gray-900 cursor-pointer transition-colors">AirPods</span>
-          <span className="hover:text-gray-900 cursor-pointer transition-colors">TV & Home</span>
+          <span className="hover:text-gray-900 cursor-pointer transition-colors">TV &amp; Home</span>
           <span className="hover:text-gray-900 cursor-pointer transition-colors">Support</span>
         </nav>
         <div className="flex items-center gap-4">
           <Search size={16} className="text-gray-400 cursor-pointer hover:text-gray-600 transition-colors" />
-          <span className="text-gray-400 cursor-pointer hover:text-gray-600 transition-colors text-sm">👜</span>
         </div>
       </div>
       <div className="bg-black text-white text-center py-16 px-6 shrink-0">
@@ -295,25 +300,11 @@ function ApplePage() {
                   <h3 className="text-lg font-semibold text-gray-900 mb-1">{product.name}</h3>
                   <p className="text-sm text-gray-500 mb-2">{product.tagline}</p>
                   <p className="text-sm text-gray-700 font-medium">{product.price}</p>
-                  <div className="flex items-center gap-3 mt-3">
-                    <span className="text-sm text-blue-600 hover:underline cursor-pointer">Learn more</span>
-                    <span className="text-sm text-blue-600 hover:underline cursor-pointer">Buy</span>
-                  </div>
                 </div>
               </div>
             )
           })}
         </div>
-      </div>
-      <div className="bg-[#f5f5f7] px-8 py-6 border-t border-gray-200 shrink-0">
-        <div className="flex flex-wrap justify-center gap-6 text-[11px] text-gray-400">
-          <span className="hover:text-gray-600 cursor-pointer">Privacy Policy</span>
-          <span className="hover:text-gray-600 cursor-pointer">Terms of Use</span>
-          <span className="hover:text-gray-600 cursor-pointer">Sales and Refunds</span>
-          <span className="hover:text-gray-600 cursor-pointer">Legal</span>
-          <span className="hover:text-gray-600 cursor-pointer">Site Map</span>
-        </div>
-        <p className="text-center text-[11px] text-gray-400 mt-2">Copyright &copy; 2025 Apple Inc. All rights reserved.</p>
       </div>
     </div>
   )
@@ -321,30 +312,21 @@ function ApplePage() {
 
 function GitHubPage() {
   const repos = [
-    { name: 'react', desc: 'The library for web and native user interfaces.', lang: 'JavaScript', langColor: '#f1e05a', stars: '230k', forks: '48.2k' },
-    { name: 'next.js', desc: 'The React Framework \u2013 the perfect full-stack solution.', lang: 'TypeScript', langColor: '#3178c6', stars: '128k', forks: '26.8k' },
-    { name: 'tailwindcss', desc: 'A utility-first CSS framework for rapid UI development.', lang: 'CSS', langColor: '#563d7c', stars: '84.3k', forks: '4.2k' },
-    { name: 'prisma', desc: 'Next-generation Node.js and TypeScript ORM.', lang: 'TypeScript', langColor: '#3178c6', stars: '42.1k', forks: '1.6k' },
-    { name: 'typescript', desc: 'TypeScript is a superset of JavaScript that compiles to clean JavaScript.', lang: 'TypeScript', langColor: '#3178c6', stars: '103k', forks: '12.8k' },
-    { name: 'bun', desc: 'Incredibly fast JavaScript runtime, bundler, test runner, and package manager.', lang: 'Zig', langColor: '#ec915c', stars: '75.2k', forks: '2.7k' },
+    { name: 'react', desc: 'The library for web and native user interfaces.', lang: 'JavaScript', langColor: '#f1e05a', stars: '230k' },
+    { name: 'next.js', desc: 'The React Framework.', lang: 'TypeScript', langColor: '#3178c6', stars: '128k' },
+    { name: 'tailwindcss', desc: 'A utility-first CSS framework.', lang: 'CSS', langColor: '#563d7c', stars: '84.3k' },
+    { name: 'prisma', desc: 'Next-generation Node.js and TypeScript ORM.', lang: 'TypeScript', langColor: '#3178c6', stars: '42.1k' },
   ]
 
   return (
     <div className="flex flex-col w-full min-h-full bg-[#0d1117] text-gray-200">
       <div className="flex items-center px-4 py-2 border-b border-gray-700/50 shrink-0">
-        <span className="text-white text-lg mr-1"></span>
         <span className="font-semibold text-white text-base">GitHub</span>
         <div className="flex-1 max-w-md mx-auto">
           <div className="flex items-center bg-[#161b22] border border-gray-700 rounded-md px-3 py-1">
             <Search size={14} className="text-gray-500 mr-2" />
             <input type="text" placeholder="Type / to search" className="flex-1 text-sm outline-none bg-transparent text-gray-300 placeholder:text-gray-500" />
           </div>
-        </div>
-        <div className="flex items-center gap-3 text-sm text-gray-400">
-          <span className="hover:text-gray-200 cursor-pointer">Pull requests</span>
-          <span className="hover:text-gray-200 cursor-pointer">Issues</span>
-          <span className="hover:text-gray-200 cursor-pointer">Marketplace</span>
-          <span className="hover:text-gray-200 cursor-pointer">Explore</span>
         </div>
       </div>
       <div className="flex-1 overflow-y-auto p-6">
@@ -354,11 +336,8 @@ function GitHubPage() {
             {repos.map((repo, i) => (
               <div key={repo.name} className={`flex items-start gap-4 p-4 hover:bg-[#161b22] transition-colors ${i < repos.length - 1 ? 'border-b border-gray-700/50' : ''}`}>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1 mb-1">
-                    <span className="text-blue-400 hover:underline cursor-pointer font-medium text-sm">{repo.name}</span>
-                    <span className="text-[11px] border border-gray-600 rounded-full px-2 py-0.5 text-gray-400">Public</span>
-                  </div>
-                  <p className="text-[13px] text-gray-400 leading-snug">{repo.desc}</p>
+                  <span className="text-blue-400 hover:underline cursor-pointer font-medium text-sm">{repo.name}</span>
+                  <p className="text-[13px] text-gray-400 leading-snug mt-1">{repo.desc}</p>
                   <div className="flex items-center gap-4 mt-2">
                     <span className="flex items-center gap-1 text-[12px] text-gray-400">
                       <span className="w-3 h-3 rounded-full inline-block" style={{ backgroundColor: repo.langColor }} />
@@ -367,12 +346,8 @@ function GitHubPage() {
                     <span className="flex items-center gap-1 text-[12px] text-gray-400">
                       <Star size={12} /> {repo.stars}
                     </span>
-                    <span className="text-[12px] text-gray-400">\u2009{repo.forks}</span>
                   </div>
                 </div>
-                <button className="shrink-0 px-3 py-1 text-[12px] bg-[#21262d] border border-gray-600 rounded-md text-gray-300 hover:bg-[#30363d] hover:border-gray-500 transition-colors">
-                  \u2B50 Star
-                </button>
               </div>
             ))}
           </div>
@@ -386,41 +361,14 @@ function WikipediaPage() {
   return (
     <div className="flex flex-col w-full min-h-full bg-white">
       <div className="border-b border-gray-200 px-6 py-2 shrink-0">
-        <div className="flex items-center gap-3">
-          <span className="text-2xl"></span>
-          <div>
-            <h1 className="text-lg font-serif text-gray-900">Wikipedia</h1>
-            <p className="text-[11px] text-gray-400">The Free Encyclopedia</p>
-          </div>
-          <div className="flex-1 max-w-sm ml-8">
-            <div className="flex items-center border border-gray-300 rounded px-3 py-1">
-              <Search size={14} className="text-gray-400 mr-2" />
-              <input type="text" placeholder="Search Wikipedia" className="flex-1 text-sm outline-none bg-transparent" />
-            </div>
-          </div>
-        </div>
+        <h1 className="text-lg font-serif text-gray-900">Wikipedia</h1>
       </div>
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-3xl mx-auto px-6 py-6">
           <h1 className="text-3xl font-serif font-normal text-gray-900 mb-1 border-b border-gray-200 pb-3">macOS</h1>
           <p className="text-[13px] text-gray-500 italic mb-4">From Wikipedia, the free encyclopedia</p>
-          <div className="float-right ml-6 mb-4 w-[260px] border border-gray-200 bg-gray-50 rounded-lg overflow-hidden text-[13px]">
-            <div className="bg-gradient-to-r from-gray-100 to-gray-200 px-4 py-2 text-center font-semibold border-b border-gray-200">macOS</div>
-            <div className="p-3 space-y-2 text-gray-700">
-              <div className="flex justify-between"><span className="text-gray-500">Developer</span><span>Apple Inc.</span></div>
-              <div className="flex justify-between"><span className="text-gray-500">Written in</span><span>C, C++, Swift</span></div>
-              <div className="flex justify-between"><span className="text-gray-500">OS family</span><span>Unix-like</span></div>
-              <div className="flex justify-between"><span className="text-gray-500">Initial release</span><span>March 24, 2001</span></div>
-              <div className="flex justify-between"><span className="text-gray-500">Latest release</span><span>15.2 (2025)</span></div>
-              <div className="flex justify-between"><span className="text-gray-500">Kernel</span><span>XNU (hybrid)</span></div>
-              <div className="flex justify-between"><span className="text-gray-500">License</span><span>Proprietary</span></div>
-            </div>
-          </div>
           <div className="text-[14px] text-gray-800 leading-relaxed space-y-4">
-            <p><strong>macOS</strong> is a proprietary graphical operating system developed and marketed by <strong>Apple Inc.</strong> since 2001. It is the primary operating system for Apple&apos;s Mac computers.</p>
-            <p>macOS succeeded the classic Mac OS, a Mac operating system with nine releases from 1984 to 1999.</p>
-            <h2 className="text-xl font-serif font-semibold text-gray-900 mt-6 mb-2 border-b border-gray-200 pb-1">History</h2>
-            <p>macOS is based on the Unix operating system and on technologies developed at NeXT from the 1980s until Apple purchased the company in early 1997.</p>
+            <p><strong>macOS</strong> is a proprietary graphical operating system developed and marketed by <strong>Apple Inc.</strong> since 2001.</p>
             <h2 className="text-xl font-serif font-semibold text-gray-900 mt-6 mb-2 border-b border-gray-200 pb-1">Features</h2>
             <ul className="list-disc pl-6 space-y-1">
               <li>Aqua user interface with translucent menus and window effects</li>
@@ -428,7 +376,6 @@ function WikipediaPage() {
               <li>Time Machine automated backup system</li>
               <li>Metal graphics and compute API</li>
               <li>Continuity features across Apple devices</li>
-              <li>Support for Universal applications on Apple Silicon</li>
             </ul>
           </div>
         </div>
@@ -439,23 +386,15 @@ function WikipediaPage() {
 
 function RedditPage() {
   const posts = [
-    { subreddit: 'r/programming', title: 'Next.js 16 just dropped \u2014 here are the highlights', author: 'u/dev_master', upvotes: '12.4k', comments: '847', time: '3h' },
-    { subreddit: 'r/webdev', title: 'I built a full-stack app in 2 hours with AI assistance', author: 'u/aicoder', upvotes: '8.9k', comments: '623', time: '5h' },
-    { subreddit: 'r/react', title: 'React Server Components: A practical guide for 2025', author: 'u/reactfan', upvotes: '6.2k', comments: '412', time: '7h' },
-    { subreddit: 'r/typescript', title: 'TypeScript 6.0 roadmap announced', author: 'u/ts_dev', upvotes: '15.1k', comments: '1.2k', time: '2h' },
+    { subreddit: 'r/programming', title: 'Next.js 16 just dropped', author: 'u/dev_master', upvotes: '12.4k', time: '3h' },
+    { subreddit: 'r/webdev', title: 'I built a full-stack app in 2 hours with AI assistance', author: 'u/aicoder', upvotes: '8.9k', time: '5h' },
+    { subreddit: 'r/react', title: 'React Server Components: A practical guide for 2025', author: 'u/reactfan', upvotes: '6.2k', time: '7h' },
   ]
 
   return (
     <div className="flex flex-col w-full min-h-full bg-[#dae0e6]">
       <div className="flex items-center px-4 py-2 bg-white border-b border-gray-200 shrink-0">
-        <span className="text-2xl mr-2">🟠</span>
         <span className="font-bold text-gray-900 text-lg">reddit</span>
-        <div className="flex-1 max-w-md mx-auto ml-6">
-          <div className="flex items-center border border-gray-200 rounded-full px-4 py-1.5 bg-gray-50">
-            <Search size={16} className="text-gray-400 mr-2" />
-            <input type="text" placeholder="Search Reddit" className="flex-1 text-sm outline-none bg-transparent" />
-          </div>
-        </div>
       </div>
       <div className="flex-1 overflow-y-auto p-4">
         <div className="max-w-2xl mx-auto space-y-3">
@@ -463,16 +402,11 @@ function RedditPage() {
             <div key={post.title} className="bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-colors cursor-pointer">
               <div className="flex">
                 <div className="flex flex-col items-center py-3 px-2 bg-gray-50 rounded-l-lg gap-1">
-                  <button className="text-gray-400 hover:text-orange-500 transition-colors">▲</button>
                   <span className="text-xs font-bold text-gray-700">{post.upvotes}</span>
-                  <button className="text-gray-400 hover:text-blue-500 transition-colors">▼</button>
                 </div>
                 <div className="flex-1 p-3">
                   <div className="flex items-center gap-2 text-[12px] text-gray-500 mb-1">
                     <span className="font-semibold text-gray-800">{post.subreddit}</span>
-                    <span>·</span>
-                    <span>Posted by {post.author}</span>
-                    <span>·</span>
                     <span>{post.time} ago</span>
                   </div>
                   <h3 className="text-[15px] font-medium text-gray-900 mb-1 leading-snug">{post.title}</h3>
@@ -488,16 +422,39 @@ function RedditPage() {
 
 // ─── Real Browsing Page Components ───────────────────────────────────────────
 
-function StartPage({ onNavigate }: { onNavigate: (url: string) => void }) {
+function StartPage({ onNavigate, onSearch }: { onNavigate: (url: string) => void; onSearch: (query: string) => void }) {
+  const [searchValue, setSearchValue] = useState('')
+  const searchInputRef = useRef<HTMLInputElement>(null)
+
   return (
     <div
       className="flex flex-col items-center w-full min-h-full bg-gradient-to-b from-[#f5f5f7] to-[#e8e8ed]"
       style={{ fontFamily: "'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" }}
     >
       <div className="w-full max-w-xl px-6 pt-10 pb-6">
-        <div className="flex items-center bg-white/90 rounded-xl px-4 py-[10px] shadow-[0_1px_4px_rgba(0,0,0,0.06),0_0_0_0.5px_rgba(0,0,0,0.08)] hover:shadow-[0_2px_6px_rgba(0,0,0,0.08),0_0_0_0.5px_rgba(0,0,0,0.1)] transition-shadow cursor-text">
+        <div
+          className="flex items-center bg-white/90 rounded-xl px-4 py-[10px] shadow-[0_1px_4px_rgba(0,0,0,0.06),0_0_0_0.5px_rgba(0,0,0,0.08)] hover:shadow-[0_2px_6px_rgba(0,0,0,0.08),0_0_0_0.5px_rgba(0,0,0,0.1)] transition-shadow cursor-text"
+          onClick={() => searchInputRef.current?.focus()}
+        >
           <Search size={16} className="text-gray-400 mr-2.5 shrink-0" />
-          <span className="text-[14px] text-gray-400">Search or enter website name</span>
+          <input
+            ref={searchInputRef}
+            type="text"
+            value={searchValue}
+            onChange={(e) => setSearchValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && searchValue.trim()) {
+                onSearch(searchValue.trim())
+              }
+            }}
+            className="flex-1 text-[14px] outline-none bg-transparent text-gray-800 placeholder:text-gray-400"
+            placeholder="Search or enter website name"
+          />
+          {searchValue && (
+            <button onClick={() => setSearchValue('')} className="ml-1">
+              <X size={14} className="text-gray-400 hover:text-gray-600" />
+            </button>
+          )}
         </div>
       </div>
       <div className="w-full max-w-2xl px-10 pb-10">
@@ -575,10 +532,8 @@ function SearchResultsPage({
 
   return (
     <div className="flex flex-col w-full min-h-full bg-white">
-      {/* Search header */}
       <div className="shrink-0 border-b border-gray-200 pb-4 pt-4 px-6">
         <div className="flex items-center gap-4 mb-4">
-          {/* Google logo */}
           <div className="text-2xl font-bold tracking-tight shrink-0 cursor-pointer" onClick={() => onNavigate('google.com')}>
             <span className="text-[#4285F4]">G</span>
             <span className="text-[#EA4335]">o</span>
@@ -615,36 +570,39 @@ function SearchResultsPage({
           </div>
         </div>
       </div>
-
-      {/* Results */}
       <div className="flex-1 overflow-y-auto px-6 pb-8">
         <div className="max-w-2xl">
           <p className="text-[13px] text-gray-500 mb-4">
             About {results.length} results for &quot;{query}&quot;
           </p>
           <div className="space-y-6">
-            {results.map((result, index) => (
-              <div key={index} className="group">
-                <div className="flex items-center gap-2 mb-1">
-                  <div className="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center shrink-0 overflow-hidden">
-                    {result.favicon ? (
-                      <img src={result.favicon} alt="" className="w-4 h-4" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
-                    ) : (
-                      <Globe size={10} className="text-gray-400" />
-                    )}
+            {results.map((result, index) => {
+              const isYtVideo = extractYouTubeVideoId(result.url)
+              return (
+                <div key={index} className="group">
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center shrink-0 overflow-hidden">
+                      {isYtVideo ? (
+                        <div className="w-4 h-4 rounded-sm bg-red-500 flex items-center justify-center">
+                          <Play size={8} className="text-white fill-white" />
+                        </div>
+                      ) : (
+                        <Globe size={10} className="text-gray-400" />
+                      )}
+                    </div>
+                    <span className="text-[12px] text-gray-500 truncate">{result.host_name}</span>
                   </div>
-                  <span className="text-[12px] text-gray-500 truncate">{result.host_name}</span>
+                  <h3
+                    className="text-[18px] text-[#1a0dab] leading-snug mb-1 cursor-pointer hover:underline group-hover:underline"
+                    onClick={() => onNavigate(result.url)}
+                  >
+                    {result.name}
+                  </h3>
+                  <p className="text-[13px] text-[#4d5156] leading-relaxed line-clamp-2">{result.snippet}</p>
+                  <p className="text-[12px] text-green-700/70 mt-0.5 truncate">{result.url}</p>
                 </div>
-                <h3
-                  className="text-[18px] text-[#1a0dab] leading-snug mb-1 cursor-pointer hover:underline group-hover:underline"
-                  onClick={() => onNavigate(result.url)}
-                >
-                  {result.name}
-                </h3>
-                <p className="text-[13px] text-[#4d5156] leading-relaxed line-clamp-2">{result.snippet}</p>
-                <p className="text-[12px] text-green-700/70 mt-0.5 truncate">{result.url}</p>
-              </div>
-            ))}
+              )
+            })}
           </div>
           {results.length === 0 && (
             <div className="flex flex-col items-center justify-center py-16">
@@ -659,6 +617,125 @@ function SearchResultsPage({
   )
 }
 
+// ─── YouTube Browse View ─────────────────────────────────────────────────────
+
+function YouTubeBrowseView({
+  results,
+  searchQuery,
+  onPlayVideo,
+  onSearch,
+}: {
+  results: YouTubeSearchResult[]
+  searchQuery?: string
+  onPlayVideo: (videoId: string, title: string) => void
+  onSearch: (query: string) => void
+}) {
+  const [searchInput, setSearchInput] = useState(searchQuery || '')
+
+  return (
+    <div className="flex flex-col w-full min-h-full bg-[#0f0f0f]">
+      {/* YouTube Header */}
+      <div className="shrink-0 flex items-center gap-3 px-4 py-2 bg-[#0f0f0f] border-b border-white/10">
+        <div className="flex items-center gap-1.5 shrink-0">
+          <div className="w-6 h-6 bg-red-600 rounded-sm flex items-center justify-center">
+            <Play size={12} className="text-white fill-white ml-0.5" />
+          </div>
+          <span className="text-white font-bold text-[15px]">YouTube</span>
+        </div>
+        <div className="flex-1 max-w-xl mx-auto">
+          <div className="flex items-center bg-[#121212] border border-[#303030] rounded-full overflow-hidden">
+            <input
+              type="text"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && searchInput.trim()) {
+                  onSearch(searchInput.trim())
+                }
+              }}
+              className="flex-1 px-4 py-1.5 text-sm outline-none bg-transparent text-white placeholder:text-gray-500"
+              placeholder="Search YouTube"
+            />
+            <button
+              className="px-4 py-1.5 bg-[#222222] hover:bg-[#303030] border-l border-[#303030] transition-colors"
+              onClick={() => searchInput.trim() && onSearch(searchInput.trim())}
+            >
+              <Search size={16} className="text-white" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Results */}
+      <div className="flex-1 overflow-y-auto p-4">
+        {searchQuery && (
+          <p className="text-[13px] text-gray-400 mb-4">
+            {results.length} video{results.length !== 1 ? 's' : ''} for &quot;{searchQuery}&quot;
+          </p>
+        )}
+        {results.length === 0 && !searchQuery && (
+          <div className="flex flex-col items-center justify-center py-16">
+            <div className="w-16 h-16 bg-red-600/20 rounded-full flex items-center justify-center mb-4">
+              <Play size={28} className="text-red-500" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-300 mb-2">Search for videos</h3>
+            <p className="text-sm text-gray-500">Type a search query to find YouTube videos</p>
+          </div>
+        )}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {results.map((video) => (
+            <div
+              key={video.videoId || video.url}
+              className="group cursor-pointer rounded-xl overflow-hidden bg-[#1a1a1a] hover:bg-[#252525] transition-colors"
+              onClick={() => video.videoId && onPlayVideo(video.videoId, video.title)}
+            >
+              <div className="relative aspect-video bg-[#222] overflow-hidden">
+                {video.thumbnail ? (
+                  <img
+                    src={video.thumbnail}
+                    alt={video.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <Play size={32} className="text-gray-600" />
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                  <div className="w-12 h-12 bg-black/70 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Play size={20} className="text-white fill-white ml-1" />
+                  </div>
+                </div>
+              </div>
+              <div className="p-3">
+                <h3 className="text-[14px] font-medium text-white leading-snug line-clamp-2 mb-1">
+                  {video.title}
+                </h3>
+                <p className="text-[12px] text-gray-400 truncate">
+                  {video.channelName || video.hostName}
+                </p>
+                {video.snippet && (
+                  <p className="text-[11px] text-gray-500 mt-1 line-clamp-2">{video.snippet}</p>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+        {results.length === 0 && searchQuery && (
+          <div className="flex flex-col items-center justify-center py-16">
+            <Search size={48} className="text-gray-600 mb-4" />
+            <h3 className="text-lg font-medium text-gray-400 mb-2">No videos found</h3>
+            <p className="text-sm text-gray-500">Try different keywords</p>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ─── YouTube Video Player ────────────────────────────────────────────────────
+
 function YouTubeVideoPage({
   videoId,
   title,
@@ -671,7 +748,6 @@ function YouTubeVideoPage({
   return (
     <div className="flex flex-col w-full min-h-full bg-[#0f0f0f]">
       <div className="flex-1 flex flex-col">
-        {/* Video Player */}
         <div className="w-full bg-black">
           <div className="relative w-full" style={{ paddingTop: '56.25%' }}>
             <iframe
@@ -683,8 +759,6 @@ function YouTubeVideoPage({
             />
           </div>
         </div>
-
-        {/* Video Info */}
         <div className="px-4 py-3 bg-[#0f0f0f]">
           <div className="flex items-center gap-3 mb-2">
             <button
@@ -692,7 +766,7 @@ function YouTubeVideoPage({
               className="flex items-center gap-1.5 px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-full text-white text-sm transition-colors"
             >
               <ArrowLeft size={14} />
-              Back to results
+              Back
             </button>
           </div>
           <h1 className="text-white text-lg font-medium leading-snug">
@@ -705,6 +779,8 @@ function YouTubeVideoPage({
   )
 }
 
+// ─── Page Reader View ────────────────────────────────────────────────────────
+
 function PageReaderView({
   pageContent,
   onNavigate,
@@ -712,27 +788,20 @@ function PageReaderView({
   pageContent: PageReadResult
   onNavigate: (url: string) => void
 }) {
-  // Sanitize HTML: remove scripts and dangerous elements but keep basic formatting
   const sanitizedHtml = useMemo(() => {
     if (!pageContent.html) return ''
     let html = pageContent.html
-    // Remove script tags and their content
     html = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-    // Remove style tags
     html = html.replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
-    // Remove iframe, object, embed tags
     html = html.replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
     html = html.replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, '')
     html = html.replace(/<embed\b[^>]*>/gi, '')
-    // Remove event handlers
     html = html.replace(/\son\w+\s*=\s*["'][^"']*["']/gi, '')
     html = html.replace(/\son\w+\s*=\s*\S+/gi, '')
-    // Remove javascript: URLs
     html = html.replace(/href\s*=\s*["']javascript:[^"']*["']/gi, 'href="#"')
     return html
   }, [pageContent.html])
 
-  // Handle link clicks within the rendered HTML
   const handleContentClick = useCallback((e: React.MouseEvent) => {
     const target = e.target as HTMLElement
     const anchor = target.closest('a')
@@ -740,7 +809,6 @@ function PageReaderView({
       e.preventDefault()
       const href = anchor.getAttribute('href')
       if (href) {
-        // Handle relative URLs
         if (href.startsWith('/') || href.startsWith('./')) {
           const baseUrl = pageContent.url || ''
           const fullUrl = new URL(href, baseUrl).toString()
@@ -754,22 +822,19 @@ function PageReaderView({
 
   return (
     <div className="flex flex-col w-full min-h-full bg-white">
-      {/* Page header */}
       <div className="shrink-0 border-b border-gray-200 px-6 py-3 bg-gray-50">
         <div className="flex items-center gap-2 mb-1">
           <Globe size={14} className="text-gray-400" />
           <span className="text-[12px] text-gray-500 truncate">{pageContent.url}</span>
           {pageContent.publishedTime && (
             <>
-              <span className="text-gray-300">·</span>
+              <span className="text-gray-300">&#183;</span>
               <span className="text-[12px] text-gray-400">{pageContent.publishedTime}</span>
             </>
           )}
         </div>
         <h1 className="text-lg font-semibold text-gray-900">{pageContent.title}</h1>
       </div>
-
-      {/* Page content */}
       <div className="flex-1 overflow-y-auto px-6 py-6">
         <div className="max-w-3xl mx-auto">
           <div
@@ -804,7 +869,7 @@ function ErrorPage({ message, url }: { message: string; url: string }) {
       <div className="text-center px-8 max-w-md">
         <AlertCircle size={48} className="mx-auto mb-4 text-orange-400" />
         <h2 className="text-lg font-medium text-gray-700 mb-2">Unable to Load Page</h2>
-        <p className="text-sm text-gray-500 mb-1 font-medium">{url}</p>
+        <p className="text-sm text-gray-500 mb-1 font-medium">{getDisplayUrl(url)}</p>
         <p className="text-sm text-gray-400 mt-2">{message}</p>
       </div>
     </div>
@@ -817,7 +882,6 @@ function GoogleHomePage({ onSearch }: { onSearch: (query: string) => void }) {
   return (
     <div className="flex flex-col items-center w-full min-h-full bg-white">
       <div className="flex-1 flex flex-col items-center justify-center px-6 -mt-16">
-        {/* Google Logo */}
         <div className="text-5xl font-bold mb-8 tracking-tight">
           <span className="text-[#4285F4]">G</span>
           <span className="text-[#EA4335]">o</span>
@@ -826,7 +890,6 @@ function GoogleHomePage({ onSearch }: { onSearch: (query: string) => void }) {
           <span className="text-[#34A853]">l</span>
           <span className="text-[#EA4335]">e</span>
         </div>
-        {/* Search Bar */}
         <div className="w-full max-w-[584px] relative">
           <div className="flex items-center border border-gray-200 rounded-full px-5 py-3 shadow-sm hover:shadow-md focus-within:shadow-md transition-shadow">
             <Search size={18} className="text-gray-400 mr-3 shrink-0" />
@@ -850,7 +913,6 @@ function GoogleHomePage({ onSearch }: { onSearch: (query: string) => void }) {
             )}
           </div>
         </div>
-        {/* Buttons */}
         <div className="flex gap-3 mt-8">
           <button
             className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded border border-gray-200 hover:border-gray-300 hover:shadow-sm transition-all"
@@ -864,12 +926,6 @@ function GoogleHomePage({ onSearch }: { onSearch: (query: string) => void }) {
           >
             I&apos;m Feeling Lucky
           </button>
-        </div>
-      </div>
-      {/* Footer */}
-      <div className="w-full bg-gray-100 border-t border-gray-200 px-8 py-3">
-        <div className="text-[12px] text-gray-500 text-center">
-          &copy; 2025 Google &mdash; Privacy &mdash; Terms &mdash; Settings
         </div>
       </div>
     </div>
@@ -899,12 +955,10 @@ export default function Safari() {
   const [editUrl, setEditUrl] = useState('')
   const [showTabOverview, setShowTabOverview] = useState(false)
 
-  // Navigation history per tab
   const [tabHistories, setTabHistories] = useState<Record<string, { urls: string[]; index: number }>>({
     [tabs[0].id]: { urls: ['localhost:3000'], index: 0 },
   })
 
-  // Page data per tab (search results, page content, etc.)
   const [tabPageData, setTabPageData] = useState<Record<string, PageState>>({})
 
   const urlInputRef = useRef<HTMLInputElement>(null)
@@ -924,14 +978,9 @@ export default function Safari() {
     return hist ? hist.index < hist.urls.length - 1 : false
   }, [tabHistories, activeTabId])
 
-  // Simulate loading with progress bar
   const simulateLoading = useCallback((tabId: string, url: string, title?: string) => {
-    if (loadingTimersRef.current[tabId]) {
-      clearTimeout(loadingTimersRef.current[tabId])
-    }
-    if (loadingIntervalsRef.current[tabId]) {
-      clearInterval(loadingIntervalsRef.current[tabId])
-    }
+    if (loadingTimersRef.current[tabId]) clearTimeout(loadingTimersRef.current[tabId])
+    if (loadingIntervalsRef.current[tabId]) clearInterval(loadingIntervalsRef.current[tabId])
 
     const displayTitle = title ?? (url === 'localhost:3000' ? 'Safari Start Page' : getDisplayUrl(url))
 
@@ -950,9 +999,7 @@ export default function Safari() {
       progress += incrementPerTick + Math.random() * 2
       if (progress >= 85) {
         progress = 85
-        if (loadingIntervalsRef.current[tabId]) {
-          clearInterval(loadingIntervalsRef.current[tabId])
-        }
+        if (loadingIntervalsRef.current[tabId]) clearInterval(loadingIntervalsRef.current[tabId])
       }
       setTabs((prev) =>
         prev.map((t) =>
@@ -962,9 +1009,7 @@ export default function Safari() {
     }, intervalMs)
 
     loadingTimersRef.current[tabId] = setTimeout(() => {
-      if (loadingIntervalsRef.current[tabId]) {
-        clearInterval(loadingIntervalsRef.current[tabId])
-      }
+      if (loadingIntervalsRef.current[tabId]) clearInterval(loadingIntervalsRef.current[tabId])
       setTabs((prev) =>
         prev.map((t) =>
           t.id === tabId ? { ...t, isLoading: false, loadingProgress: 100 } : t
@@ -980,7 +1025,6 @@ export default function Safari() {
     }, loadDuration)
   }, [])
 
-  // Finish loading (set title etc)
   const finishLoading = useCallback((tabId: string, title: string) => {
     setTabs((prev) =>
       prev.map((t) =>
@@ -996,7 +1040,7 @@ export default function Safari() {
     }, 200)
   }, [])
 
-  // Resolve an input string to a canonical URL (search: prefix for queries, normalized for URLs)
+  // Resolve an input string to a canonical URL
   const resolveInputUrl = useCallback((inputUrl: string): string => {
     const trimmed = inputUrl.trim()
     if (!trimmed || trimmed === 'localhost:3000') return 'localhost:3000'
@@ -1004,7 +1048,7 @@ export default function Safari() {
     return normalizeUrl(trimmed)
   }, [])
 
-  // Load content for a URL (no history push) - handles all API calls and page type determination
+  // Load content for a URL
   const loadUrlContent = useCallback(
     async (displayUrl: string, tabId: string) => {
       // Handle start page
@@ -1020,8 +1064,41 @@ export default function Safari() {
         simulateLoading(tabId, displayUrl, `${query} - Google Search`)
         setTabPageData((prev) => ({ ...prev, [tabId]: { type: 'loading', searchQuery: query } }))
 
+        // Check if search query is YouTube-related
+        const isYoutubeSearch = query.toLowerCase().includes('youtube') || query.toLowerCase().includes('video')
+
+        if (isYoutubeSearch) {
+          // Search YouTube specifically
+          try {
+            const searchQuery = query.replace(/\byoutube\b/i, '').replace(/\bvideos?\b/i, '').trim() || 'trending'
+            const response = await fetch(`/api/safari/youtube-search?q=${encodeURIComponent(searchQuery)}&num=12`)
+            const data = await response.json()
+
+            if (data.error) {
+              setTabPageData((prev) => ({ ...prev, [tabId]: { type: 'error', errorMessage: data.error } }))
+              finishLoading(tabId, 'Error')
+              return
+            }
+
+            const ytResults: YouTubeSearchResult[] = data.results || []
+            setTabPageData((prev) => ({
+              ...prev,
+              [tabId]: { type: 'youtube-browse', youtubeResults: ytResults, youtubeSearchQuery: searchQuery },
+            }))
+            finishLoading(tabId, `${searchQuery} - YouTube`)
+          } catch {
+            setTabPageData((prev) => ({
+              ...prev,
+              [tabId]: { type: 'error', errorMessage: 'Failed to search YouTube.' },
+            }))
+            finishLoading(tabId, 'Error')
+          }
+          return
+        }
+
+        // Regular web search
         try {
-          const response = await fetch(`/api/browser/search?q=${encodeURIComponent(query)}&num=10`)
+          const response = await fetch(`/api/safari/search?q=${encodeURIComponent(query)}&num=10`)
           const data = await response.json()
 
           if (data.error) {
@@ -1050,7 +1127,7 @@ export default function Safari() {
       if (isSimulatedSite(displayUrl)) {
         setTabPageData((prev) => ({ ...prev, [tabId]: { type: 'simulated' } }))
         const normalized = displayUrl.toLowerCase().replace(/^https?:\/\//, '').replace(/\/$/, '')
-        const title = normalized.includes('apple') ? 'Apple' : normalized.includes('github') ? 'GitHub' : normalized.includes('wikipedia') ? 'macOS \u2014 Wikipedia' : normalized.includes('reddit') ? 'Reddit' : normalized
+        const title = normalized.includes('apple') ? 'Apple' : normalized.includes('github') ? 'GitHub' : normalized.includes('wikipedia') ? 'macOS - Wikipedia' : normalized.includes('reddit') ? 'Reddit' : normalized
         simulateLoading(tabId, displayUrl, title)
         return
       }
@@ -1066,19 +1143,19 @@ export default function Safari() {
         return
       }
 
-      // Check if it's YouTube homepage or search - redirect to search
-      if (isYouTubeUrl(displayUrl) && !youtubeVideoId) {
-        const searchQuery = 'site:youtube.com'
+      // Check if it's YouTube homepage or search - show YouTube browse view
+      if (isYouTubeUrl(displayUrl)) {
         simulateLoading(tabId, displayUrl, 'YouTube')
         setTabPageData((prev) => ({ ...prev, [tabId]: { type: 'loading' } }))
 
         try {
-          const response = await fetch(`/api/browser/search?q=${encodeURIComponent(searchQuery)}&num=10`)
+          const searchQuery = 'trending popular videos'
+          const response = await fetch(`/api/safari/youtube-search?q=${encodeURIComponent(searchQuery)}&num=12`)
           const data = await response.json()
-          const results: SearchResult[] = data.results || []
+          const ytResults: YouTubeSearchResult[] = data.results || []
           setTabPageData((prev) => ({
             ...prev,
-            [tabId]: { type: 'search-results', searchResults: results, searchQuery: 'YouTube' },
+            [tabId]: { type: 'youtube-browse', youtubeResults: ytResults, youtubeSearchQuery: '' },
           }))
           finishLoading(tabId, 'YouTube')
         } catch {
@@ -1104,7 +1181,8 @@ export default function Safari() {
       setTabPageData((prev) => ({ ...prev, [tabId]: { type: 'loading' } }))
 
       try {
-        const response = await fetch(`/api/browser/read?url=${encodeURIComponent(displayUrl)}`)
+        const fullUrl = displayUrl.startsWith('http') ? displayUrl : `https://${displayUrl}`
+        const response = await fetch(`/api/safari/read?url=${encodeURIComponent(fullUrl)}`)
         const data = await response.json()
 
         if (data.error) {
@@ -1116,7 +1194,12 @@ export default function Safari() {
           return
         }
 
-        const pageContent: PageReadResult = data.data || { title: '', url: displayUrl, html: '', publishedTime: '' }
+        const pageContent: PageReadResult = {
+          title: data.title || '',
+          url: data.url || fullUrl,
+          html: data.html || '',
+          publishedTime: data.publishedTime || '',
+        }
 
         // Check if the read page is actually a YouTube video
         const readYoutubeId = extractYouTubeVideoId(pageContent.url || displayUrl)
@@ -1145,13 +1228,11 @@ export default function Safari() {
     [simulateLoading, finishLoading]
   )
 
-  // Navigate to URL (resolves input + pushes history + loads content)
   const navigateToUrl = useCallback(
     async (inputUrl: string) => {
       const displayUrl = resolveInputUrl(inputUrl)
       if (!displayUrl) return
 
-      // Push to history
       setTabHistories((prev) => {
         const hist = prev[activeTabId] ?? { urls: ['localhost:3000'], index: 0 }
         const newUrls = [...hist.urls.slice(0, hist.index + 1), displayUrl]
@@ -1209,12 +1290,8 @@ export default function Safari() {
   const closeTab = useCallback(
     (tabId: string, e?: React.MouseEvent) => {
       e?.stopPropagation()
-      if (loadingTimersRef.current[tabId]) {
-        clearTimeout(loadingTimersRef.current[tabId])
-      }
-      if (loadingIntervalsRef.current[tabId]) {
-        clearInterval(loadingIntervalsRef.current[tabId])
-      }
+      if (loadingTimersRef.current[tabId]) clearTimeout(loadingTimersRef.current[tabId])
+      if (loadingIntervalsRef.current[tabId]) clearInterval(loadingIntervalsRef.current[tabId])
       setTabs((prev) => {
         if (prev.length <= 1) return prev
         const idx = prev.findIndex((t) => t.id === tabId)
@@ -1225,7 +1302,6 @@ export default function Safari() {
         }
         return newTabs
       })
-      // Clean up page data
       setTabPageData((prev) => {
         const next = { ...prev }
         delete next[tabId]
@@ -1281,7 +1357,65 @@ export default function Safari() {
     }
   }, [activeTab.url, activeTabId, loadUrlContent])
 
-  // Cleanup timers on unmount
+  // Play YouTube video - navigate to embed
+  const handlePlayYouTubeVideo = useCallback(
+    (videoId: string, title: string) => {
+      const url = `https://www.youtube.com/watch?v=${videoId}`
+      setTabHistories((prev) => {
+        const hist = prev[activeTabId] ?? { urls: ['localhost:3000'], index: 0 }
+        const newUrls = [...hist.urls.slice(0, hist.index + 1), url]
+        return {
+          ...prev,
+          [activeTabId]: { urls: newUrls, index: newUrls.length - 1 },
+        }
+      })
+      setTabPageData((prev) => ({
+        ...prev,
+        [activeTabId]: { type: 'youtube-video', youtubeVideoId: videoId, youtubeTitle: title },
+      }))
+      simulateLoading(activeTabId, url, title)
+      finishLoading(activeTabId, title)
+    },
+    [activeTabId, simulateLoading, finishLoading]
+  )
+
+  // YouTube search from the browse view
+  const handleYouTubeSearch = useCallback(
+    (query: string) => {
+      const url = `search:yt:${query}`
+      setTabHistories((prev) => {
+        const hist = prev[activeTabId] ?? { urls: ['localhost:3000'], index: 0 }
+        const newUrls = [...hist.urls.slice(0, hist.index + 1), url]
+        return {
+          ...prev,
+          [activeTabId]: { urls: newUrls, index: newUrls.length - 1 },
+        }
+      })
+      setTabPageData((prev) => ({ ...prev, [activeTabId]: { type: 'loading' } }))
+      simulateLoading(activeTabId, url, `${query} - YouTube`)
+
+      void (async () => {
+        try {
+          const response = await fetch(`/api/safari/youtube-search?q=${encodeURIComponent(query)}&num=12`)
+          const data = await response.json()
+          const ytResults: YouTubeSearchResult[] = data.results || []
+          setTabPageData((prev) => ({
+            ...prev,
+            [activeTabId]: { type: 'youtube-browse', youtubeResults: ytResults, youtubeSearchQuery: query },
+          }))
+          finishLoading(activeTabId, `${query} - YouTube`)
+        } catch {
+          setTabPageData((prev) => ({
+            ...prev,
+            [activeTabId]: { type: 'error', errorMessage: 'Failed to search YouTube.' },
+          }))
+          finishLoading(activeTabId, 'Error')
+        }
+      })()
+    },
+    [activeTabId, simulateLoading, finishLoading]
+  )
+
   useEffect(() => {
     return () => {
       Object.values(loadingTimersRef.current).forEach(clearTimeout)
@@ -1294,16 +1428,14 @@ export default function Safari() {
     const url = activeTab.url
     const pageData = activePageData
 
-    // Start page
     if (url === 'localhost:3000' || (!pageData && url === 'localhost:3000')) {
-      return <StartPage onNavigate={(u) => void navigateToUrl(u)} />
+      return <StartPage onNavigate={(u) => void navigateToUrl(u)} onSearch={(q) => void navigateToUrl(q)} />
     }
 
-    // If page data exists, use it
     if (pageData) {
       switch (pageData.type) {
         case 'start':
-          return <StartPage onNavigate={(u) => void navigateToUrl(u)} />
+          return <StartPage onNavigate={(u) => void navigateToUrl(u)} onSearch={(q) => void navigateToUrl(q)} />
 
         case 'simulated':
           return getSimulatedPage(url, (u) => void navigateToUrl(u)) || <ErrorPage message="Page not available" url={url} />
@@ -1315,6 +1447,16 @@ export default function Safari() {
               query={pageData.searchQuery || ''}
               onNavigate={(u) => void navigateToUrl(u)}
               onSearch={(q) => void navigateToUrl(q)}
+            />
+          )
+
+        case 'youtube-browse':
+          return (
+            <YouTubeBrowseView
+              results={pageData.youtubeResults || []}
+              searchQuery={pageData.youtubeSearchQuery}
+              onPlayVideo={handlePlayYouTubeVideo}
+              onSearch={handleYouTubeSearch}
             />
           )
 
@@ -1342,7 +1484,6 @@ export default function Safari() {
           return <ErrorPage message={pageData.errorMessage || 'Unknown error'} url={url} />
 
         case 'loading':
-          // Loading state is handled below
           break
       }
     }
@@ -1354,23 +1495,23 @@ export default function Safari() {
 
     // Fallback: Google homepage
     if (url.toLowerCase().replace(/^https?:\/\//, '').replace(/\/$/, '').includes('google.com')) {
-      return <StartPage onNavigate={(u) => void navigateToUrl(u)} />
+      return <StartPage onNavigate={(u) => void navigateToUrl(u)} onSearch={(q) => void navigateToUrl(q)} />
     }
 
-    // No content available
     return <ErrorPage message="Page data not available. Try reloading." url={url} />
   }
 
   // Get display URL for the URL bar
   const getUrlBarDisplay = () => {
     if (activeTab.url === 'localhost:3000') return 'Search or enter website name'
-    if (activeTab.url.startsWith('search:')) return activeTab.url.replace('search:', '')
+    if (activeTab.url.startsWith('search:')) return activeTab.url.replace('search:', '').replace(/^yt:/, '')
+    if (activeTab.url.startsWith('search:yt:')) return activeTab.url.replace('search:yt:', '')
     return getDisplayUrl(activeTab.url)
   }
 
   return (
     <div className="flex flex-col w-full h-full bg-white text-gray-900 text-sm select-none overflow-hidden" style={{ fontFamily: "'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" }}>
-      {/* ─── Tab Bar ─────────────────────────────────────────────── */}
+      {/* Tab Bar */}
       <div className="shrink-0 bg-[#ddd]" style={{ paddingTop: '6px', paddingBottom: '0' }}>
         <div className="flex items-center gap-[3px] px-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
           {tabs.map((tab) => {
@@ -1407,7 +1548,6 @@ export default function Safari() {
               </div>
             )
           })}
-
           <button
             className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center hover:bg-[#c8c8c8]/70 text-gray-500 transition-colors duration-100"
             onClick={addTab}
@@ -1418,14 +1558,12 @@ export default function Safari() {
         </div>
       </div>
 
-      {/* ─── Toolbar ─────────────────────────────────────────────── */}
+      {/* Toolbar */}
       <div className="shrink-0 bg-[#f6f6f6] border-b border-gray-200/80">
         <div className="flex items-center gap-1.5 px-3 py-1.5">
           <button
             className={`p-1.5 rounded-md transition-colors ${
-              canGoBack
-                ? 'hover:bg-gray-200/80 text-gray-600 active:bg-gray-300/60'
-                : 'text-gray-300 cursor-default'
+              canGoBack ? 'hover:bg-gray-200/80 text-gray-600 active:bg-gray-300/60' : 'text-gray-300 cursor-default'
             }`}
             onClick={goBack}
             disabled={!canGoBack}
@@ -1436,9 +1574,7 @@ export default function Safari() {
 
           <button
             className={`p-1.5 rounded-md transition-colors ${
-              canGoForward
-                ? 'hover:bg-gray-200/80 text-gray-600 active:bg-gray-300/60'
-                : 'text-gray-300 cursor-default'
+              canGoForward ? 'hover:bg-gray-200/80 text-gray-600 active:bg-gray-300/60' : 'text-gray-300 cursor-default'
             }`}
             onClick={goForward}
             disabled={!canGoForward}
@@ -1476,7 +1612,6 @@ export default function Safari() {
             </div>
           </div>
 
-          {/* Reload */}
           <button
             className="p-1.5 rounded-md hover:bg-gray-200/80 text-gray-500 active:bg-gray-300/60 transition-colors"
             onClick={handleReload}
@@ -1485,7 +1620,6 @@ export default function Safari() {
             <RotateCw size={14} />
           </button>
 
-          {/* Share */}
           <button
             className="p-1.5 rounded-md hover:bg-gray-200/80 text-gray-500 active:bg-gray-300/60 transition-colors"
             title="Share"
@@ -1493,12 +1627,9 @@ export default function Safari() {
             <Share2 size={15} />
           </button>
 
-          {/* Tab Overview */}
           <button
             className={`p-1.5 rounded-md transition-colors ${
-              showTabOverview
-                ? 'bg-gray-200/80 text-gray-700'
-                : 'hover:bg-gray-200/80 text-gray-500 active:bg-gray-300/60'
+              showTabOverview ? 'bg-gray-200/80 text-gray-700' : 'hover:bg-gray-200/80 text-gray-500 active:bg-gray-300/60'
             }`}
             onClick={() => setShowTabOverview(!showTabOverview)}
             title="Tab Overview"
@@ -1508,7 +1639,7 @@ export default function Safari() {
         </div>
       </div>
 
-      {/* ─── Bookmarks Bar ───────────────────────────────────────── */}
+      {/* Bookmarks Bar */}
       <div className="shrink-0 flex items-center gap-0.5 px-3 py-[3px] bg-[#fafafa] border-b border-gray-200/80">
         {BOOKMARKS.map((bm) => (
           <button
@@ -1522,7 +1653,7 @@ export default function Safari() {
         ))}
       </div>
 
-      {/* ─── Loading Progress Bar ────────────────────────────────── */}
+      {/* Loading Progress Bar */}
       {activeTab.isLoading && (
         <div className="relative h-[2px] bg-transparent shrink-0 overflow-hidden">
           <div
@@ -1532,7 +1663,7 @@ export default function Safari() {
         </div>
       )}
 
-      {/* ─── Content Area ────────────────────────────────────────── */}
+      {/* Content Area */}
       <div className="flex-1 overflow-auto min-h-0 relative">
         {showTabOverview ? (
           <TabOverview
@@ -1548,7 +1679,7 @@ export default function Safari() {
         ) : activeTab.isLoading && (!activePageData || activePageData.type === 'loading') ? (
           <div className="flex flex-col items-center justify-center w-full h-full bg-white">
             <div className="flex flex-col items-center gap-3">
-              <div className="w-8 h-8 border-3 border-gray-200 border-t-blue-500 rounded-full animate-spin" />
+              <Loader2 size={28} className="text-blue-500 animate-spin" />
               <p className="text-sm text-gray-400">Loading...</p>
             </div>
           </div>

@@ -11,40 +11,41 @@ export interface Wallpaper {
 }
 
 const WALLPAPERS: Wallpaper[] = [
-  // 1. Sonoma — Rolling hills in warm orange/golden tones (ENHANCED)
+  // 1. Sonoma — Vibrant rolling hills in warm golden/amber tones matching macOS Sonoma
   {
     name: 'Sonoma',
     style: {
       background: [
-        // Sun/light source glow in upper area — multiple layers for soft falloff
-        'radial-gradient(ellipse 50% 28% at 50% 18%, rgba(255,210,120,0.45) 0%, rgba(255,180,80,0.2) 35%, rgba(255,140,40,0.08) 60%, transparent 80%)',
-        // Upper atmospheric haze — warm light scattering
-        'radial-gradient(ellipse 100% 22% at 50% 28%, rgba(220,160,90,0.18) 0%, rgba(200,140,70,0.08) 50%, transparent 80%)',
+        // Bright sun glow at center-top
+        'radial-gradient(ellipse 35% 22% at 50% 15%, rgba(255,225,130,0.6) 0%, rgba(255,190,80,0.3) 35%, rgba(255,140,40,0.1) 60%, transparent 80%)',
+        // Sun core bright spot
+        'radial-gradient(ellipse 12% 8% at 50% 12%, rgba(255,245,200,0.5) 0%, rgba(255,220,120,0.2) 50%, transparent 80%)',
+        // Upper atmospheric haze — warm
+        'radial-gradient(ellipse 100% 20% at 50% 26%, rgba(230,170,100,0.2) 0%, rgba(210,150,80,0.08) 50%, transparent 80%)',
         // Cloud wisps catching light
-        'radial-gradient(ellipse 35% 3% at 30% 20%, rgba(255,200,140,0.15) 0%, transparent 80%)',
-        'radial-gradient(ellipse 25% 2.5% at 65% 24%, rgba(255,190,120,0.12) 0%, transparent 80%)',
-        // Distant hills (lighter, haze-covered) — multiple overlapping for natural shapes
-        'radial-gradient(ellipse 130% 14% at 35% 51%, rgba(195,145,85,0.55) 0%, rgba(175,125,70,0.35) 50%, rgba(160,110,60,0.15) 80%, transparent 100%)',
-        'radial-gradient(ellipse 110% 11% at 60% 53%, rgba(185,135,78,0.45) 0%, rgba(165,115,65,0.25) 55%, transparent 85%)',
-        'radial-gradient(ellipse 90% 10% at 80% 55%, rgba(175,125,72,0.35) 0%, rgba(155,105,58,0.18) 50%, transparent 80%)',
-        // Mid-ground hills (richer, more saturated color)
-        'radial-gradient(ellipse 115% 17% at 28% 62%, #d8a850 0%, #c89842 25%, #b08535 50%, #9a7228 75%, transparent 100%)',
-        'radial-gradient(ellipse 95% 18% at 72% 64%, #d09848 0%, #c08a3a 25%, #a87830 50%, #906525 75%, transparent 100%)',
-        'radial-gradient(ellipse 70% 12% at 50% 66%, rgba(200,150,70,0.3) 0%, transparent 70%)',
-        // Foreground rolling hills (darkest, most saturated)
-        'radial-gradient(ellipse 140% 24% at 42% 84%, #be8530 0%, #a47022 20%, #8a5e1a 45%, #6a4812 70%, transparent 100%)',
-        'radial-gradient(ellipse 100% 18% at 22% 89%, #aa7828 0%, #8e6218 30%, #725010 55%, transparent 80%)',
-        'radial-gradient(ellipse 105% 16% at 78% 91%, #b47a28 0%, #966418 30%, #785010 55%, transparent 80%)',
-        // Very foreground — deepest green-brown
-        'radial-gradient(ellipse 150% 14% at 50% 100%, #5a3a10 0%, #48300a 40%, #3a2506 70%, transparent 100%)',
-        // Sky gradient — deeper, more nuanced color transitions
-        'linear-gradient(180deg, #0a0418 0%, #120828 4%, #1c0c38 8%, #2a1250 13%, #3c1a60 18%, #582458 23%, #7a3050 28%, #983842 33%, #b84830 38%, #d46020 43%, #e07828 47%, #e89438 51%, #e8ac50 55%, #e0b858 59%, #d0a048 64%, #b88838 70%, #9a7028 76%, #7a5818 82%, #5a4010 89%, #3a2a08 95%, #201808 100%)',
+        'radial-gradient(ellipse 30% 2.5% at 28% 18%, rgba(255,210,150,0.18) 0%, transparent 80%)',
+        'radial-gradient(ellipse 22% 2% at 68% 22%, rgba(255,200,130,0.14) 0%, transparent 80%)',
+        // Distant hills (lighter, haze-covered)
+        'radial-gradient(ellipse 130% 13% at 35% 50%, rgba(200,155,95,0.6) 0%, rgba(180,135,80,0.4) 50%, rgba(165,120,68,0.15) 80%, transparent 100%)',
+        'radial-gradient(ellipse 110% 10% at 62% 52%, rgba(190,145,82,0.5) 0%, rgba(170,125,70,0.3) 55%, transparent 85%)',
+        'radial-gradient(ellipse 85% 9% at 82% 54%, rgba(180,130,75,0.4) 0%, rgba(160,110,62,0.2) 50%, transparent 80%)',
+        // Mid-ground hills — richer golden
+        'radial-gradient(ellipse 115% 16% at 28% 61%, #daa848 0%, #c89842 25%, #b08535 50%, #9a7228 75%, transparent 100%)',
+        'radial-gradient(ellipse 95% 17% at 72% 63%, #d29845 0%, #c08a3a 25%, #a87830 50%, #906525 75%, transparent 100%)',
+        'radial-gradient(ellipse 70% 11% at 50% 65%, rgba(205,155,72,0.35) 0%, transparent 70%)',
+        // Foreground rolling hills — darkest amber
+        'radial-gradient(ellipse 140% 23% at 42% 83%, #c08832 0%, #a67224 20%, #8c5e1c 45%, #6a4a14 70%, transparent 100%)',
+        'radial-gradient(ellipse 100% 17% at 22% 88%, #b47c2a 0%, #96641c 30%, #7a5214 55%, transparent 80%)',
+        'radial-gradient(ellipse 105% 15% at 78% 90%, #be8028 0%, #9c681a 30%, #7e5212 55%, transparent 80%)',
+        // Very foreground — deepest amber-brown
+        'radial-gradient(ellipse 150% 13% at 50% 100%, #5e3c12 0%, #4a300c 40%, #3c2608 70%, transparent 100%)',
+        // Sky gradient — vibrant sunset-to-amber
+        'linear-gradient(180deg, #0c0620 0%, #140a30 4%, #1e0e42 8%, #2c1458 13%, #401c68 18%, #5c2660 23%, #7e3252 28%, #9a3c44 33%, #ba4c32 38%, #d66422 43%, #e47c2c 47%, #ec9438 51%, #ecac4e 55%, #e4b858 59%, #d4a448 64%, #bc8c38 70%, #9e7428 76%, #805c18 82%, #604412 89%, #3e2e0a 95%, #241a08 100%)',
       ].join(', '),
     },
     overlayStyle: {
-      // Atmospheric haze effect near the horizon
       background: [
-        'linear-gradient(180deg, transparent 0%, transparent 44%, rgba(220,180,110,0.06) 48%, rgba(210,170,100,0.04) 52%, rgba(220,180,110,0.02) 56%, transparent 60%)',
+        'linear-gradient(180deg, transparent 0%, transparent 43%, rgba(225,185,115,0.07) 47%, rgba(215,175,105,0.04) 51%, rgba(225,185,115,0.02) 55%, transparent 59%)',
       ].join(', '),
     },
   },
@@ -349,13 +350,14 @@ export default function Desktop({ children }: { children: React.ReactNode }) {
         }}
       />
 
-      {/* Noise texture overlay for realism */}
+      {/* Noise texture overlay for realism — finer grain */}
       <div
         className="absolute inset-0 pointer-events-none animate-wallpaper-breathe"
         style={{
-          opacity: 0.03,
-          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E")`,
+          opacity: 0.025,
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='5' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E")`,
           backgroundSize: '256px 256px',
+          mixBlendMode: 'overlay',
         }}
       />
       {/* Animated gradient overlay for subtle shimmer effect */}

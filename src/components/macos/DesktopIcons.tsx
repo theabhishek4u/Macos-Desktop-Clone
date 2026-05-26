@@ -37,16 +37,16 @@ const DESKTOP_ICONS: DesktopIcon[] = [
   },
 ]
 
-// Grid snapping constants
-const GRID_X = 100
-const GRID_Y = 90
-const MARGIN_TOP = 32 + 12 // menu bar + padding
-const MARGIN_RIGHT = 16
+// Grid snapping constants — tighter grid for better macOS feel
+const GRID_X = 90
+const GRID_Y = 100
+const MARGIN_TOP = 34 // menu bar + small gap
+const MARGIN_RIGHT = 12
 
 // Default positions (right-aligned, top to bottom)
 function getDefaultPositions(): Record<string, { x: number; y: number }> {
   if (typeof window === 'undefined') return {}
-  const rightEdge = window.innerWidth - MARGIN_RIGHT - 90
+  const rightEdge = window.innerWidth - MARGIN_RIGHT - 80
   const result: Record<string, { x: number; y: number }> = {}
   DESKTOP_ICONS.forEach((icon, index) => {
     result[icon.id] = {

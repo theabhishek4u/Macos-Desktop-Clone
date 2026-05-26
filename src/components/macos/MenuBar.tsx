@@ -671,17 +671,17 @@ export default function MenuBar() {
     <div
       className={`fixed top-0 left-0 right-0 h-[25px] text-white/90 z-[9999] flex items-center justify-between px-2 select-none`}
       style={{
-        font: "13px -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif",
+        font: "12.5px -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif",
         fontWeight: 500,
         WebkitFontSmoothing: 'antialiased',
         MozOsxFontSmoothing: 'grayscale',
         backdropFilter: 'saturate(180%) blur(40px)',
         WebkitBackdropFilter: 'saturate(180%) blur(40px)',
         background: isDarkMode
-          ? 'linear-gradient(180deg, rgba(30,30,30,0.78) 0%, rgba(20,20,20,0.85) 100%)'
-          : 'linear-gradient(180deg, rgba(40,40,40,0.48) 0%, rgba(25,25,25,0.58) 100%)',
-        borderBottom: '0.5px solid rgba(255,255,255,0.12)',
-        textShadow: '0 0.5px 1px rgba(0,0,0,0.4)',
+          ? 'linear-gradient(180deg, rgba(28,28,28,0.80) 0%, rgba(18,18,18,0.88) 100%)'
+          : 'linear-gradient(180deg, rgba(38,38,38,0.52) 0%, rgba(22,22,22,0.62) 100%)',
+        borderBottom: '0.5px solid rgba(255,255,255,0.10)',
+        textShadow: '0 0.5px 0.5px rgba(0,0,0,0.35)',
       }}
       ref={menuBarRef}
     >
@@ -700,10 +700,10 @@ export default function MenuBar() {
             aria-label="Apple Menu"
           >
             <svg
-              className="w-[14px] h-[17px]"
+              className="w-[13px] h-[16px]"
               viewBox="0 0 170 200"
               fill="currentColor"
-              style={{ filter: 'drop-shadow(0 0.5px 0.5px rgba(0,0,0,0.3))' }}
+              style={{ filter: 'drop-shadow(0 0.5px 0 rgba(0,0,0,0.25))' }}
             >
               <path d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.2-2.12-9.97-3.17-14.34-3.17-4.58 0-9.49 1.05-14.75 3.17-5.28 2.13-9.54 3.24-12.8 3.35-4.93.21-9.84-1.96-14.75-6.52-3.13-2.73-7.05-7.41-11.75-14.04-5.03-7.08-9.17-15.29-12.41-24.65-3.47-10.11-5.21-19.9-5.21-29.38 0-10.86 2.35-20.22 7.04-28.04 3.69-6.27 8.6-11.23 14.76-14.88 6.15-3.65 12.8-5.51 19.97-5.63 3.92 0 9.06 1.21 15.43 3.6 6.36 2.4 10.44 3.62 12.24 3.62 1.34 0 5.87-1.43 13.56-4.28 7.27-2.64 13.41-3.74 18.44-3.32 13.63 1.1 23.87 6.47 30.68 16.15-12.2 7.39-18.22 17.73-18.1 31 0.12 10.33 3.86 18.93 11.19 25.77 3.33 3.17 7.05 5.62 11.18 7.37-.9 2.6-1.84 5.09-2.85 7.47zM119.1 7.01c0 8.1-2.96 15.67-8.86 22.67-7.12 8.32-15.73 13.13-25.07 12.37a25.2 25.2 0 0 1-.19-3.07c0-7.78 3.39-16.1 9.4-22.9 3-3.44 6.82-6.31 11.45-8.6 4.62-2.26 8.99-3.51 13.1-3.75.13 1.11.17 2.22.17 3.28z" />
             </svg>
@@ -717,7 +717,7 @@ export default function MenuBar() {
         </div>
 
         {/* Active app name */}
-        <span className="font-bold px-[8px] h-[25px] flex items-center" style={{ font: "bold 13px -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif" }}>
+        <span className="font-bold px-[8px] h-[25px] flex items-center" style={{ font: "bold 12.5px -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif" }}>
           {activeAppName}
         </span>
 
@@ -750,18 +750,10 @@ export default function MenuBar() {
       </div>
 
       {/* Right side */}
-      <div className="flex items-center gap-[2px]">
-        <div className="flex items-center gap-1 hover:bg-white/10 rounded px-1.5 py-0.5 transition-colors duration-75 cursor-default">
-          <BatteryIconWithLevel />
-        </div>
-        <div className="w-px h-3 bg-white/10 mx-0.5" />
-        <div className="flex items-center gap-1.5 hover:bg-white/10 rounded px-1.5 py-0.5 transition-colors duration-75 cursor-default">
-          <MacOSWifiIcon />
-          <Bluetooth className="h-[12px] w-[12px] opacity-70" />
-        </div>
-        <div className="w-px h-3 bg-white/10 mx-0.5" />
+      <div className="flex items-center" style={{ gap: '1px' }}>
+        {/* Spotlight icon */}
         <div className="flex items-center hover:bg-white/10 rounded px-1.5 py-0.5 transition-colors duration-75">
-          <Search className="h-[13px] w-[13px] opacity-60 cursor-pointer hover:opacity-100 transition-opacity duration-75" onClick={toggleSpotlight} />
+          <Search className="h-[12px] w-[12px] opacity-50 cursor-pointer hover:opacity-90 transition-opacity duration-75" onClick={toggleSpotlight} />
         </div>
         {/* Control Center - pill-shaped icon matching macOS */}
         <button
@@ -780,18 +772,27 @@ export default function MenuBar() {
             <div className="w-[2.5px] h-[5px] bg-white/55 rounded-[0.5px]" />
           </div>
         </button>
+        {/* Battery */}
+        <div className="flex items-center gap-1 hover:bg-white/10 rounded px-1.5 py-0.5 transition-colors duration-75 cursor-default">
+          <BatteryIconWithLevel />
+        </div>
+        {/* Wi-Fi + Bluetooth */}
+        <div className="flex items-center gap-1.5 hover:bg-white/10 rounded px-1.5 py-0.5 transition-colors duration-75 cursor-default">
+          <MacOSWifiIcon />
+          <Bluetooth className="h-[11px] w-[11px] opacity-60" />
+        </div>
         {/* Date and Time */}
         <button
-          className="tracking-tight whitespace-nowrap hover:bg-white/10 px-1.5 py-0.5 rounded transition-colors duration-75 cursor-pointer flex items-center gap-1.5 relative"
+          className="tracking-tight whitespace-nowrap hover:bg-white/10 px-1.5 py-0.5 rounded transition-colors duration-75 cursor-pointer flex items-center gap-1 relative"
           onClick={notificationCenter.toggle}
           aria-label="Notification Center"
-          style={{ font: "13px -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif", fontWeight: 500, WebkitFontSmoothing: 'antialiased' }}
+          style={{ font: "12.5px -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif", fontWeight: 500, WebkitFontSmoothing: 'antialiased' }}
         >
-          <span className="text-white/55">{formatDateShort(currentTime)}</span>
+          <span className="text-white/50">{formatDateShort(currentTime)}</span>
           <span>{formatTimeOnly(currentTime)}</span>
-          {/* Unread notification badge */}
+          {/* Unread notification badge — smaller dot */}
           {unreadCount > 0 && (
-            <span className="ml-0.5 min-w-[14px] h-[14px] rounded-full bg-[#ff3b30] text-white text-[9px] font-bold flex items-center justify-center leading-none px-[3px]">
+            <span className="ml-0.5 min-w-[10px] h-[10px] rounded-full bg-[#ff3b30] text-white text-[7px] font-bold flex items-center justify-center leading-none px-[2px]">
               {unreadCount > 9 ? '9+' : unreadCount}
             </span>
           )}

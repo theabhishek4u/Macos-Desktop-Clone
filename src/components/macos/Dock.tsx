@@ -6,12 +6,12 @@ import useMacOSStore, { APP_CONFIGS } from '@/store/macos-store'
 import { useLaunchpad } from '@/components/macos/Launchpad'
 
 // Magnification parameters
-const ICON_SIZE = 52
-const MAX_SCALE = 1.8
-const MAGNIFICATION_RANGE = 150 // pixel range for magnification effect
-const SIGMA = 70 // gaussian spread
-const ICON_GAP = 6 // gap between icons (gap-1.5 = 6px)
-const DOCK_PADDING_X = 16 // px-4 = 16px
+const ICON_SIZE = 50
+const MAX_SCALE = 1.5
+const MAGNIFICATION_RANGE = 120 // pixel range for magnification effect
+const SIGMA = 85 // gaussian spread — wider for smoother falloff
+const ICON_GAP = 5 // gap between icons
+const DOCK_PADDING_X = 12 // dock padding
 
 // Shared squircle styles
 const SQUIRCLE_RADIUS = '22.37%'
@@ -830,55 +830,44 @@ function DockIcon({
         animate={{
           width: currentSize,
           height: currentSize,
-          scale: isBouncing ? [1, 1.1, 0.95, 1.05, 1] : 1,
+          y: isBouncing ? [0, -16, -20, -16, -4, 0] : 0,
         }}
         transition={
           isBouncing
             ? {
-                duration: 0.6,
+                duration: 0.75,
                 repeat: Infinity,
                 repeatType: 'loop',
-                ease: 'easeInOut',
+                ease: [0.25, 0.1, 0.25, 1],
               }
             : {
                 type: 'spring',
-                stiffness: 500,
-                damping: 18,
-                mass: 0.6,
+                stiffness: 400,
+                damping: 22,
+                mass: 0.5,
               }
         }
-        className="flex items-center justify-center rounded-[12px] transition-shadow duration-200 hover:shadow-[0_0_15px_rgba(255,255,255,0.15)]"
+        className="flex items-center justify-center rounded-[12px] transition-shadow duration-200 hover:shadow-[0_0_12px_rgba(255,255,255,0.12)]"
         style={{
-          background: isTrash
-            ? 'linear-gradient(135deg, rgba(255,255,255,0.18), rgba(255,255,255,0.06))'
-            : 'linear-gradient(145deg, rgba(255,255,255,0.25), rgba(255,255,255,0.1))',
-          backdropFilter: 'blur(8px)',
-          border: '1px solid rgba(255,255,255,0.22)',
-          boxShadow:
-            'inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.15)',
           padding: 0,
         }}
       >
-        <DockAppIcon appId={appId} size={currentSize * 0.85} />
+        <DockAppIcon appId={appId} size={currentSize * 0.82} />
       </motion.button>
 
-      {/* Running indicator dot with stronger glow */}
+      {/* Running indicator dot — small white dot like macOS */}
       {isRunning && !isTrash && (
         <motion.div
-          initial={{ scale: 0 }}
+          initial={{ scale: 0, opacity: 0 }}
           animate={{ 
             scale: 1,
-            boxShadow: [
-              '0 0 3px rgba(255,255,255,0.5), 0 0 8px rgba(255,255,255,0.25)',
-              '0 0 5px rgba(255,255,255,0.7), 0 0 12px rgba(255,255,255,0.35)',
-              '0 0 3px rgba(255,255,255,0.5), 0 0 8px rgba(255,255,255,0.25)',
-            ]
+            opacity: [0.7, 1, 0.7],
           }}
           transition={{
-            scale: { type: 'spring', stiffness: 400, damping: 25 },
-            boxShadow: { duration: 2.5, repeat: Infinity, ease: 'easeInOut' },
+            scale: { type: 'spring', stiffness: 500, damping: 30 },
+            opacity: { duration: 2, repeat: Infinity, ease: 'easeInOut' },
           }}
-          className="mt-1 h-[5px] w-[5px] rounded-full bg-white/90"
+          className="mt-0.5 h-[4px] w-[4px] rounded-full bg-white"
         />
       )}
     </div>
@@ -901,13 +890,19 @@ function DockContextMenu({
 }) {
   const openApp = useMacOSStore((s) => s.openApp)
 
+  const windows = useMacOSStore((s) => s.windows)
+  const closeWindow = useMacOSStore((s) => s.closeWindow)
+  const isRunning = windows.some(w => w.appId === appId)
+
   const appMenuItems = [
     { label: 'Options', disabled: true },
     { label: 'Keep in Dock', action: () => {} },
     { label: 'Open at Login', action: () => {} },
+    { separator: true, label: '' },
     { label: 'Show All Windows', action: () => {} },
     { separator: true, label: '' },
     { label: 'Open', action: () => { openApp(appId); onClose() } },
+    ...(isRunning ? [{ label: 'Quit', shortcut: '⌘Q', action: () => { const win = windows.find(w => w.appId === appId); if (win) closeWindow(win.id); onClose() } }] : []),
   ]
 
   const trashMenuItems = [
@@ -944,13 +939,16 @@ function DockContextMenu({
           return (
             <button
               key={item.label}
-              className={`w-full text-left px-3 py-[3px] text-[13px] text-white/90 hover:bg-[#0060df] hover:text-white rounded-[4px] mx-1 flex items-center transition-colors ${
+              className={`w-full text-left px-3 py-[3px] text-[13px] text-white/90 hover:bg-[#0060df] hover:text-white rounded-[4px] mx-1 flex items-center justify-between transition-colors ${
                 item.disabled ? 'opacity-40 pointer-events-none' : ''
               }`}
               style={{ width: 'calc(100% - 8px)' }}
               onClick={item.action}
             >
-              {item.label}
+              <span>{item.label}</span>
+              {'shortcut' in item && item.shortcut && (
+                <span className="text-white/35 text-[11px] ml-4">{item.shortcut}</span>
+              )}
             </button>
           )
         })}
@@ -1065,14 +1063,14 @@ export default function Dock() {
         ref={dockRef}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
-        className="relative flex items-end gap-1.5 overflow-visible rounded-[18px] px-4 pb-2.5 pt-2"
+        className="relative flex items-end gap-[5px] overflow-visible rounded-[18px] px-3 pb-2 pt-1.5"
         style={{
-          background: 'rgba(35, 35, 38, 0.40)',
-          border: '0.5px solid rgba(255,255,255,0.18)',
-          backdropFilter: 'saturate(180%) blur(50px)',
-          WebkitBackdropFilter: 'saturate(180%) blur(50px)',
+          background: 'rgba(40, 40, 44, 0.55)',
+          border: '0.5px solid rgba(255,255,255,0.20)',
+          backdropFilter: 'saturate(200%) blur(60px)',
+          WebkitBackdropFilter: 'saturate(200%) blur(60px)',
           boxShadow:
-            'inset 0 1px 0 rgba(255,255,255,0.2), 0 10px 40px rgba(0,0,0,0.4), 0 2px 10px rgba(0,0,0,0.25)',
+            'inset 0 1px 0 rgba(255,255,255,0.22), 0 12px 48px rgba(0,0,0,0.45), 0 2px 12px rgba(0,0,0,0.3)',
         }}
         initial={{ y: 80, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -1117,13 +1115,12 @@ export default function Dock() {
 
           return (
             <React.Fragment key={item.id}>
-              {/* Separator before Trash */}
+              {/* Separator before Trash — thin vertical line like macOS */}
               {isTrash && (
                 <div
-                  className="mx-2 h-10 w-[1px] self-center"
+                  className="mx-1.5 h-8 w-[0.5px] self-center"
                   style={{
-                    background: 'linear-gradient(180deg, transparent, rgba(255,255,255,0.2) 15%, rgba(255,255,255,0.22) 50%, rgba(255,255,255,0.2) 85%, transparent)',
-                    boxShadow: '0 0 4px rgba(255,255,255,0.06)',
+                    background: 'linear-gradient(180deg, transparent, rgba(255,255,255,0.25) 20%, rgba(255,255,255,0.28) 50%, rgba(255,255,255,0.25) 80%, transparent)',
                   }}
                 />
               )}

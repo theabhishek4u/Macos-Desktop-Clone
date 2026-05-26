@@ -64,37 +64,42 @@ type PaneId =
 interface PreferencePane {
   id: PaneId
   name: string
-  emoji: string
   color: string
   icon: React.ElementType
+  category?: string
 }
 
-// ─── Pane definitions ────────────────────────────────────────────────────────
+// ─── Pane definitions with categories ────────────────────────────────────────
 
 const PREFERENCE_PANES: PreferencePane[] = [
-  { id: 'about', name: 'About This Mac', emoji: '💻', color: 'bg-gray-700', icon: Monitor },
-  { id: 'general', name: 'General', emoji: '⚙️', color: 'bg-gray-500', icon: Palette },
-  { id: 'appearance', name: 'Appearance', emoji: '🎨', color: 'bg-blue-500', icon: Sun },
-  { id: 'wallpaper', name: 'Wallpaper', emoji: '🌄', color: 'bg-teal-500', icon: Image },
-  { id: 'desktop', name: 'Desktop & Screen Saver', emoji: '🖥️', color: 'bg-purple-500', icon: Monitor },
-  { id: 'dock', name: 'Dock & Menu Bar', emoji: '📋', color: 'bg-slate-500', icon: Layout },
-  { id: 'display', name: 'Display', emoji: '🖥', color: 'bg-sky-500', icon: Monitor },
-  { id: 'battery', name: 'Battery', emoji: '🔋', color: 'bg-green-500', icon: Battery },
-  { id: 'sound', name: 'Sound', emoji: '🔊', color: 'bg-rose-500', icon: Volume2 },
-  { id: 'notifications', name: 'Notifications', emoji: '🔔', color: 'bg-red-500', icon: Bell },
-  { id: 'network', name: 'Network', emoji: '📶', color: 'bg-blue-600', icon: Wifi },
-  { id: 'bluetooth', name: 'Bluetooth', emoji: '🔷', color: 'bg-blue-400', icon: Bluetooth },
-  { id: 'privacy', name: 'Privacy & Security', emoji: '🔒', color: 'bg-blue-700', icon: Shield },
-  { id: 'users', name: 'Users & Groups', emoji: '👥', color: 'bg-cyan-600', icon: Users },
-  { id: 'storage', name: 'Storage', emoji: '💾', color: 'bg-indigo-500', icon: HardDrive },
-  { id: 'keyboard', name: 'Keyboard', emoji: '⌨️', color: 'bg-gray-600', icon: Keyboard },
-  { id: 'mouse', name: 'Mouse', emoji: '🖱️', color: 'bg-violet-500', icon: Mouse },
-  { id: 'printers', name: 'Printers & Scanners', emoji: '🖨️', color: 'bg-gray-500', icon: Printer },
-  { id: 'language', name: 'Language & Region', emoji: '🌍', color: 'bg-emerald-500', icon: Globe },
-  { id: 'accessibility', name: 'Accessibility', emoji: '♿', color: 'bg-blue-500', icon: Accessibility },
-  { id: 'datetime', name: 'Date & Time', emoji: '🕐', color: 'bg-amber-500', icon: Timer },
-  { id: 'profiles', name: 'Profiles', emoji: '📁', color: 'bg-orange-500', icon: Lock },
+  // Personal
+  { id: 'general', name: 'General', color: 'bg-gray-500', icon: Palette, category: 'Personal' },
+  { id: 'appearance', name: 'Appearance', color: 'bg-blue-500', icon: Sun, category: 'Personal' },
+  { id: 'desktop', name: 'Desktop & Screen Saver', color: 'bg-purple-500', icon: Monitor, category: 'Personal' },
+  { id: 'dock', name: 'Dock & Menu Bar', color: 'bg-slate-500', icon: Layout, category: 'Personal' },
+  { id: 'notifications', name: 'Notifications', color: 'bg-red-500', icon: Bell, category: 'Personal' },
+  // Hardware
+  { id: 'display', name: 'Display', color: 'bg-sky-500', icon: Monitor, category: 'Hardware' },
+  { id: 'sound', name: 'Sound', color: 'bg-rose-500', icon: Volume2, category: 'Hardware' },
+  { id: 'battery', name: 'Battery', color: 'bg-green-500', icon: Battery, category: 'Hardware' },
+  { id: 'keyboard', name: 'Keyboard', color: 'bg-gray-600', icon: Keyboard, category: 'Hardware' },
+  { id: 'mouse', name: 'Mouse', color: 'bg-violet-500', icon: Mouse, category: 'Hardware' },
+  { id: 'printers', name: 'Printers & Scanners', color: 'bg-gray-500', icon: Printer, category: 'Hardware' },
+  { id: 'storage', name: 'Storage', color: 'bg-indigo-500', icon: HardDrive, category: 'Hardware' },
+  // Internet & Wireless
+  { id: 'network', name: 'Wi-Fi', color: 'bg-blue-600', icon: Wifi, category: 'Internet & Wireless' },
+  { id: 'bluetooth', name: 'Bluetooth', color: 'bg-blue-400', icon: Bluetooth, category: 'Internet & Wireless' },
+  // System
+  { id: 'about', name: 'About This Mac', color: 'bg-gray-700', icon: Monitor, category: 'System' },
+  { id: 'privacy', name: 'Privacy & Security', color: 'bg-blue-700', icon: Shield, category: 'System' },
+  { id: 'users', name: 'Users & Groups', color: 'bg-cyan-600', icon: Users, category: 'System' },
+  { id: 'language', name: 'Language & Region', color: 'bg-emerald-500', icon: Globe, category: 'System' },
+  { id: 'accessibility', name: 'Accessibility', color: 'bg-blue-500', icon: Accessibility, category: 'System' },
+  { id: 'datetime', name: 'Date & Time', color: 'bg-amber-500', icon: Timer, category: 'System' },
+  { id: 'profiles', name: 'Profiles', color: 'bg-orange-500', icon: Lock, category: 'System' },
 ]
+
+const PANE_CATEGORIES = ['Personal', 'Hardware', 'Internet & Wireless', 'System']
 
 // ─── macOS-style toggle switch (custom, bigger than shadcn default) ──────────
 
@@ -174,7 +179,7 @@ function SettingSection({
 // ─── Detail Views ────────────────────────────────────────────────────────────
 
 function GeneralPane() {
-  const [appearance, setAppearance] = useState<'light' | 'dark' | 'auto'>('auto')
+  const { isDarkMode, setDarkMode } = useDarkModeStore()
   const [accentColor, setAccentColor] = useState('blue')
   const [sidebarIconSize, setSidebarIconSize] = useState<'small' | 'medium' | 'large'>('medium')
   const [showScrollBars, setShowScrollBars] = useState<'auto' | 'scrolling' | 'always'>('auto')
@@ -201,16 +206,22 @@ function GeneralPane() {
             {(['light', 'dark', 'auto'] as const).map((mode) => (
               <button
                 key={mode}
-                onClick={() => setAppearance(mode)}
+                onClick={() => {
+                  if (mode === 'light') setDarkMode(false)
+                  else if (mode === 'dark') setDarkMode(true)
+                  else setDarkMode(false)
+                }}
                 className="flex flex-col items-center gap-1.5"
               >
                 <div
                   className={`w-[64px] h-[44px] rounded-lg border-2 transition-all ${
-                    appearance === mode
+                    (mode === 'light' && !isDarkMode) || (mode === 'dark' && isDarkMode)
                       ? 'border-blue-500 shadow-md shadow-blue-500/20'
                       : 'border-gray-200 hover:border-gray-300'
                   } ${mode === 'light' ? 'bg-white' : mode === 'dark' ? 'bg-gray-800' : 'bg-gradient-to-r from-white to-gray-800'}`}
-                />
+                >
+                  <div className={`h-3 rounded-t-lg ${mode === 'light' ? 'bg-gray-100' : mode === 'dark' ? 'bg-gray-700' : 'bg-gradient-to-r from-gray-100 to-gray-700'}`} />
+                </div>
                 <span className="text-[11px] text-gray-600 capitalize">{mode}</span>
               </button>
             ))}
@@ -1148,7 +1159,21 @@ function DesktopPane() {
   const [changeInterval, setChangeInterval] = useState('never')
   const [randomOrder, setRandomOrder] = useState(false)
   const [showDesktopFolders, setShowDesktopFolders] = useState(true)
+  const [selectedScreenSaver, setSelectedScreenSaver] = useState('Flurry')
+  const [screenSaverStartTime, setScreenSaverStartTime] = useState('5min')
+  const [showScreenSaverClock, setShowScreenSaverClock] = useState(false)
   const { wallpaperIndex, setWallpaperIndex } = useMacOSStore()
+
+  const screenSavers = [
+    { name: 'Flurry', color: 'bg-gradient-to-br from-purple-400 to-pink-500' },
+    { name: 'Nature Patterns', color: 'bg-gradient-to-br from-green-400 to-emerald-600' },
+    { name: 'Cosmos', color: 'bg-gradient-to-br from-slate-800 to-indigo-900' },
+    { name: 'Shell', color: 'bg-gradient-to-br from-amber-300 to-orange-500' },
+    { name: 'Arabesque', color: 'bg-gradient-to-br from-rose-400 to-red-600' },
+    { name: 'Message', color: 'bg-gradient-to-br from-sky-400 to-blue-600' },
+    { name: 'iTunes Artwork', color: 'bg-gradient-to-br from-pink-500 to-violet-600' },
+    { name: 'Photo Slideshow', color: 'bg-gradient-to-br from-teal-400 to-cyan-600' },
+  ]
 
   return (
     <div>
@@ -1198,6 +1223,59 @@ function DesktopPane() {
         </SettingRow>
         <SettingRow label="Random order">
           <MacToggle checked={randomOrder} onCheckedChange={setRandomOrder} />
+        </SettingRow>
+      </SettingSection>
+
+      <SettingSection title="Screen Saver">
+        <div className="py-3">
+          <div className="flex gap-3">
+            {/* Screen saver list */}
+            <div className="w-[160px] max-h-[200px] overflow-y-auto rounded-lg border border-gray-200 bg-white">
+              {screenSavers.map((ss) => (
+                <button
+                  key={ss.name}
+                  onClick={() => setSelectedScreenSaver(ss.name)}
+                  className={`w-full flex items-center gap-2 px-2.5 py-2 text-[12px] text-left transition-colors ${
+                    selectedScreenSaver === ss.name
+                      ? 'bg-blue-500 text-white'
+                      : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  <div className={`w-5 h-5 rounded ${ss.color} shrink-0`} />
+                  <span className="truncate">{ss.name}</span>
+                </button>
+              ))}
+            </div>
+            {/* Preview */}
+            <div className="flex-1 aspect-video rounded-lg border border-gray-200 overflow-hidden relative">
+              <div className={`absolute inset-0 ${screenSavers.find(s => s.name === selectedScreenSaver)?.color ?? 'bg-gray-400'} animate-pulse`} style={{ animationDuration: '3s' }} />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-white/80 text-[11px] font-medium bg-black/30 px-2 py-1 rounded">{selectedScreenSaver}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </SettingSection>
+
+      <SettingSection>
+        <SettingRow label="Start after">
+          <select
+            value={screenSaverStartTime}
+            onChange={(e) => setScreenSaverStartTime(e.target.value)}
+            className="text-[13px] bg-gray-100 border border-gray-200 rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          >
+            <option value="1min">1 Minute</option>
+            <option value="2min">2 Minutes</option>
+            <option value="5min">5 Minutes</option>
+            <option value="10min">10 Minutes</option>
+            <option value="20min">20 Minutes</option>
+            <option value="30min">30 Minutes</option>
+            <option value="1hr">1 Hour</option>
+            <option value="never">Never</option>
+          </select>
+        </SettingRow>
+        <SettingRow label="Show with clock">
+          <MacToggle checked={showScreenSaverClock} onCheckedChange={setShowScreenSaverClock} />
         </SettingRow>
       </SettingSection>
 
@@ -1379,7 +1457,7 @@ function AboutThisMacPane() {
 
 // ─── Placeholder for panes without a full detail view ────────────────────────
 
-function PlaceholderPane({ name, emoji, color, icon }: { name: string; emoji: string; color: string; icon: React.ElementType }) {
+function PlaceholderPane({ name, color, icon }: { name: string; color: string; icon: React.ElementType }) {
   const IconComponent = icon
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center">
@@ -1429,7 +1507,7 @@ function DetailView({ paneId }: { paneId: PaneId }) {
     case 'users':
       return <UsersPane />
     default:
-      return <PlaceholderPane name={pane?.name ?? ''} emoji={pane?.emoji ?? '⚙️'} color={pane?.color ?? 'bg-gray-500'} icon={pane?.icon ?? Sun} />
+      return <PlaceholderPane name={pane?.name ?? ''} color={pane?.color ?? 'bg-gray-500'} icon={pane?.icon ?? Sun} />
   }
 }
 

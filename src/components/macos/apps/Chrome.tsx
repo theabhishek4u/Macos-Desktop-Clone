@@ -14,7 +14,7 @@ import {
   RotateCw,
   AlertCircle,
   Loader2,
-  ExternalLink,
+  Play,
 } from 'lucide-react'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -26,8 +26,10 @@ interface Tab {
   favicon: string
   isLoading: boolean
   loadingProgress: number
-  contentType?: 'newtab' | 'search' | 'youtube' | 'webpage' | 'simulated' | 'error'
+  contentType?: 'newtab' | 'search' | 'youtube-browse' | 'youtube' | 'webpage' | 'simulated' | 'error'
   searchResults?: SearchResult[]
+  youtubeResults?: YouTubeSearchResult[]
+  youtubeSearchQuery?: string
   pageContent?: PageReadResult
   errorMessage?: string
 }
@@ -40,6 +42,18 @@ interface SearchResult {
   rank: number
   date: string
   favicon: string
+}
+
+interface YouTubeSearchResult {
+  videoId: string
+  url: string
+  title: string
+  snippet: string
+  hostName: string
+  rank: number
+  date: string
+  thumbnail: string
+  channelName: string
 }
 
 interface PageReadResult {
@@ -79,7 +93,7 @@ interface FaviconConfig {
 const FAVICON_CONFIG: Record<string, FaviconConfig> = {
   'google.com': { letter: 'G', bgColor: '#4285F4' },
   'mail.google.com': { letter: 'M', bgColor: '#EA4335' },
-  'youtube.com': { letter: '▶', bgColor: '#FF0000' },
+  'youtube.com': { letter: '\u25B6', bgColor: '#FF0000' },
   'github.com': { bgColor: '#24292e', icon: 'github' },
   'wikipedia.org': { letter: 'W', bgColor: '#ffffff', textColor: '#333333', borderColor: '#cccccc' },
   'reddit.com': { letter: 'R', bgColor: '#FF4500' },
@@ -183,16 +197,31 @@ function isUrl(text: string): boolean {
   return false
 }
 
+function isYouTubeUrl(url: string): boolean {
+  const normalized = url.toLowerCase().replace(/^https?:\/\//, '')
+  return normalized.includes('youtube.com') || normalized.includes('youtu.be')
+}
+
+function getDisplayUrl(url: string): string {
+  return url.replace(/^https?:\/\//, '').replace(/\/$/, '')
+}
+
 // ─── Chrome New Tab Page ─────────────────────────────────────────────────────
 
-function ChromeNewTabPage({ onNavigate }: { onNavigate: (url: string) => void }) {
+function ChromeNewTabPage({ onNavigate, onSearch }: { onNavigate: (url: string) => void; onSearch: (query: string) => void }) {
   const [searchValue, setSearchValue] = useState('')
   const onNavigateRef = useRef(onNavigate)
+  const onSearchRef = useRef(onSearch)
   useEffect(() => { onNavigateRef.current = onNavigate }, [onNavigate])
+  useEffect(() => { onSearchRef.current = onSearch }, [onSearch])
 
   const handleSearch = () => {
     if (searchValue.trim()) {
-      onNavigateRef.current(searchValue.trim())
+      if (isUrl(searchValue.trim())) {
+        onNavigateRef.current(searchValue.trim())
+      } else {
+        onSearchRef.current(searchValue.trim())
+      }
     }
   }
 
@@ -248,11 +277,14 @@ function ChromeNewTabPage({ onNavigate }: { onNavigate: (url: string) => void })
 
 // ─── Search Results Page ──────────────────────────────────────────────────────
 
-function SearchResultsPage({ query, results, onNavigate }: {
+function SearchResultsPage({ query, results, onNavigate, onSearch }: {
   query: string
   results: SearchResult[]
   onNavigate: (url: string) => void
+  onSearch: (q: string) => void
 }) {
+  const [searchInput, setSearchInput] = useState(query)
+
   return (
     <div className="flex flex-col w-full min-h-full bg-white">
       <div className="border-b border-gray-200 px-6 py-3 shrink-0">
@@ -265,8 +297,29 @@ function SearchResultsPage({ query, results, onNavigate }: {
             <span className="text-[#34A853]">l</span>
             <span className="text-[#EA4335]">e</span>
           </div>
-          <div className="flex-1 flex items-center border border-gray-200 rounded-full px-4 py-2 hover:shadow-sm transition-shadow">
-            <span className="text-sm text-gray-800">{query}</span>
+          <div className="flex-1 flex items-center border border-gray-200 rounded-full px-4 py-2 focus-within:shadow-sm transition-shadow">
+            <input
+              type="text"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && searchInput.trim()) {
+                  onSearch(searchInput.trim())
+                }
+              }}
+              className="flex-1 text-sm outline-none bg-transparent text-gray-800"
+            />
+            {searchInput && (
+              <button onClick={() => setSearchInput('')} className="ml-2">
+                <X size={16} className="text-gray-400 hover:text-gray-600" />
+              </button>
+            )}
+            <button
+              className="ml-2 p-1 hover:bg-gray-100 rounded-full transition-colors"
+              onClick={() => searchInput.trim() && onSearch(searchInput.trim())}
+            >
+              <Search size={16} className="text-blue-500" />
+            </button>
           </div>
         </div>
       </div>
@@ -275,24 +328,145 @@ function SearchResultsPage({ query, results, onNavigate }: {
           <p className="text-[12px] text-gray-500 mb-4">
             About {results.length} results
           </p>
-          {results.map((result, i) => (
-            <div key={i} className="mb-6">
-              <div className="flex items-center gap-1.5 mb-0.5">
-                <div className="w-5 h-5 rounded-full overflow-hidden flex items-center justify-center" style={{ backgroundColor: '#f1f3f4' }}>
-                  <Globe size={10} className="text-gray-500" />
+          {results.map((result, i) => {
+            const isYtVideo = extractYouTubeVideoId(result.url)
+            return (
+              <div key={i} className="mb-6">
+                <div className="flex items-center gap-1.5 mb-0.5">
+                  <div className="w-5 h-5 rounded-full overflow-hidden flex items-center justify-center" style={{ backgroundColor: '#f1f3f4' }}>
+                    {isYtVideo ? (
+                      <div className="w-4 h-4 rounded-sm bg-red-500 flex items-center justify-center">
+                        <Play size={8} className="text-white fill-white" />
+                      </div>
+                    ) : (
+                      <Globe size={10} className="text-gray-500" />
+                    )}
+                  </div>
+                  <span className="text-[12px] text-gray-600">{result.host_name}</span>
                 </div>
-                <span className="text-[12px] text-gray-600">{result.host_name}</span>
+                <button
+                  className="text-[#1a0dab] text-[18px] font-normal hover:underline text-left leading-snug mb-0.5 block"
+                  onClick={() => onNavigate(result.url)}
+                >
+                  {result.name}
+                </button>
+                <p className="text-[13px] text-[#4d5156] leading-snug">{result.snippet}</p>
               </div>
-              <button
-                className="text-[#1a0dab] text-[18px] font-normal hover:underline text-left leading-snug mb-0.5 block"
-                onClick={() => onNavigate(result.url)}
-              >
-                {result.name}
-              </button>
-              <p className="text-[13px] text-[#4d5156] leading-snug">{result.snippet}</p>
+            )
+          })}
+          {results.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-16">
+              <Search size={48} className="text-gray-300 mb-4" />
+              <h3 className="text-lg font-medium text-gray-600 mb-2">No results found</h3>
+              <p className="text-sm text-gray-400">Try different keywords</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── YouTube Browse View ─────────────────────────────────────────────────────
+
+function YouTubeBrowseView({
+  results,
+  searchQuery,
+  onPlayVideo,
+  onSearch,
+}: {
+  results: YouTubeSearchResult[]
+  searchQuery?: string
+  onPlayVideo: (videoId: string, title: string) => void
+  onSearch: (query: string) => void
+}) {
+  const [searchInput, setSearchInput] = useState(searchQuery || '')
+
+  return (
+    <div className="flex flex-col w-full min-h-full bg-[#0f0f0f]">
+      <div className="shrink-0 flex items-center gap-3 px-4 py-2 bg-[#0f0f0f] border-b border-white/10">
+        <div className="flex items-center gap-1.5 shrink-0">
+          <div className="w-6 h-6 bg-red-600 rounded-sm flex items-center justify-center">
+            <Play size={12} className="text-white fill-white ml-0.5" />
+          </div>
+          <span className="text-white font-bold text-[15px]">YouTube</span>
+        </div>
+        <div className="flex-1 max-w-xl mx-auto">
+          <div className="flex items-center bg-[#121212] border border-[#303030] rounded-full overflow-hidden">
+            <input
+              type="text"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && searchInput.trim()) {
+                  onSearch(searchInput.trim())
+                }
+              }}
+              className="flex-1 px-4 py-1.5 text-sm outline-none bg-transparent text-white placeholder:text-gray-500"
+              placeholder="Search YouTube"
+            />
+            <button
+              className="px-4 py-1.5 bg-[#222222] hover:bg-[#303030] border-l border-[#303030] transition-colors"
+              onClick={() => searchInput.trim() && onSearch(searchInput.trim())}
+            >
+              <Search size={16} className="text-white" />
+            </button>
+          </div>
+        </div>
+      </div>
+      <div className="flex-1 overflow-y-auto p-4">
+        {results.length === 0 && !searchQuery && (
+          <div className="flex flex-col items-center justify-center py-16">
+            <div className="w-16 h-16 bg-red-600/20 rounded-full flex items-center justify-center mb-4">
+              <Play size={28} className="text-red-500" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-300 mb-2">Search for videos</h3>
+            <p className="text-sm text-gray-500">Type a search query to find YouTube videos</p>
+          </div>
+        )}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {results.map((video) => (
+            <div
+              key={video.videoId || video.url}
+              className="group cursor-pointer rounded-xl overflow-hidden bg-[#1a1a1a] hover:bg-[#252525] transition-colors"
+              onClick={() => video.videoId && onPlayVideo(video.videoId, video.title)}
+            >
+              <div className="relative aspect-video bg-[#222] overflow-hidden">
+                {video.thumbnail ? (
+                  <img
+                    src={video.thumbnail}
+                    alt={video.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <Play size={32} className="text-gray-600" />
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                  <div className="w-12 h-12 bg-black/70 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Play size={20} className="text-white fill-white ml-1" />
+                  </div>
+                </div>
+              </div>
+              <div className="p-3">
+                <h3 className="text-[14px] font-medium text-white leading-snug line-clamp-2 mb-1">{video.title}</h3>
+                <p className="text-[12px] text-gray-400 truncate">{video.channelName || video.hostName}</p>
+                {video.snippet && (
+                  <p className="text-[11px] text-gray-500 mt-1 line-clamp-2">{video.snippet}</p>
+                )}
+              </div>
             </div>
           ))}
         </div>
+        {results.length === 0 && searchQuery && (
+          <div className="flex flex-col items-center justify-center py-16">
+            <Search size={48} className="text-gray-600 mb-4" />
+            <h3 className="text-lg font-medium text-gray-400 mb-2">No videos found</h3>
+            <p className="text-sm text-gray-500">Try different keywords</p>
+          </div>
+        )}
       </div>
     </div>
   )
@@ -308,7 +482,7 @@ function YouTubeVideoPlayer({ videoId, onBack }: { videoId: string; onBack?: () 
           onClick={onBack}
           className="self-start m-3 px-3 py-1.5 text-sm text-white/70 hover:text-white bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
         >
-          ← Back
+          &#8592; Back
         </button>
       )}
       <div className="flex-1 flex items-center justify-center p-4">
@@ -329,6 +503,20 @@ function YouTubeVideoPlayer({ videoId, onBack }: { videoId: string; onBack?: () 
 // ─── Web Page Content Viewer ─────────────────────────────────────────────────
 
 function WebPageContent({ content }: { content: PageReadResult }) {
+  const sanitizedHtml = useMemo(() => {
+    if (!content.html) return ''
+    let html = content.html
+    html = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    html = html.replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
+    html = html.replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
+    html = html.replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, '')
+    html = html.replace(/<embed\b[^>]*>/gi, '')
+    html = html.replace(/\son\w+\s*=\s*["'][^"']*["']/gi, '')
+    html = html.replace(/\son\w+\s*=\s*\S+/gi, '')
+    html = html.replace(/href\s*=\s*["']javascript:[^"']*["']/gi, 'href="#"')
+    return html
+  }, [content.html])
+
   return (
     <div className="flex flex-col w-full min-h-full bg-white">
       <div className="border-b border-gray-200 px-6 py-3 shrink-0">
@@ -337,14 +525,25 @@ function WebPageContent({ content }: { content: PageReadResult }) {
           <Globe size={12} className="text-gray-400" />
           <span className="text-[12px] text-gray-500 truncate">{content.url}</span>
           {content.publishedTime && (
-            <span className="text-[11px] text-gray-400">· {new Date(content.publishedTime).toLocaleDateString()}</span>
+            <span className="text-[11px] text-gray-400">&#183; {new Date(content.publishedTime).toLocaleDateString()}</span>
           )}
         </div>
       </div>
       <div className="flex-1 overflow-y-auto px-6 py-4">
         <div
-          className="prose prose-sm max-w-none"
-          dangerouslySetInnerHTML={{ __html: content.html }}
+          className="prose prose-sm max-w-none text-gray-800 leading-relaxed
+            [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:mb-4 [&_h1]:mt-6 [&_h1]:text-gray-900
+            [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:mb-3 [&_h2]:mt-5 [&_h2]:text-gray-900
+            [&_h3]:text-lg [&_h3]:font-semibold [&_h3]:mb-2 [&_h3]:mt-4 [&_h3]:text-gray-900
+            [&_p]:mb-4 [&_p]:leading-relaxed
+            [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:mb-4 [&_ul]:space-y-1
+            [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:mb-4 [&_ol]:space-y-1
+            [&_a]:text-blue-600 [&_a]:underline [&_a]:hover:text-blue-800
+            [&_img]:max-w-full [&_img]:rounded-lg [&_img]:my-4
+            [&_pre]:bg-gray-100 [&_pre]:rounded-lg [&_pre]:p-4 [&_pre]:overflow-x-auto [&_pre]:my-4
+            [&_code]:bg-gray-100 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-sm
+          "
+          dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
         />
       </div>
     </div>
@@ -358,7 +557,7 @@ function ErrorPage({ message, url }: { message: string; url: string }) {
     <div className="flex flex-col items-center justify-center w-full min-h-full bg-[#202124] text-white">
       <AlertCircle size={48} className="text-red-400 mb-4" />
       <h2 className="text-lg font-medium mb-2">This site can&apos;t be reached</h2>
-      <p className="text-sm text-gray-400 mb-1">{url}</p>
+      <p className="text-sm text-gray-400 mb-1">{getDisplayUrl(url)}</p>
       <p className="text-sm text-gray-500 max-w-sm text-center">{message}</p>
     </div>
   )
@@ -406,7 +605,7 @@ export default function Chrome() {
   }, [tabHistories, activeTabId])
 
   const simulateLoading = useCallback((tabId: string, url: string) => {
-    const favicon = FAVICON_MAP[url] ?? ''
+    const favicon = FAVICON_MAP[url] ?? resolveFaviconChrome(url)
     setTabs((prev) =>
       prev.map((t) =>
         t.id === tabId ? { ...t, isLoading: true, loadingProgress: 0, url, favicon } : t
@@ -448,11 +647,108 @@ export default function Chrome() {
       return
     }
 
+    // Check if it's YouTube homepage
+    if (isYouTubeUrl(displayUrl) && !youtubeVideoId) {
+      setTabs(prev => prev.map(t =>
+        t.id === tabId ? { ...t, title: 'YouTube' } : t
+      ))
+      try {
+        const searchQuery = 'trending popular videos'
+        const response = await fetch(`/api/safari/youtube-search?q=${encodeURIComponent(searchQuery)}&num=12`)
+        const data = await response.json()
+        if (data.results) {
+          setTabs(prev => prev.map(t =>
+            t.id === tabId ? {
+              ...t,
+              isLoading: false,
+              loadingProgress: 100,
+              title: 'YouTube',
+              contentType: 'youtube-browse' as const,
+              youtubeResults: data.results,
+              youtubeSearchQuery: '',
+              favicon: 'youtube',
+            } : t
+          ))
+        } else {
+          setTabs(prev => prev.map(t =>
+            t.id === tabId ? {
+              ...t,
+              isLoading: false,
+              loadingProgress: 100,
+              contentType: 'error' as const,
+              errorMessage: 'Failed to load YouTube.',
+            } : t
+          ))
+        }
+      } catch {
+        setTabs(prev => prev.map(t =>
+          t.id === tabId ? {
+            ...t,
+            isLoading: false,
+            loadingProgress: 100,
+            contentType: 'error' as const,
+            errorMessage: 'Network error.',
+          } : t
+        ))
+      }
+      return
+    }
+
     // Check if it's a search query or URL
     const isSearchQuery = !isUrl(displayUrl)
 
     if (isSearchQuery) {
-      // Web search
+      // Check if search query is YouTube-related
+      const isYoutubeSearch = displayUrl.toLowerCase().includes('youtube') || displayUrl.toLowerCase().includes('video')
+
+      if (isYoutubeSearch) {
+        setTabs(prev => prev.map(t =>
+          t.id === tabId ? { ...t, title: `${displayUrl} - YouTube` } : t
+        ))
+        try {
+          const searchQuery = displayUrl.replace(/\byoutube\b/i, '').replace(/\bvideos?\b/i, '').trim() || 'trending'
+          const response = await fetch(`/api/safari/youtube-search?q=${encodeURIComponent(searchQuery)}&num=12`)
+          const data = await response.json()
+
+          if (data.results) {
+            setTabs(prev => prev.map(t =>
+              t.id === tabId ? {
+                ...t,
+                isLoading: false,
+                loadingProgress: 100,
+                title: `${searchQuery} - YouTube`,
+                contentType: 'youtube-browse' as const,
+                youtubeResults: data.results,
+                youtubeSearchQuery: searchQuery,
+                favicon: 'youtube',
+              } : t
+            ))
+          } else {
+            setTabs(prev => prev.map(t =>
+              t.id === tabId ? {
+                ...t,
+                isLoading: false,
+                loadingProgress: 100,
+                contentType: 'error' as const,
+                errorMessage: 'Search failed. Please try again.',
+              } : t
+            ))
+          }
+        } catch {
+          setTabs(prev => prev.map(t =>
+            t.id === tabId ? {
+              ...t,
+              isLoading: false,
+              loadingProgress: 100,
+              contentType: 'error' as const,
+              errorMessage: 'Network error.',
+            } : t
+          ))
+        }
+        return
+      }
+
+      // Regular web search
       try {
         setTabs(prev => prev.map(t =>
           t.id === tabId ? { ...t, title: `${displayUrl} - Google Search` } : t
@@ -490,7 +786,7 @@ export default function Chrome() {
             isLoading: false,
             loadingProgress: 100,
             contentType: 'error' as const,
-            errorMessage: 'Network error. Please check your connection.',
+            errorMessage: 'Network error.',
           } : t
         ))
       }
@@ -508,7 +804,6 @@ export default function Chrome() {
         if (data.success && data.data) {
           const pageContent: PageReadResult = data.data || { title: displayUrl, url: fullUrl, html: '', publishedTime: '' }
 
-          // Check if the returned URL is a YouTube video
           const readYoutubeId = extractYouTubeVideoId(pageContent.url || fullUrl)
           if (readYoutubeId) {
             setTabs(prev => prev.map(t =>
@@ -552,7 +847,7 @@ export default function Chrome() {
             isLoading: false,
             loadingProgress: 100,
             contentType: 'error' as const,
-            errorMessage: 'Network error. Please check your connection.',
+            errorMessage: 'Network error.',
           } : t
         ))
       }
@@ -589,6 +884,14 @@ export default function Chrome() {
       loadUrlContent(activeTabId, displayUrl)
     },
     [activeTabId, tabs, simulateLoading, loadUrlContent]
+  )
+
+  // Search from new tab page or search bar
+  const handleSearch = useCallback(
+    (query: string) => {
+      navigateToUrl(query)
+    },
+    [navigateToUrl]
   )
 
   const goBack = useCallback(() => {
@@ -695,12 +998,70 @@ export default function Chrome() {
     [handleUrlSubmit]
   )
 
-  // Get the previous URL for back navigation in YouTube
-  const getPreviousUrl = useCallback(() => {
-    const hist = tabHistories[activeTabId]
-    if (!hist || hist.index <= 0) return undefined
-    return hist.urls[hist.index - 1]
-  }, [tabHistories, activeTabId])
+  // Play YouTube video from browse view
+  const handlePlayYouTubeVideo = useCallback(
+    (videoId: string, title: string) => {
+      const url = `https://www.youtube.com/watch?v=${videoId}`
+      setTabHistories((prev) => {
+        const hist = prev[activeTabId] ?? { urls: ['localhost:3000'], index: 0 }
+        const newUrls = [...hist.urls.slice(0, hist.index + 1), url]
+        return { ...prev, [activeTabId]: { urls: newUrls, index: newUrls.length - 1 } }
+      })
+      setTabs(prev => prev.map(t =>
+        t.id === activeTabId ? {
+          ...t,
+          url,
+          title: title || 'YouTube Video',
+          contentType: 'youtube' as const,
+          favicon: 'youtube',
+          isLoading: false,
+          loadingProgress: 100,
+        } : t
+      ))
+    },
+    [activeTabId]
+  )
+
+  // YouTube search from browse view
+  const handleYouTubeSearch = useCallback(
+    (query: string) => {
+      simulateLoading(activeTabId, `yt:search:${query}`)
+      setTabs(prev => prev.map(t =>
+        t.id === activeTabId ? { ...t, title: `${query} - YouTube` } : t
+      ))
+      void (async () => {
+        try {
+          const response = await fetch(`/api/safari/youtube-search?q=${encodeURIComponent(query)}&num=12`)
+          const data = await response.json()
+          if (data.results) {
+            setTabs(prev => prev.map(t =>
+              t.id === activeTabId ? {
+                ...t,
+                isLoading: false,
+                loadingProgress: 100,
+                title: `${query} - YouTube`,
+                contentType: 'youtube-browse' as const,
+                youtubeResults: data.results,
+                youtubeSearchQuery: query,
+                favicon: 'youtube',
+              } : t
+            ))
+          }
+        } catch {
+          setTabs(prev => prev.map(t =>
+            t.id === activeTabId ? {
+              ...t,
+              isLoading: false,
+              loadingProgress: 100,
+              contentType: 'error' as const,
+              errorMessage: 'YouTube search failed.',
+            } : t
+          ))
+        }
+      })()
+    },
+    [activeTabId, simulateLoading]
+  )
 
   useEffect(() => {
     return () => {
@@ -717,15 +1078,25 @@ export default function Chrome() {
 
     switch (tab.contentType) {
       case 'newtab':
-        return <ChromeNewTabPage onNavigate={navigateToUrl} />
+        return <ChromeNewTabPage onNavigate={navigateToUrl} onSearch={handleSearch} />
       case 'youtube':
         return <YouTubeVideoPlayer videoId={extractYouTubeVideoId(tab.url) || ''} onBack={canGoBack ? goBack : undefined} />
+      case 'youtube-browse':
+        return tab.youtubeResults ? (
+          <YouTubeBrowseView
+            results={tab.youtubeResults}
+            searchQuery={tab.youtubeSearchQuery}
+            onPlayVideo={handlePlayYouTubeVideo}
+            onSearch={handleYouTubeSearch}
+          />
+        ) : <LoadingPage />
       case 'search':
         return tab.searchResults ? (
           <SearchResultsPage
             query={tab.title.replace(' - Google Search', '')}
             results={tab.searchResults}
             onNavigate={navigateToUrl}
+            onSearch={handleSearch}
           />
         ) : <LoadingPage />
       case 'webpage':
@@ -733,13 +1104,13 @@ export default function Chrome() {
       case 'error':
         return <ErrorPage message={tab.errorMessage || 'Unknown error'} url={tab.url} />
       default:
-        return <ChromeNewTabPage onNavigate={navigateToUrl} />
+        return <ChromeNewTabPage onNavigate={navigateToUrl} onSearch={handleSearch} />
     }
   }
 
   return (
     <div className="flex flex-col w-full h-full bg-white text-gray-900 text-sm select-none overflow-hidden" style={{ fontFamily: "'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif" }}>
-      {/* ─── Chrome Tab Bar ─────────────────────────────────────── */}
+      {/* Chrome Tab Bar */}
       <div className="shrink-0 bg-[#202124] pt-2" style={{ paddingLeft: '8px', paddingRight: '8px' }}>
         <div className="flex items-end gap-0">
           {tabs.map((tab) => {
@@ -783,7 +1154,7 @@ export default function Chrome() {
         </div>
       </div>
 
-      {/* ─── Chrome Toolbar ──────────────────────────────────────── */}
+      {/* Chrome Toolbar */}
       <div className="shrink-0 bg-white border-b border-gray-200">
         <div className="flex items-center gap-1.5 px-3 py-2">
           <button
@@ -828,11 +1199,11 @@ export default function Chrome() {
                 />
               ) : (
                 <div className="flex items-center justify-center gap-1.5 w-full">
-                  {activeTab.url !== 'localhost:3000' && (
+                  {activeTab.url !== 'localhost:3000' && !activeTab.url.startsWith('yt:search:') && (
                     <Lock size={12} className="text-gray-400 shrink-0" />
                   )}
                   <span className="text-[14px] text-gray-500 truncate">
-                    {activeTab.url === 'localhost:3000' ? 'Search Google or type a URL' : activeTab.url}
+                    {activeTab.url === 'localhost:3000' ? 'Search Google or type a URL' : activeTab.url.startsWith('yt:search:') ? activeTab.url.replace('yt:search:', '') : getDisplayUrl(activeTab.url)}
                   </span>
                 </div>
               )}
@@ -851,7 +1222,7 @@ export default function Chrome() {
         </div>
       </div>
 
-      {/* ─── Bookmarks Bar ───────────────────────────────────────── */}
+      {/* Bookmarks Bar */}
       <div className="shrink-0 bg-[#f9f9f9] border-b border-gray-200 px-4 py-1 flex items-center gap-3 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
         {BOOKMARKS.map((bm) => (
           <div
@@ -865,7 +1236,7 @@ export default function Chrome() {
         ))}
       </div>
 
-      {/* ─── Loading Bar ─────────────────────────────────────────── */}
+      {/* Loading Bar */}
       {activeTab.isLoading && (
         <div className="h-[3px] bg-gray-100 shrink-0">
           <div
@@ -875,10 +1246,22 @@ export default function Chrome() {
         </div>
       )}
 
-      {/* ─── Content Area ────────────────────────────────────────── */}
+      {/* Content Area */}
       <div className="flex-1 overflow-y-auto">
         {renderContent()}
       </div>
     </div>
   )
+}
+
+function resolveFaviconChrome(url: string): string {
+  const normalized = url.toLowerCase().replace(/^https?:\/\//, '').replace(/\/$/, '')
+  if (normalized.includes('google')) return 'google'
+  if (normalized.includes('youtube')) return 'youtube'
+  if (normalized.includes('github')) return 'github'
+  if (normalized.includes('wikipedia')) return 'wikipedia'
+  if (normalized.includes('reddit')) return 'reddit'
+  if (normalized.includes('x.com') || normalized.includes('twitter')) return 'x'
+  if (normalized.includes('stackoverflow')) return 'stackoverflow'
+  return ''
 }
