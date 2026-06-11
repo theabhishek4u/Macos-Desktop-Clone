@@ -1587,3 +1587,29 @@ Unresolved Issues / Next Steps:
 - Could add more app-specific keyboard shortcuts
 - Could add drag-and-drop between apps
 - Wallpaper could be higher quality (consider AI-generated image)
+
+---
+Task ID: 13
+Agent: Main Agent
+Task: Fix dock bounce animation to look like real macOS
+
+Work Log:
+- User reported: dock bounce animation looks wrong - up-down wave pattern instead of real macOS bounce
+- Analyzed current animation: `y: [0, -16, -20, -16, -4, 0]` with single ease - this is a wave pattern
+- Real macOS bounce uses ball-drop physics: icon goes UP, falls with gravity acceleration, smaller bounces, settles
+- Replaced with physics-based keyframe animation:
+  - y values: `[0, -32, 0, -14, 0, -5, 0]` - progressively smaller bounces (100% → 44% → 16%)
+  - times: `[0, 0.20, 0.42, 0.56, 0.70, 0.82, 1.0]` - gravity-like timing
+  - Per-segment easing: decelerate going up `[0.17, 0.67, 0.35, 1]`, accelerate falling `[0.65, 0, 0.35, 1]`
+  - Duration: 0.85s per cycle, repeat Infinity
+  - Bounce stops after 1700ms (2 full cycles)
+- Separated y transition from width/height transitions for independent animation control
+- Updated .gitignore to exclude skills/ and agent-ctx/ directories
+- Lint passes, dev server compiles OK
+
+Stage Summary:
+- **Dock bounce animation fixed**: Now uses real macOS ball-drop physics with gravity
+  - Main bounce up (32px) → gravity fall → second bounce (14px) → fall → third bounce (5px) → settle
+  - Per-segment easing simulates real physics (decelerate up, accelerate down)
+  - Stops after 2 complete bounce cycles
+- Visual fidelity significantly improved for dock interaction
