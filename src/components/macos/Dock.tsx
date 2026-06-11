@@ -830,15 +830,29 @@ function DockIcon({
         animate={{
           width: currentSize,
           height: currentSize,
-          y: isBouncing ? [0, -16, -20, -16, -4, 0] : 0,
+          y: isBouncing
+            ? [0, -32, 0, -14, 0, -5, 0]
+            : 0,
         }}
         transition={
           isBouncing
             ? {
-                duration: 0.75,
-                repeat: Infinity,
-                repeatType: 'loop',
-                ease: [0.25, 0.1, 0.25, 1],
+                y: {
+                  duration: 0.85,
+                  repeat: Infinity,
+                  repeatType: 'loop',
+                  times: [0, 0.20, 0.42, 0.56, 0.70, 0.82, 1.0],
+                  ease: [
+                    [0.17, 0.67, 0.35, 1],  // going up - decelerate
+                    [0.65, 0, 0.35, 1],       // falling down - accelerate (gravity)
+                    [0.17, 0.67, 0.35, 1],  // second bounce up - decelerate
+                    [0.65, 0, 0.35, 1],       // second fall - accelerate
+                    [0.17, 0.67, 0.35, 1],  // third bounce up - decelerate
+                    [0.65, 0, 0.35, 1],       // third fall - settle
+                  ],
+                },
+                width: { type: 'spring', stiffness: 400, damping: 22, mass: 0.5 },
+                height: { type: 'spring', stiffness: 400, damping: 22, mass: 0.5 },
               }
             : {
                 type: 'spring',
@@ -1037,7 +1051,9 @@ export default function Dock() {
         return
       }
       setBouncingApp(appId)
-      setTimeout(() => setBouncingApp(null), 1200)
+      // Stop bounce after ~2.5 full cycles (0.85s each) = 2.1s
+      // Use 1700ms for exactly 2 complete bounce cycles
+      setTimeout(() => setBouncingApp(null), 1700)
       openApp(appId)
     },
     [openApp, toggleLaunchpad]
