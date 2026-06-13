@@ -6,7 +6,7 @@
   "main": "dist/index.js",
   "scripts": {
     "generate": "tsx generate.ts",
-    "build": "tsc",
+    "build": "node init && tsc",
     "prepublishOnly": "npm run build"
   },
   "keywords": [
